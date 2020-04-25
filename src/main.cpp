@@ -1,62 +1,76 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-
-template <class... Args>
-void error[[noreturn]](Args... args)
-{
-    // C++17 fold expression <3
-    (std::cerr << ... << args) << std::endl;
-    glfwTerminate();
-    std::exit(-1);
-}
+#include <cmath>
+#include "Window.h"
+#include "DrawableObject.h"
+#include "loader.h"
 
 int main()
 {
-    float time;
+    Window window(800, 600, "game");
+    DummyModel obj;
 
-    if (!glfwInit())
-        error("glfwInit failed");
+    glm::mat4 V = glm::lookAt(
+        glm::vec3(0.f, 0.f, 0.f),
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f));
+    window.shaderProgram.uniformMatrix4fv("V", glm::value_ptr(V));
 
-    glfwSetErrorCallback([](int error, const char *description) {
-        std::cerr << "error: " << description << std::endl;
-    });
+    glm::vec3 position(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection;
+    float xCursorPos, yCursorPos, yaw = 0.f, pitch = 0.f, time;
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
-    GLFWwindow *window(glfwCreateWindow(200, 200, "sample window", nullptr, nullptr));
-    if (!window)
-        error("glfwCreateWindow failed");
-
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
-        glViewport(0, 0, width, height);
-    });
-
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGL())
-        error("gladLoadGL failed");
-
-    while (!glfwWindowShouldClose(window))
+    while (window.isOpen())
     {
         time = glfwGetTime();
         if (time >= 2.f)
             glfwSetTime(0.f);
 
-        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, true);
+        if (window.getKeyState(GLFW_KEY_ESCAPE) == GLFW_PRESS)
+            window.close();
+
+        if (window.getKeyState(GLFW_KEY_W) == GLFW_PRESS)
+            position += frontDirection;
+        if (window.getKeyState(GLFW_KEY_S) == GLFW_PRESS)
+            position -= frontDirection;
+
+        if (window.getKeyState(GLFW_KEY_D) == GLFW_PRESS)
+            position -= rightDirection;
+        if (window.getKeyState(GLFW_KEY_A) == GLFW_PRESS)
+            position += rightDirection;
+
+        window.getCursorPosition(xCursorPos, yCursorPos);
+        window.setCursorPositionCenter();
+
+        yaw -= xCursorPos * 0.01f;
+        pitch += yCursorPos * 0.01f;
+
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        frontDirection.x = -sin(yaw) * cos(pitch);
+        frontDirection.y = -sin(pitch);
+        frontDirection.z = -cos(yaw) * cos(pitch);
+
+        rightDirection.x = -cos(yaw);
+        rightDirection.y = 0.0;
+        rightDirection.z = sin(yaw);
+
+        glm::vec3 upDirection = glm::cross(frontDirection, rightDirection);
+
+        V = glm::lookAt(
+            position,
+            position + glm::normalize(frontDirection),
+            glm::normalize(upDirection));
+        window.shaderProgram.uniformMatrix4fv("V", glm::value_ptr(V));
 
         if (time < 1.f)
-            glClearColor(1.f - time, time, 0.5f * time, 1.0f);
+            window.setClearColor(1.f - time, time, 0.5f * time);
         else
-            glClearColor(time - 1.f, 2.f - time, 0.5f - 0.5f * time, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+            window.setClearColor(time - 1.f, 2.f - time, 0.5f - 0.5f * time);
+        window.clear();
+        window.draw(obj);
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        window.swapBuffers();
     }
-
-    glfwTerminate();
     return 0;
 }
