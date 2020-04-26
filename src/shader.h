@@ -28,10 +28,14 @@ public:
         glDeleteShader(fragmentShader);
         glDeleteProgram(shaderProgram);
     }
-    void uniformMatrix4fv(const char *name, const float *matrix)
+    void uniformMatrix4fv(const char *name, const float *matrix) const
     {
         GLuint location = glGetUniformLocation(shaderProgram, name);
         glUniformMatrix4fv(location, 1, false, matrix);
+    }
+    void use() const
+    {
+        glUseProgram(shaderProgram);
     }
 
 private:

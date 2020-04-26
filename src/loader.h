@@ -4,7 +4,7 @@
 #include <tiny_obj_loader.h>
 #include "error.h"
 
-void load(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;

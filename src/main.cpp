@@ -1,11 +1,12 @@
 #include <cmath>
 #include "Window.h"
-#include "DrawableObject.h"
+#include "dummy.h"
 #include "loader.h"
 
 int main()
 {
     Window window(800, 600, "game");
+    DummyModel::init();
     DummyModel obj;
 
     glm::mat4 V = glm::lookAt(

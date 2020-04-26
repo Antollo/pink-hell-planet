@@ -56,14 +56,11 @@ protected:
 private:
     void loadBuffers(const GLfloat *data, int length, GLuint index, GLuint buffer, GLint size)
     {
-        glBindVertexArray(buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
-
         glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
         glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(index);
 
-        glBindVertexArray(0);
     }
     GLuint vertexArray;
     GLuint vertexBuffer;
@@ -78,7 +75,7 @@ public:
     DummyModel()
     {
         std::vector<float> vertices, colors, normals;
-        load("BOSCH_WLG.obj", vertices, colors, normals);
+        loadObjFile("BOSCH_WLG.obj", vertices, colors, normals);
         loadVertices(&vertices[0], vertices.size());
         loadColors(&colors[0], colors.size());
         loadNormals(&normals[0], normals.size());
