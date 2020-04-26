@@ -46,7 +46,7 @@ public:
             glViewport(0, 0, width, height);
             Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
             obj.P = glm::perspective(glm::radians(50.f), (float)width / (float)height, 0.01f, 1000.0f);
-            obj.shaderProgram.uniformMatrix4fv("P", glm::value_ptr(obj.P));
+            ShaderProgram::setGlobalUniformMatrix4fv("P", obj.P);
             obj._width = width;
             obj._height = height;
         });
@@ -56,10 +56,8 @@ public:
         if (!gladLoadGL())
             errorAndExit("gladLoadGL failed");
 
-        shaderProgram.load("shaders/vert.glsl", "shaders/frag.glsl");
-
         P = glm::perspective(glm::radians(50.f), (float)width / (float)height, 0.1f, 1000.0f);
-        shaderProgram.uniformMatrix4fv("P", glm::value_ptr(P));
+        ShaderProgram::setGlobalUniformMatrix4fv("P", P);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
@@ -118,8 +116,6 @@ public:
     {
         glfwSetCursorPos(window, double(_width) / 2.0, double(_height) / 2.0);
     }
-
-    ShaderProgram shaderProgram;
 
 private:
     friend class Drawable;

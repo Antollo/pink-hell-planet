@@ -2,6 +2,7 @@
 #define SHADER_H_
 
 #include <fstream>
+#include <map>
 #include <glad/glad.h>
 #include "error.h"
 
@@ -28,17 +29,27 @@ public:
         glDeleteShader(fragmentShader);
         glDeleteProgram(shaderProgram);
     }
-    void uniformMatrix4fv(const char *name, const float *matrix) const
+    void setUniformMatrix4fv(const char *name, const glm::mat4 &matrix) const
     {
         GLuint location = glGetUniformLocation(shaderProgram, name);
-        glUniformMatrix4fv(location, 1, false, matrix);
+        glUniformMatrix4fv(location, 1, false, glm::value_ptr(matrix));
+    }
+    static void setGlobalUniformMatrix4fv(const char *name, const glm::mat4 &matrix)
+    {
+        globalMat4[name] = matrix;
     }
     void use() const
     {
         glUseProgram(shaderProgram);
+        for (const auto &el : globalMat4)
+        {
+            GLuint location = glGetUniformLocation(shaderProgram, el.first.c_str());
+            glUniformMatrix4fv(location, 1, false, glm::value_ptr(el.second));
+        }
     }
 
 private:
+    static inline std::map<std::string, glm::mat4> globalMat4;
     GLuint vertexShader, fragmentShader, shaderProgram;
     GLuint loadShader(const GLenum type, std::string fileName)
     {

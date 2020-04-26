@@ -6,80 +6,96 @@
 #include "Window.h"
 #include "loader.h"
 
-constexpr GLuint POSITION = 0;
-constexpr GLuint COLOR = 1;
-constexpr GLuint NORMAL = 2;
-
 class DrawableObject : public Drawable
 {
 public:
-    DrawableObject() : _length(0), M(1.0f)
+    enum class bufferIndex
     {
-        glGenVertexArrays(1, &vertexArray);
-        glBindVertexArray(vertexArray);
-
-        glGenBuffers(1, &vertexBuffer);
-        loadVertices(nullptr, 0);
-        glBindVertexArray(vertexArray);
-
-        glGenBuffers(1, &colorBuffer);
-        loadColors(nullptr, 0);
-        glBindVertexArray(vertexArray);
-
-        glGenBuffers(1, &normalBuffer);
-        loadNormals(nullptr, 0);
-    }
-    void loadVertices(const GLfloat *vertices, int length)
-    {
-        loadBuffers(vertices, length, POSITION, vertexBuffer, 3);
-        _length = length;
-    }
-    void loadColors(const GLfloat *colors, int length)
-    {
-        loadBuffers(colors, length, COLOR, colorBuffer, 3);
-    }
-    void loadNormals(const GLfloat *normals, int length)
-    {
-        loadBuffers(normals, length, NORMAL, normalBuffer, 3);
-    }
+        POSITION = 0,
+        COLOR = 1,
+        NORMAL = 2
+    };
+    static void init() { defaultShaderProgram.load("shaders/vert.glsl", "shaders/frag.glsl"); }
+    DrawableObject() : M(1.0f) {}
     void draw(Window *window) const override
     {
-        window->shaderProgram.uniformMatrix4fv("M", glm::value_ptr(M));
-        glBindVertexArray(vertexArray);
-        glDrawArrays(GL_TRIANGLES, 0, _length);
+        getShaderProgram().use();
+        getShaderProgram().setUniformMatrix4fv("M", M);
+        glBindVertexArray(getVertexArray());
+        glDrawArrays(GL_TRIANGLES, 0, getVertexArrayLength());
         glBindVertexArray(0);
     }
 
 protected:
     glm::mat4 M;
+    static inline ShaderProgram defaultShaderProgram;
 
-private:
-    void loadBuffers(const GLfloat *data, int length, GLuint index, GLuint buffer, GLint size)
+    virtual GLuint getVertexArray() const = 0;
+    virtual int getVertexArrayLength() const = 0;
+    virtual const ShaderProgram &getShaderProgram() const { return defaultShaderProgram; };
+
+    class VertexArray
     {
-        glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
-        glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, nullptr);
-        glEnableVertexAttribArray(index);
+    public:
+        VertexArray() : vertexArray(0), vertexBuffer(0), colorBuffer(0), normalBuffer(0), length(0) {}
+        void load(const std::string &modelFilename)
+        {
+            std::vector<float> vertices, colors, normals;
+            loadObjFile(modelFilename, vertices, colors, normals);
+            createVertexArray(vertices, colors, normals);
+        }
+        void load(std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+        {
+            createVertexArray(vertices, colors, normals);
+        }
 
-    }
-    GLuint vertexArray;
-    GLuint vertexBuffer;
-    GLuint colorBuffer;
-    GLuint normalBuffer;
-    int _length;
+        GLuint vertexArray;
+        GLuint vertexBuffer;
+        GLuint colorBuffer;
+        GLuint normalBuffer;
+        GLsizei length;
+
+    private:
+        void createVertexArray(std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+        {
+            glGenVertexArrays(1, &vertexArray);
+            glBindVertexArray(vertexArray);
+            glGenBuffers(1, &vertexBuffer);
+            loadBuffer(&vertices[0], vertices.size(), bufferIndex::POSITION, vertexBuffer);
+            glGenBuffers(1, &colorBuffer);
+            loadBuffer(&colors[0], colors.size(), bufferIndex::COLOR, colorBuffer);
+            glGenBuffers(1, &normalBuffer);
+            loadBuffer(&normals[0], normals.size(), bufferIndex::NORMAL, normalBuffer);
+            glBindVertexArray(0);
+            length = vertices.size();
+        }
+        void loadBuffer(const GLfloat *data, int length, bufferIndex index, GLuint buffer, GLint size = 3)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, buffer);
+            glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
+            glVertexAttribPointer(static_cast<GLuint>(index), size, GL_FLOAT, GL_FALSE, 0, nullptr);
+            glEnableVertexAttribArray(static_cast<GLuint>(index));
+        }
+    };
 };
 
 class DummyModel : public DrawableObject
 {
 public:
-    DummyModel()
+    static void init()
     {
-        std::vector<float> vertices, colors, normals;
-        loadObjFile("BOSCH_WLG.obj", vertices, colors, normals);
-        loadVertices(&vertices[0], vertices.size());
-        loadColors(&colors[0], colors.size());
-        loadNormals(&normals[0], normals.size());
+        shaderProgram.load("shaders/vert.glsl", "shaders/frag.glsl");
+        vertexArray.load("BOSCH_WLG.obj");
     }
+
+protected:
+    virtual GLuint getVertexArray() const override { return vertexArray.vertexArray; }
+    virtual int getVertexArrayLength() const override { return vertexArray.length; }
+    virtual const ShaderProgram &getShaderProgram() const override  { return shaderProgram; }
+
+private:
+    static inline VertexArray vertexArray;
+    static inline ShaderProgram shaderProgram;
 };
 
 #endif /* !DRAWABLEOBJECT_H_ */

@@ -1,11 +1,12 @@
 #include <cmath>
 #include "Window.h"
-#include "dummy.h"
+#include "DrawableObject.h"
 #include "loader.h"
 
 int main()
 {
     Window window(800, 600, "game");
+    DrawableObject::init();
     DummyModel::init();
     DummyModel obj;
 
@@ -13,10 +14,10 @@ int main()
         glm::vec3(0.f, 0.f, 0.f),
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(0.0f, 1.0f, 0.0f));
-    window.shaderProgram.uniformMatrix4fv("V", glm::value_ptr(V));
+    ShaderProgram::setGlobalUniformMatrix4fv("V", V);
 
     glm::vec3 position(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection;
-    float xCursorPos, yCursorPos, yaw = 0.f, pitch = 0.f, time;
+    float xCursorPos, yCursorPos, yaw = 0.f, pitch = 45.f, time;
 
     while (window.isOpen())
     {
@@ -40,8 +41,8 @@ int main()
         window.getCursorPosition(xCursorPos, yCursorPos);
         window.setCursorPositionCenter();
 
-        yaw -= xCursorPos * 0.01f;
-        pitch += yCursorPos * 0.01f;
+        yaw -= xCursorPos * 0.005f;
+        pitch += yCursorPos * 0.005f;
 
         if (pitch > 89.0f)
             pitch = 89.0f;
@@ -56,13 +57,13 @@ int main()
         rightDirection.y = 0.0;
         rightDirection.z = sin(yaw);
 
-        glm::vec3 upDirection = glm::cross(frontDirection, rightDirection);
+        upDirection = glm::cross(frontDirection, rightDirection);
 
         V = glm::lookAt(
             position,
             position + glm::normalize(frontDirection),
             glm::normalize(upDirection));
-        window.shaderProgram.uniformMatrix4fv("V", glm::value_ptr(V));
+        ShaderProgram::setGlobalUniformMatrix4fv("V", V);
 
         if (time < 1.f)
             window.setClearColor(1.f - time, time, 0.5f * time);
