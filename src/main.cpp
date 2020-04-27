@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cmath>
 #include "Window.h"
 #include "DrawableObject.h"
@@ -17,32 +18,49 @@ int main()
     ShaderProgram::setGlobalUniformMatrix4fv("V", V);
 
     glm::vec3 position(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection;
-    float xCursorPos, yCursorPos, yaw = 0.f, pitch = 45.f, time;
+    float xCursorPos, yCursorPos, yaw = 0.f, pitch = 45.f, time, lastTime = 0, timeDiff;
+
+    int frames = 0;
 
     while (window.isOpen())
     {
+        frames++;
         time = glfwGetTime();
+        timeDiff = time - lastTime;
         if (time >= 2.f)
+        {
             glfwSetTime(0.f);
+            lastTime = 0;
+            std::cerr << "fps: " << frames / 2.f << std::endl;
+            frames = 0;
+        }
+        else
+            lastTime = time;
+
+        static const float freecamSpeed = 400;
+
+        float distance = freecamSpeed * timeDiff;
 
         if (window.getKeyState(GLFW_KEY_ESCAPE) == GLFW_PRESS)
             window.close();
 
         if (window.getKeyState(GLFW_KEY_W) == GLFW_PRESS)
-            position += frontDirection;
+            position += frontDirection * distance;
         if (window.getKeyState(GLFW_KEY_S) == GLFW_PRESS)
-            position -= frontDirection;
+            position -= frontDirection * distance;
 
         if (window.getKeyState(GLFW_KEY_D) == GLFW_PRESS)
-            position -= rightDirection;
+            position -= rightDirection * distance;
         if (window.getKeyState(GLFW_KEY_A) == GLFW_PRESS)
-            position += rightDirection;
+            position += rightDirection * distance;
 
         window.getCursorPosition(xCursorPos, yCursorPos);
         window.setCursorPositionCenter();
 
-        yaw -= xCursorPos * 0.005f;
-        pitch += yCursorPos * 0.005f;
+        static const float mouseSensitivity = 0.005f;
+
+        yaw -= xCursorPos * mouseSensitivity;
+        pitch += yCursorPos * mouseSensitivity;
 
         if (pitch > 89.0f)
             pitch = 89.0f;
@@ -66,9 +84,9 @@ int main()
         ShaderProgram::setGlobalUniformMatrix4fv("V", V);
 
         if (time < 1.f)
-            window.setClearColor(1.f - time, time, 0.5f * time);
+            window.setClearColor(0.5f * time, time, 1.f - time);
         else
-            window.setClearColor(time - 1.f, 2.f - time, 0.5f - 0.5f * time);
+            window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
         window.clear();
         window.draw(obj);
 
