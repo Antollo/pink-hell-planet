@@ -44,7 +44,7 @@ protected:
             loadObjFile(modelFilename, vertices, colors, normals);
             createVertexArray(vertices, colors, normals);
         }
-        void load(std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+        void load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals)
         {
             createVertexArray(vertices, colors, normals);
         }
@@ -56,7 +56,7 @@ protected:
         GLsizei length;
 
     private:
-        void createVertexArray(std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+        void createVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals)
         {
             glGenVertexArrays(1, &vertexArray);
             glBindVertexArray(vertexArray);
@@ -72,7 +72,7 @@ protected:
         void loadBuffer(const GLfloat *data, int length, bufferIndex index, GLuint buffer, GLint size = 3)
         {
             glBindBuffer(GL_ARRAY_BUFFER, buffer);
-            glBufferData(GL_ARRAY_BUFFER, length, data, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, length * sizeof(GLfloat), data, GL_STATIC_DRAW);
             glVertexAttribPointer(static_cast<GLuint>(index), size, GL_FLOAT, GL_FALSE, 0, nullptr);
             glEnableVertexAttribArray(static_cast<GLuint>(index));
         }
