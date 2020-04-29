@@ -37,7 +37,7 @@ int main()
         else
             lastTime = time;
 
-        static const float freecamSpeed = 400;
+        static const float freecamSpeed = 100;
 
         float distance = freecamSpeed * timeDiff;
 
