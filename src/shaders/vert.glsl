@@ -12,15 +12,24 @@ uniform mat4 M;
 uniform mat4 V;
 uniform mat4 P;
 
-uniform vec4 lightDir = vec4(0 ,0 ,1, 0);
+uniform vec4 l = vec4(1, 1, 1, 0);
+
+const vec4 eye = vec4(0, 0, 0, 1);
 
 out vec3 outColor;
 
 void main()
 {
     gl_Position =  P * V * M * vec4(inPosition, 1);
-    mat4 G = mat4(inverse(transpose(mat3(M))));
-    vec4 n = normalize(V * G * vec4(normal, 0));
-    float nl = clamp(dot(n, lightDir), 0, 1);
-    outColor=inColor * nl;
+
+    mat4 V_inv = mat4(inverse(transpose(mat3(V))));
+    
+    vec4 n = normalize(M*vec4(normal, 0));
+    vec4 h = normalize(l + V_inv * eye);
+
+    float nl = clamp(dot(n, l), 0, 1);
+
+    float vl = clamp(dot(h, n), 0, 1);
+    
+    outColor = inColor * nl * 0.5 + inColor * pow(vl, 2) * 0.6;
 }

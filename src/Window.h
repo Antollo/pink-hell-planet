@@ -43,12 +43,13 @@ public:
 
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
+            std::cout << width << " " << height << std::endl;
             glViewport(0, 0, width, height);
             Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-            obj.P = glm::perspective(glm::radians(50.f), (float)width / (float)height, 0.01f, 1000.0f);
-            ShaderProgram::setGlobalUniformMatrix4fv("P", obj.P);
             obj._width = width;
             obj._height = height;
+            obj.P = glm::perspective(glm::radians(50.f), float(obj._width / obj._height), 0.01f, 1000.0f);
+            ShaderProgram::setGlobalUniformMatrix4fv("P", obj.P);
         });
 
         glfwMakeContextCurrent(window);
@@ -56,11 +57,13 @@ public:
         if (!gladLoadGL())
             errorAndExit("gladLoadGL failed");
 
-        P = glm::perspective(glm::radians(50.f), (float)width / (float)height, 0.1f, 1000.0f);
+        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.1f, 1000.0f);
         ShaderProgram::setGlobalUniformMatrix4fv("P", P);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     ~Window()
@@ -108,20 +111,23 @@ public:
     {
         double wx, wy;
         glfwGetCursorPos(window, &wx, &wy);
-        x = float(wx) - float(_width) / 2.f;
-        y = float(wy) - float(_height) / 2.f;
+        x = wx - _width / 2;
+        y = wy - _height / 2;
     }
 
     void setCursorPositionCenter()
     {
-        glfwSetCursorPos(window, double(_width) / 2.0, double(_height) / 2.0);
+        glfwSetCursorPos(window, _width / 2.0, _height / 2.0);
+        //float wx, wy;
+        //getCursorPosition(wx, wy);
+        //std::cout << wx << " " << wy << std::endl;
     }
 
 private:
     friend class Drawable;
     glm::mat4 P;
     GLFWwindow *window;
-    int _width, _height;
+    double _width, _height;
 };
 
 #endif /* !RENDERER_H_ */
