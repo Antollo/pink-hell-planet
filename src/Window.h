@@ -30,6 +30,7 @@ public:
 
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_RED_BITS, mode->redBits);
