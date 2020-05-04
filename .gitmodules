@@ -7,3 +7,9 @@
 [submodule "thirdparty/tinyobjloader/tinyobjloader"]
 	path = thirdparty/tinyobjloader/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader
+[submodule "thirdparty/lodepng/lodepng"]
+	path = thirdparty/lodepng/lodepng
+	url = https://github.com/lvandeve/lodepng
+[submodule "thirdparty/bullet3/bullet3"]
+	path = thirdparty/bullet3/bullet3
+	url = https://github.com/bulletphysics/bullet3

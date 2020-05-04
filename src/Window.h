@@ -1,12 +1,13 @@
 #ifndef WINDOW_H_
 #define WINDOW_H_
 
+#include <queue>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "shader.h"
+#include "ShaderProgram.h"
 
 class Window;
 
@@ -16,10 +17,12 @@ public:
     virtual void draw(Window *window) const = 0;
 };
 
+//Current implementation can use only one window
+
 class Window
 {
 public:
-    Window(int width, int height, const char *title) : _width(width), _height(height)
+    Window(int width, int height, const char *title) : _width(width), _height(height), xDiff(0.0), yDiff(0.0), xPosOld(0.0), yPosOld(0.0), firstUpdate(true)
     {
         if (!glfwInit())
             errorAndExit("glfwInit failed");
@@ -42,24 +45,19 @@ public:
         if (!window)
             errorAndExit("glfwCreateWindow failed");
 
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
-            std::cout << width << " " << height << std::endl;
-            glViewport(0, 0, width, height);
-            Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
-            obj._width = width;
-            obj._height = height;
-            obj.P = glm::perspective(glm::radians(50.f), float(obj._width / obj._height), 0.01f, 1000.0f);
-            ShaderProgram::setGlobalUniformMatrix4fv("P", obj.P);
-        });
+        glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+        glfwSetKeyCallback(window, keyCallback);
+        glfwSetCursorPosCallback(window, cursorPosCallback);
 
         glfwMakeContextCurrent(window);
 
         if (!gladLoadGL())
             errorAndExit("gladLoadGL failed");
 
-        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.1f, 1000.0f);
-        ShaderProgram::setGlobalUniformMatrix4fv("P", P);
+        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
+        ShaderProgram::setMatrixP(P);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
@@ -94,13 +92,26 @@ public:
 
     void swapBuffers()
     {
+        if (firstUpdate)
+        {
+            ShaderProgram::setMatrixP(P);
+            firstUpdate = false;
+        }
+        xDiff = 0.0;
+        yDiff = 0.0;
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    int getKeyState(int key)
+    int pollKey()
     {
-        return glfwGetKey(window, key);
+        if(!keys.empty())
+        {
+            int key = keys.front();
+            keys.pop();
+            return key; 
+        }
+        return 0;
     }
 
     void draw(const Drawable &drawable)
@@ -108,27 +119,68 @@ public:
         drawable.draw(this);
     }
 
-    void getCursorPosition(float &x, float &y)
+    void getCursorDiff(float &x, float &y)
     {
-        double wx, wy;
-        glfwGetCursorPos(window, &wx, &wy);
-        x = wx - _width / 2;
-        y = wy - _height / 2;
+        x = xDiff;
+        y = yDiff;
     }
 
-    void setCursorPositionCenter()
+    void refreshMatrixP()
     {
-        glfwSetCursorPos(window, _width / 2.0, _height / 2.0);
-        //float wx, wy;
-        //getCursorPosition(wx, wy);
-        //std::cout << wx << " " << wy << std::endl;
+        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
+        ShaderProgram::setMatrixP(P);
     }
 
 private:
     friend class Drawable;
+
     glm::mat4 P;
     GLFWwindow *window;
+
+    bool firstUpdate;
     double _width, _height;
+    std::queue<int> keys;
+    double xPosOld, yPosOld;
+    float xDiff, yDiff;
+    static void framebufferSizeCallback(GLFWwindow *window, int width, int height)
+    {
+        glViewport(0, 0, width, height);
+        Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        obj._width = width;
+        obj._height = height;
+        obj.P = glm::perspective(glm::radians(50.f), float(obj._width / obj._height), 0.01f, 1000.0f);
+        ShaderProgram::setMatrixP(obj.P);
+    }
+    static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+    {
+        Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        switch (action)
+        {
+        case GLFW_PRESS:
+            obj.keys.push(key);
+            break;
+        
+        case GLFW_RELEASE:
+            obj.keys.push(-key);
+            break;
+        }
+    }
+    static void cursorPosCallback(GLFWwindow *window, double xPos, double yPos)
+    {
+        Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        if (obj.xPosOld == 0.0 && obj.yPosOld == 0.0 && obj.xDiff == 0 && obj.yDiff == 0)
+        {
+            obj.xPosOld = xPos;
+            obj.yPosOld = yPos;
+        }
+        else
+        {
+            obj.xDiff = xPos - obj.xPosOld;
+            obj.yDiff = yPos - obj.yPosOld;
+            obj.xPosOld = xPos;
+            obj.yPosOld = yPos;
+        }
+    }
 };
 
 #endif /* !RENDERER_H_ */

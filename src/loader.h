@@ -4,7 +4,7 @@
 #include <tiny_obj_loader.h>
 #include "error.h"
 
-void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals)
+void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals, std::vector<float> &texCoords)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
@@ -35,6 +35,8 @@ void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices,
                 vertices.insert(vertices.end(), attrib.vertices.begin() + 3 * idx.vertex_index, attrib.vertices.begin() + 3 * idx.vertex_index + 3);
                 normals.insert(normals.end(), attrib.normals.begin() + 3 * idx.normal_index, attrib.normals.begin() + 3 * idx.normal_index + 3);
                 colors.insert(colors.end(), attrib.colors.begin() + 3 * idx.vertex_index, attrib.colors.begin() + 3 * idx.vertex_index + 3);
+                texCoords.insert(texCoords.end(), attrib.texcoords.begin() + 2 * idx.texcoord_index, attrib.texcoords.begin() + 2 * idx.texcoord_index + 2);
+                //std::cout << attrib.texcoords[2 * idx.texcoord_index] << std::endl;
             }
             index_offset += fv;
         }

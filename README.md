@@ -18,5 +18,6 @@ cmake --build . --config Release
 
 Copy `src/shaders` folder to folder with binary.
 
-Download and unpack models from `https://drive.google.com/file/d/1MS0SABv4ragHQp4be2VtJDv011KRP6xf/view?usp=sharing` 
+Download and unpack models from (washing machine) `https://drive.google.com/file/d/1MS0SABv4ragHQp4be2VtJDv011KRP6xf/view?usp=sharing` 
+and (penguin) `https://drive.google.com/file/d/1OwD2uw05B16WGuwZ53ZG8IoG1j80I0H6/view?usp=sharing`
 to folder with binary.
