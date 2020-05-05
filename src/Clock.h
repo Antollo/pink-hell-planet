@@ -8,7 +8,7 @@ public:
     float getDelta()
     {
         double time = getTime();
-        double delta = time - lastTime;
+        float delta = time - lastTime;
         lastTime = time;
         return delta;
     }

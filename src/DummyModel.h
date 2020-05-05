@@ -1,10 +1,10 @@
 #ifndef DUMMYMODEL_H_
 #define DUMMYMODEL_H_
 
-#include "PhysicsObject.h"
+#include "PlayableObject.h"
 #include "Axes.h"
 
-class DummyModel : public PhysicsObject
+class DummyModel : public PlayableObject
 {
 public:
     static void init()
@@ -16,10 +16,10 @@ public:
     {
         shape.reset();
     }
-    DummyModel(World &world) : PhysicsObject(world, shape.get()) {}
-    void update(double delta) override
+    DummyModel(World &world) : PlayableObject(world, shape.get()) {}
+    void update(float delta) override
     {
-        PhysicsObject::update(delta);
+        PlayableObject::update(delta);
         axes.setMatrixM(M);
     }
     void draw(Window *window) const override

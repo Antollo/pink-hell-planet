@@ -16,7 +16,7 @@ public:
         dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
         dynamicsWorld->setGravity(btVector3(0.f, -10.f, 0.f));
 
-        groundShape = new btTriangleShape(btVector3(-20, -5, -10), btVector3(20, -5, -10), btVector3(10, 0, 10));
+        groundShape = new btTriangleShape(btVector3(-200, 0, -100), btVector3(200, 0, -100), btVector3(100, 0, 100));
         btTransform groundTransform;
         groundTransform.setIdentity();
         groundTransform.setOrigin(btVector3(0, -6, 0));

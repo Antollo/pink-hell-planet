@@ -16,7 +16,7 @@ public:
         defaultTextureShaderProgram.load("shaders/tex_vert.glsl", "shaders/tex_frag.glsl");
     }
     DrawableObject() : M(1.0f) {}
-    virtual void update(double delta) {}
+    virtual void update(float delta) {}
     void draw(Window *window) const override
     {
         getShaderProgram().use();

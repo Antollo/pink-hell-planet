@@ -13,25 +13,30 @@ public:
         btTransform startTransform;
         startTransform.setIdentity();
         btScalar mass(4.f);
-        btVector3 localInertia(0, 0.5, 0);
+        btVector3 localInertia(0.f, 1.f, 1.f);
         shape->calculateLocalInertia(mass, localInertia);
         startTransform.setOrigin(btVector3(0, 5, 0));
-        myMotionState = new btDefaultMotionState(startTransform);
-        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, localInertia);
+        motionState = new btDefaultMotionState(startTransform);
+        btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
         body = new btRigidBody(rbInfo);
 
         world.dynamicsWorld->addRigidBody(body);
     }
     ~PhysicsObject()
     {
-        delete myMotionState;
+        delete motionState;
         delete body;
     }
-    void update(double delta) override
+    void update(float delta) override
     {
         btTransform m;
         body->getMotionState()->getWorldTransform(m);
         m.getOpenGLMatrix(glm::value_ptr(M));
+    }
+    glm::vec3 getPosition() const
+    {
+        btVector3 v = body->getWorldTransform().getOrigin();
+        return glm::vec3(v.x(), v.y(), v.z());
     }
 
 protected:
@@ -47,10 +52,12 @@ protected:
         shape->optimizeConvexHull();
         return std::unique_ptr<btCollisionShape>(shape);
     }
+    btRigidBody *body;
+
 private:
     btCollisionShape *myShape;
-    btDefaultMotionState *myMotionState;
-    btRigidBody *body;
+    btDefaultMotionState *motionState;
+
     World &world;
 };
 #endif /* !PHYSICSOBJECT_H_ */

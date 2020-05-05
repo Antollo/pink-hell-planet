@@ -3,11 +3,12 @@
 #define CAMERA_H_
 
 #include "Window.h"
+#include "PlayableObject.h"
 
 class Camera
 {
 public:
-    Camera(Window &w) : window(w), forward(false), backward(false), left(false), right(false)
+    Camera(Window &w, PlayableObject *&p) : window(w), player(p), forward(false), backward(false), left(false), right(false), oldPosition(0.f, 0.f, 0.f)
     {
         glm::mat4 V = glm::lookAt(
             glm::vec3(0.f, 0.f, 0.f),
@@ -69,10 +70,11 @@ public:
         yaw += yCursorDiff * mouseSensitivity;
         pitch -= xCursorDiff * mouseSensitivity;
 
-        if (pitch > 160.0f)
-            pitch = 160.0f;
-        if (pitch < 20.0f)
-            pitch = 20.0f;
+        /*if (yaw > 160.0f)
+            yaw = 160.0f;
+        if (yaw < 20.0f)
+            yaw = 20.0f;
+        */
 
         frontDirection.z = sin(yaw) * cos(pitch);
         frontDirection.x = sin(yaw) * sin(pitch);
@@ -84,18 +86,34 @@ public:
 
         upDirection = glm::cross(frontDirection, rightDirection);
 
+        if (player != nullptr)
+        {
+            //position = glm::vec3(0.f, 0.f, 0.f);
+            //glm::mat3 rotMat(player->getM());
+            //glm::vec3 d(player->getM()[3]);
+            //position = position* 0.6f + d * rotMat * 0.4f;
+            //oldPosition = position;
+            //position = player->getM()*oldPosition;
+            position = (player->getPosition() - glm::normalize(frontDirection)*1.5f + glm::vec3(0.f, 1.f, 0.f)) * 0.2f + position * 0.8f;
+            oldPosition = position;
+        }
+
         V = glm::lookAt(
             position,
             position + glm::normalize(frontDirection),
             glm::normalize(upDirection));
 
+        //if (player == nullptr)
         ShaderProgram::setMatrixV(V);
+        //else
+        //    ShaderProgram::setMatrixV(V*glm::inverse(player->getM()));
     }
 
 private:
     Window &window;
+    PlayableObject *&player;
     glm::mat4 V;
-    glm::vec3 position, frontDirection, upDirection, rightDirection;
+    glm::vec3 position, frontDirection, upDirection, rightDirection, oldPosition;
     float xCursorDiff, yCursorDiff, yaw, pitch;
     bool forward, backward, left, right;
     static constexpr float freecamSpeed = 1.f;

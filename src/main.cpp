@@ -9,7 +9,8 @@ int main()
     Axes::init();
 
     Game game(window);
-    game();
+    while (window.isOpen())
+        game();
 
     DummyModel::fini();
     return 0;
