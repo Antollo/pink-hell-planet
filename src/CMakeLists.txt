@@ -2,7 +2,7 @@ SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin )
 SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin )
 SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin )
 
-add_executable(game main.cpp)
+add_executable(game main.cpp terrain.cpp marchingCubesTable.cpp)
 
 target_link_libraries(game OpenGL::GL glm::glm glfw glad tinyobjloader)
 

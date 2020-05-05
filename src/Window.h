@@ -38,6 +38,7 @@ public:
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
         glfwWindowHint(GLFW_SAMPLES, 4);
+
         window = glfwCreateWindow(width, height, title, nullptr, nullptr);
         if (!window)
             errorAndExit("glfwCreateWindow failed");
@@ -54,6 +55,8 @@ public:
         });
 
         glfwMakeContextCurrent(window);
+
+        glfwSwapInterval(0);
 
         if (!gladLoadGL())
             errorAndExit("gladLoadGL failed");

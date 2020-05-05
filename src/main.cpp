@@ -4,6 +4,9 @@
 #include "DrawableObject.h"
 #include "loader.h"
 
+#include "VecInt3.h"
+#include "terrain.h"
+
 int main()
 {
     Window window(800, 600, "game");
@@ -22,8 +25,11 @@ int main()
 
     int frames = 0;
 
+    Terrain terrain;
+
     while (window.isOpen())
     {
+        static int ind = 1;
         frames++;
         time = glfwGetTime();
         timeDiff = time - lastTime;
@@ -33,11 +39,12 @@ int main()
             lastTime = 0;
             std::cerr << "fps: " << frames / 2.f << std::endl;
             frames = 0;
+            std::cerr << "position " << position << std::endl;
         }
         else
             lastTime = time;
 
-        static const float freecamSpeed = 100;
+        static const float freecamSpeed = 10;
 
         float distance = freecamSpeed * timeDiff;
 
@@ -57,7 +64,7 @@ int main()
         window.getCursorPosition(xCursorPos, yCursorPos);
         window.setCursorPositionCenter();
 
-        static const float mouseSensitivity = 0.005f;
+        static const float mouseSensitivity = 0.001f;
 
         yaw += yCursorPos * mouseSensitivity;
         pitch -= xCursorPos * mouseSensitivity;
@@ -88,7 +95,11 @@ int main()
         else
             window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
         window.clear();
-        window.draw(obj);
+        //window.draw(obj);
+
+        terrain.updateBuffers();
+
+        window.draw(terrain);
 
         window.swapBuffers();
     }
