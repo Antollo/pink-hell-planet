@@ -37,7 +37,7 @@ public:
         glAttachShader(shaderProgram, fragmentShader);
 
         link(shaderProgram);
-        use();
+        glUseProgram(shaderProgram);
 
         GLuint id = glGetUniformBlockIndex(shaderProgram, "matrices");
         glUniformBlockBinding(shaderProgram, id, 0);
