@@ -99,7 +99,9 @@ private:
                 rootTerrainCube->genBuffers();
 
             colors = std::vector<float>(vertices.size(), 1.f);
-            vertexArray.load(vertices, colors, normals);
+            texCoords = std::vector<float>(vertices.size() / 3 * 2, 0.f);
+            
+            vertexArray.load(vertices, colors, normals, texCoords);
         }
 
         void drawAtPos(int size, VecInt3 pos)
@@ -161,9 +163,9 @@ private:
         std::vector<float> vertices;
         std::vector<float> colors;
         std::vector<float> normals;
+        std::vector<float> texCoords;
 
-        virtual GLuint getVertexArray() const override { return vertexArray.vertexArray; }
-        virtual int getVertexArrayLength() const override { return vertexArray.length; }
+        const VertexArray &getVertexArray() const override { return vertexArray; }
 
         VertexArray vertexArray;
         friend class TerrainCube;

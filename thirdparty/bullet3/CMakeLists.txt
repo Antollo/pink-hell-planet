@@ -1,0 +1,10 @@
+set(BUILD_UNIT_TESTS OFF)
+set(BUILD_CPU_DEMOS OFF)
+set(BUILD_BULLET2_DEMOS OFF)
+set(BUILD_EXTRAS OFF)
+set(USE_GLUT OFF)
+add_subdirectory(bullet3)
+
+add_library(bullet3 INTERFACE)
+target_include_directories(bullet3 INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/bullet3/src")
+target_link_libraries(bullet3 INTERFACE LinearMath Bullet3Common BulletInverseDynamics BulletCollision BulletDynamics BulletSoftBody)
