@@ -9,7 +9,6 @@ void errorAndExit [[noreturn]] (Args... args)
 {
     // C++17 fold expression <3
     (std::cerr << ... << args) << std::endl;
-    glfwTerminate();
     std::exit(1);
 }
 

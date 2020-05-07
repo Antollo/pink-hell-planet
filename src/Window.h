@@ -70,7 +70,13 @@ public:
 
     ~Window()
     {
-        glfwTerminate();
+        glfwDestroyWindow(window);
+
+        // glfwTerminate has to be called after destructors of all Textures and ShaderPrograms
+        // and there are some static Textures.
+        // As a temporary solution just dont call glfwTerminate at all.
+        // Seems to work properly at least on linux, OS frees all resources anyway.
+        // glfwTerminate();
     }
 
     bool isOpen() const

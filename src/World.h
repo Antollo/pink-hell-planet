@@ -15,15 +15,12 @@ public:
 
     ~World()
     {
-        delete myMotionState;
-        dynamicsWorld->removeCollisionObject(body);
-        delete body;
-        delete groundShape;
         delete dynamicsWorld;
         delete solver;
         delete overlappingPairCache;
         delete dispatcher;
         delete collisionConfiguration;
+        delete groundShape;
     }
 
     void update(float delta)
@@ -41,9 +38,6 @@ private:
 
     RigidBody* ground;
     btCollisionShape *groundShape;
-    btRigidBody *body;
-    btDefaultMotionState *myMotionState;
-    
 };
 
 #endif /* !WORLD_H_ */
