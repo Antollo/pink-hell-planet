@@ -1,7 +1,7 @@
 #include "Game.h"
 
 #include "VecInt3.h"
-#include "terrain.h"
+#include "Terrain.h"
 
 int main()
 {
