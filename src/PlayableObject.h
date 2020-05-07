@@ -6,9 +6,9 @@
 class PlayableObject : public PhysicsObject
 {
 public:
-    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape), forward(false), backward(false), left(false), right(false), up(false)
-    {
-    }
+    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/4, /*position*/{3, 20, 3}), 
+        forward(false), backward(false), left(false), right(false), up(false) {}
+
     void update(float delta) override
     {
         PhysicsObject::update(delta);
@@ -36,7 +36,7 @@ public:
         }
         if (up)
         {
-            std::cout << "up\n";
+            // std::cout << "up\n";
             v = (M * glm::vec4(0.f, 1.f, 0.f, 0.f)) * 50.f * delta;
             body->applyCentralImpulse(btVector3(v.x, v.y, v.z));
         }

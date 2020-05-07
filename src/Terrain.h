@@ -1,9 +1,10 @@
 #ifndef TERRAIN_H_
 #define TERRAIN_H_
 
-#include "marchingCubesTable.h"
-#include "DrawableObject.h"
 #include "debug.h"
+#include "DrawableObject.h"
+#include "marchingCubesTable.h"
+#include "RigidBody.h"
 #include "VecInt3.h"
 
 #include <vector>
@@ -16,8 +17,8 @@
 class Terrain : public Drawable
 {
 public:
-    Terrain();
-    void draw(Window *window) const override;
+    Terrain(World& world);
+    void draw(Window* window) const override;
     void updateBuffers();
     
     void marchingPointsAdd(VecInt3 v, int d)
@@ -85,7 +86,6 @@ private:
             if (fill) {
                 rootTerrainCube = std::make_unique<TerrainCube>(chunkSize, intPos, this);
             }
-            // debugDrawAll();
         }
 
         void updateBuffers()
@@ -93,6 +93,7 @@ private:
             vertices.clear();
             colors.clear();
             normals.clear();
+            rigidBodies.clear();
 
             drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
             if (rootTerrainCube)
@@ -138,14 +139,19 @@ private:
                 if (terrain->marchingPoints.count(pos + cubeVer[b]))
                     mask |= 1 << b;
 
+            glm::vec3 glmPos = VecInt3ToVec3(pos);
             for (auto i : marchingCubesVertices[mask])
             {
-                glm::vec3 x = i + VecInt3ToVec3(pos);
+                glm::vec3 x = i + glmPos;
                 vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
             }
             for (auto i : marchingCubesNormals[mask])
             {
                 normals.insert(normals.end(), glm::value_ptr(i), glm::value_ptr(i) + 3);
+            }
+            for (auto i : marchingCubesShapes[mask])
+            {
+                rigidBodies.emplace_back(new RigidBody(terrain->world, i, 0, glmPos));
             }
         }
 
@@ -165,7 +171,9 @@ private:
         std::vector<float> normals;
         std::vector<float> texCoords;
 
-        const VertexArray &getVertexArray() const override { return vertexArray; }
+        std::vector<std::unique_ptr<RigidBody>> rigidBodies;
+
+        const VertexArray& getVertexArray() const override { return vertexArray; }
 
         VertexArray vertexArray;
         friend class TerrainCube;
@@ -176,6 +184,8 @@ private:
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
     std::set<VecInt3> toRegen;
+
+    World& world;
 };
 
 #endif

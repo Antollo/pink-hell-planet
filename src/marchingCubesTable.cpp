@@ -1,5 +1,6 @@
 
 #include "marchingCubesTable.h"
+#include "utils.h"
 
 const glm::vec3 cubeVert[8] = {
     {0, 0, 0},
@@ -304,13 +305,13 @@ const VecInt3 cubeVer[8] = {
 
 std::vector<std::vector<glm::vec3>> getVertices()
 {
-    std::vector<std::vector<glm::vec3>> v;
+    std::vector<std::vector<glm::vec3>> v(256);
     for (int i = 0; i < 256; i++)
     {
         v.push_back(std::vector<glm::vec3>());
         int j = 0;
         while (marchingCubesTriangles[i][j] != -1)
-            v.back().push_back(edgeFromIndex[marchingCubesTriangles[i][j++]]);
+            v[i].push_back(edgeFromIndex[marchingCubesTriangles[i][j++]]);
     }
     return v;
 }
@@ -319,19 +320,32 @@ const std::vector<std::vector<glm::vec3>> marchingCubesVertices = getVertices();
 
 std::vector<std::vector<glm::vec3>> getNormals()
 {
-    std::vector<std::vector<glm::vec3>> v;
+    std::vector<std::vector<glm::vec3>> v(256);
     for (int i = 0; i < 256; i++)
     {
-        v.push_back(std::vector<glm::vec3>());
         const std::vector<glm::vec3>& ver = marchingCubesVertices[i];
         for (size_t j = 0; j < ver.size(); j += 3)
         {
-            auto normal = glm::normalize(glm::cross(ver[j] - ver[j+2], ver[j] - ver[j+1]));
+            auto normal = glm::normalize(glm::cross(ver[j] - ver[j+1], ver[j] - ver[j+2]));
             for (int k = 0; k < 3; k++)
-                v.back().push_back(normal);
+                v[i].push_back(normal);
         }
     }
     return v;
 }
 
 const std::vector<std::vector<glm::vec3>> marchingCubesNormals = getNormals();
+
+const std::vector<std::vector<btTriangleShape*>> getShapes()
+{
+    std::vector<std::vector<btTriangleShape*>> v(256);
+    for (int i = 0; i < 256; i++)
+    {
+        const std::vector<glm::vec3>& ver = marchingCubesVertices[i];
+        for (size_t j = 0; j < ver.size(); j += 3)
+            v[i].push_back(new btTriangleShape(toBtVec3(ver[j]), toBtVec3(ver[j+1]), toBtVec3(ver[j+2])));
+    }
+    return v;
+}
+
+const std::vector<std::vector<btTriangleShape*>> marchingCubesShapes = getShapes();

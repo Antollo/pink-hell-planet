@@ -110,8 +110,8 @@ public:
     }
 
 private:
-    Window &window;
-    PlayableObject *&player;
+    Window& window;
+    PlayableObject*& player;
     glm::mat4 V;
     glm::vec3 position, frontDirection, upDirection, rightDirection, oldPosition;
     float xCursorDiff, yCursorDiff, yaw, pitch;
