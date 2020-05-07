@@ -1,8 +1,8 @@
 
-#include "terrain.h"
+#include "Terrain.h"
 
 
-Terrain::Terrain()
+Terrain::Terrain(World& world) : world(world)
 {
     //TODO reading from vector
     for (int x = 0; x < 4 * TerrainChunk::chunkSize; x += TerrainChunk::chunkSize)

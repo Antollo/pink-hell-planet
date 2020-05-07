@@ -3,23 +3,26 @@
 
 #include <iostream>
 #include <cmath>
-#include "Window.h"
-#include "DummyModel.h"
+
 #include "Axes.h"
-#include "World.h"
-#include "Clock.h"
 #include "Camera.h"
+#include "Clock.h"
+#include "debug.h"
+#include "DummyModel.h"
+#include "Terrain.h"
+#include "Window.h"
+#include "World.h"
 
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player)
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world)
     {
-        objects.push_back(std::make_unique<DummyModel>(world));
-        objects.push_back(std::make_unique<DummyModel>(world));
-        objects.push_back(std::make_unique<DummyModel>(world));
+        drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        drawableObjects.push_back(std::make_unique<DummyModel>(world));
 
-        player = dynamic_cast<PlayableObject *>(objects.front().get());
+        player = dynamic_cast<PlayableObject *>(drawableObjects.front().get());
         clock.reset();
     }
 
@@ -28,11 +31,12 @@ public:
         frames++;
         time = clock.getTime();
         delta = clock.getDelta();
-        if (time >= 1.f)
+        if (time >= 2.f)
         {
             clock.reset();
-            std::cerr << "fps: " << frames << std::endl;
+            std::cerr << "fps: " << frames / 2 << std::endl;
             frames = 0;
+            std::cerr << "player position: " << player->getPosition() << std::endl;
         }
 
         while (key = window.pollKey())
@@ -45,13 +49,16 @@ public:
 
         camera.update(delta);
         world.update(delta);
-        for (auto &objectPtr : objects)
+        for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
 
         window.clear();
         window.draw(axes);
-        for (auto &objectPtr : objects)
+        for (auto &objectPtr : drawableObjects)
             window.draw(*objectPtr);
+
+        terrain.updateBuffers();
+        window.draw(terrain);
 
         window.swapBuffers();
     }
@@ -120,7 +127,8 @@ private:
     Axes axes;
     float time, delta;
     int key, frames = 0;
-    std::vector<std::unique_ptr<DrawableObject>> objects;
+    std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
+    Terrain terrain;
     PlayableObject *player;
 };
 
