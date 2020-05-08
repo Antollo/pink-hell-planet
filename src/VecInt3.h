@@ -17,7 +17,7 @@ inline VecInt3 operator+(VecInt3 a, VecInt3 b)
 {
     for (int i = 0; i < 3; i++)
         a[i] += b[i];
-    return res;
+    return a;
 }
 
 inline VecInt3 operator-(VecInt3 a, VecInt3 b)

@@ -180,10 +180,10 @@ private:
         friend class Terrain;
     };
 
+    std::set<VecInt3> toRegen;
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
-    std::set<VecInt3> toRegen;
 
     World& world;
 };
