@@ -12,10 +12,6 @@ public:
         shape = shapeFromVertices(vertexArray.load("PenguinBaseMesh.obj"));
         texture.load("Penguin Diffuse Color.png");
     }
-    static void fini()
-    {
-        shape.reset();
-    }
     DummyModel(World &world) : PlayableObject(world, shape.get()) {}
     void update(float delta) override
     {

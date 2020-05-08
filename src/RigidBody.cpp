@@ -17,3 +17,10 @@ RigidBody::RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 po
 
     world.dynamicsWorld->addRigidBody(body);
 }
+
+RigidBody::~RigidBody()
+{
+    world.dynamicsWorld->removeCollisionObject(body);
+    delete motionState;
+    delete body;
+}

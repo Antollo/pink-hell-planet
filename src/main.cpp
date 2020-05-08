@@ -15,6 +15,5 @@ int main()
     while (window.isOpen())
         game();
 
-    DummyModel::fini();
     return 0;
 }

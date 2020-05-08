@@ -15,11 +15,7 @@ class RigidBody
 {
 public:
     RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 position);
-    ~RigidBody()
-    {
-        delete motionState;
-        delete body;
-    }
+    ~RigidBody();
 
     glm::vec3 getPosition() const
     {
