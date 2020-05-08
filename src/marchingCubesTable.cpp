@@ -326,7 +326,7 @@ std::vector<std::vector<glm::vec3>> getNormals()
         const std::vector<glm::vec3>& ver = marchingCubesVertices[i];
         for (size_t j = 0; j < ver.size(); j += 3)
         {
-            auto normal = glm::normalize(glm::cross(ver[j] - ver[j+1], ver[j] - ver[j+2]));
+            auto normal = glm::normalize(glm::cross(ver[j] - ver[j+2], ver[j] - ver[j+1]));
             for (int k = 0; k < 3; k++)
                 v[i].push_back(normal);
         }

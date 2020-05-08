@@ -29,7 +29,7 @@ void main()
     outColor = inColor;
     gl_Position =  P * V * M * vec4(inPosition, 1);
 
-    vec4 lp = vec4(1, 1, 1, 1);
+    vec4 lp = vec4(10, 10, 10, 1);
 
     vec4 l = normalize(V * lp - V * M * vec4(inPosition, 1));
     vec4 n = normalize(V * M * vec4(normal, 0));
