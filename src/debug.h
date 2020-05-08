@@ -2,7 +2,9 @@
 #define DEBUG_H_
 
 #include <iostream>
-#include "DrawableObject.h"
+#include <vector>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
 
 template<class T>
 inline std::ostream& operator<<(std::ostream& os, std::vector<T> vec)
@@ -30,5 +32,10 @@ inline std::ostream& operator<<(std::ostream& os, glm::vec3 vec)
     return os;
 }
 
+#define GL_ERROR_CHECK  {   GLenum err; \
+                            while ((err = glGetError()) != GL_NO_ERROR) \
+                                std::cerr << "OpenGL error " << std::hex << err \
+                                << std::dec << " in " << __FILE__ <<  ":" << __LINE__ << std::endl; \
+                        }
 
 #endif

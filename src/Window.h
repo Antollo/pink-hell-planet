@@ -34,8 +34,8 @@ public:
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
         const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         //glfwWindowHint(GLFW_DOUBLEBUFFER, GL_FALSE);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_RED_BITS, mode->redBits);
         glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
@@ -53,19 +53,19 @@ public:
         glfwSetCursorPosCallback(window, cursorPosCallback);
 
         glfwMakeContextCurrent(window);
-
         glfwSwapInterval(0);
 
         if (!gladLoadGL())
             errorAndExit("gladLoadGL failed");
 
+        std::cout << "OpenGL context version: " << reinterpret_cast<const char *>(glGetString(GL_VERSION)) << std::endl;
+
         P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
-        ShaderProgram::setMatrixP(P);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        //glEnable(GL_BLEND);
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     ~Window()
@@ -114,11 +114,11 @@ public:
 
     int pollKey()
     {
-        if(!keys.empty())
+        if (!keys.empty())
         {
             int key = keys.front();
             keys.pop();
-            return key; 
+            return key;
         }
         return 0;
     }
@@ -168,7 +168,7 @@ private:
         case GLFW_PRESS:
             obj.keys.push(key);
             break;
-        
+
         case GLFW_RELEASE:
             obj.keys.push(-key);
             break;

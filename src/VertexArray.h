@@ -22,16 +22,22 @@ public:
             glDeleteVertexArrays(1, &vertexArray);
         }
     }
-    std::vector<float> load(const char* modelFilename)
+    std::vector<float> load(const char *modelFilename)
     {
         std::vector<float> vertices, colors, normals, texCoords;
         loadObjFile(modelFilename, vertices, colors, normals, texCoords);
-        createVertexArray(vertices, colors, normals, texCoords);
+        if (vertexArray == 0)
+            createVertexArray(vertices, colors, normals, texCoords);
+        else
+            updateVertexArray(vertices, colors, normals, texCoords);
         return vertices;
     }
-    const std::vector<float> & load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords)
+    const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords)
     {
-        createVertexArray(vertices, colors, normals, texCoords);
+        if (vertexArray == 0)
+            createVertexArray(vertices, colors, normals, texCoords);
+        else
+            updateVertexArray(vertices, colors, normals, texCoords);
         return vertices;
     }
     GLuint getVertexArrayId() const { return vertexArray; }
@@ -73,12 +79,31 @@ private:
         length = vertices.size();
         loaded = true;
     }
+    void updateVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords)
+    {
+        assert(loaded == true);
+        assert(vertices.size() == colors.size());
+        assert(vertices.size() == normals.size());
+        assert(vertices.size() * 2 == texCoords.size() * 3);
+        glBindVertexArray(vertexArray);
+        updateBuffer(vertices.data(), vertices.size(), bufferIndex::POSITION, vertexBuffer);
+        updateBuffer(colors.data(), colors.size(), bufferIndex::COLOR, colorBuffer);
+        updateBuffer(normals.data(), normals.size(), bufferIndex::NORMAL, normalBuffer);
+        updateBuffer(texCoords.data(), texCoords.size(), bufferIndex::TEXCOORD, texCoordBuffer, 2);
+        glBindVertexArray(0);
+        length = vertices.size();
+    }
     void loadBuffer(const GLfloat *data, int length, bufferIndex index, GLuint buffer, GLint size = 3)
     {
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
         glBufferData(GL_ARRAY_BUFFER, length * sizeof(GLfloat), data, GL_STATIC_DRAW);
         glVertexAttribPointer(static_cast<GLuint>(index), size, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(static_cast<GLuint>(index));
+    }
+    void updateBuffer(const GLfloat *data, int length, bufferIndex index, GLuint buffer, GLint size = 3)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glBufferData(GL_ARRAY_BUFFER, length * sizeof(GLfloat), data, GL_DYNAMIC_DRAW);
     }
 };
 
