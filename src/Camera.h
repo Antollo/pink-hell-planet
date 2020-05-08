@@ -94,7 +94,7 @@ public:
             //position = position* 0.6f + d * rotMat * 0.4f;
             //oldPosition = position;
             //position = player->getM()*oldPosition;
-            position = (player->getPosition() - glm::normalize(frontDirection)*1.5f + glm::vec3(0.f, 1.f, 0.f)) * 0.2f + position * 0.8f;
+            position = (player->getPosition() - glm::normalize(frontDirection)*1.5f + glm::vec3(0.f, 1.f, 0.f)) * 0.2f + oldPosition * 0.8f;
             oldPosition = position;
         }
 
