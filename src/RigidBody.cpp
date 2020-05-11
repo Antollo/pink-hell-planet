@@ -2,7 +2,7 @@
 #include "RigidBody.h"
 
 RigidBody::RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 position)
-    : world(w), myShape(shape)
+    : myShape(shape), world(w)
 {
     btTransform startTransform;
     startTransform.setIdentity();

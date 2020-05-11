@@ -5,6 +5,8 @@
 #include "Window.h"
 #include "PlayableObject.h"
 
+#include "debug.h"
+
 class Camera
 {
 public:

@@ -27,7 +27,7 @@ inline void loadObjFile(const std::string &modelFilename, std::vector<float> &ve
         std::cout << "    Faces: " << shapes[s].mesh.num_face_vertices.size() << std::endl;
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)
         {
-            int fv = shapes[s].mesh.num_face_vertices[f];
+            size_t fv = shapes[s].mesh.num_face_vertices[f];
             for (size_t v = 0; v < fv; v++)
             {
                 tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];

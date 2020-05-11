@@ -52,13 +52,13 @@ private:
         TEXCOORD = 3
     };
 
-    bool loaded;
     GLuint vertexArray;
     GLuint vertexBuffer;
     GLuint colorBuffer;
     GLuint normalBuffer;
     GLuint texCoordBuffer;
     GLsizei length;
+    bool loaded;
     void createVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords)
     {
         assert(loaded == false);

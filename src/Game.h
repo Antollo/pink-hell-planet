@@ -39,7 +39,7 @@ public:
             std::cerr << "player position: " << player->getPosition() << std::endl;
         }
 
-        while (key = window.pollKey())
+        while ((key = window.pollKey()))
             consumeKey(key);
 
         if (time < 1.f)
@@ -120,16 +120,16 @@ private:
         }
     }
 
-    Clock clock;
-    Camera camera;
     Window &window;
+    Clock clock;
     World world;
+    PlayableObject *player;
+    Camera camera;
     Axes axes;
     float time, delta;
     int key, frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
     Terrain terrain;
-    PlayableObject *player;
 };
 
 #endif /* !GAME_H_ */

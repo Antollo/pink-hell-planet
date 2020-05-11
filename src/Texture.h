@@ -10,7 +10,7 @@
 class Texture
     {
     public:
-        Texture() : texture(0), loaded(false) {}
+        Texture() : loaded(false), texture(0) {}
         ~Texture()
         {
             if (loaded)

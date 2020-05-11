@@ -166,7 +166,7 @@ private:
             }
 
             const std::vector<glm::vec3>& verts = marchingCubesVertices[mask];
-            for (int i = 0; i < verts.size(); i += 3)
+            for (size_t i = 0; i < verts.size(); i += 3)
                 triangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i+1] + glmPos), toBtVec3(verts[i+2] + glmPos));
         }
 

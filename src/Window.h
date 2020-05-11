@@ -22,7 +22,7 @@ public:
 class Window
 {
 public:
-    Window(int width, int height, const char *title) : _width(width), _height(height), xDiff(0.0), yDiff(0.0), xPosOld(0.0), yPosOld(0.0), firstUpdate(true)
+    Window(int width, int height, const char *title) : _width(width), _height(height), xPosOld(0.0), yPosOld(0.0), xDiff(0.0), yDiff(0.0),  firstUpdate(true)
     {
         if (!glfwInit())
             errorAndExit("glfwInit failed");
@@ -146,11 +146,11 @@ private:
     glm::mat4 P;
     GLFWwindow *window;
 
-    bool firstUpdate;
     double _width, _height;
     std::queue<int> keys;
     double xPosOld, yPosOld;
     float xDiff, yDiff;
+    bool firstUpdate;
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     {
         glViewport(0, 0, width, height);

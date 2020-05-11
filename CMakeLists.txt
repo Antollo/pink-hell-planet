@@ -17,7 +17,7 @@ else()
     if (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
         add_compile_options(-O3)
     endif()
-    add_compile_options(-static-libgcc -static-libstdc++)
+    add_compile_options(-static-libgcc -static-libstdc++ -Wall)
 endif()
 
 set(OpenGL_GL_PREFERENCE GLVND)
