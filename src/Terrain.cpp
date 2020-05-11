@@ -5,8 +5,8 @@
 Terrain::Terrain(World& world) : world(world)
 {
     //TODO reading from vector
-    for (int x = 0; x < 4 * TerrainChunk::chunkSize; x += TerrainChunk::chunkSize)
-        for (int z = 0; z < 2 * TerrainChunk::chunkSize; z += TerrainChunk::chunkSize)
+    for (int x = 0; x < 30 * TerrainChunk::chunkSize; x += TerrainChunk::chunkSize)
+        for (int z = 0; z < 30 * TerrainChunk::chunkSize; z += TerrainChunk::chunkSize)
             chunks.emplace(getVecInt3(x, 0, z), new TerrainChunk({x, 0, z}, this, true));
     chunks.emplace(getVecInt3(0, TerrainChunk::chunkSize, 0), new TerrainChunk({0, TerrainChunk::chunkSize, 0}, this, true));
 }

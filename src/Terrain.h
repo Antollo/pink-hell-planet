@@ -90,10 +90,13 @@ private:
 
         void updateBuffers()
         {
+            std::cout << glfwGetTime() << "chunk genration start" << std::endl;
             vertices.clear();
             colors.clear();
             normals.clear();
-            rigidBodies.clear();
+            rigidBody.reset();
+            shape.reset();
+            triangleMesh.reset(new btTriangleMesh());
 
             drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
             if (rootTerrainCube)
@@ -102,7 +105,14 @@ private:
             colors = std::vector<float>(vertices.size(), 1.f);
             texCoords = std::vector<float>(vertices.size() / 3 * 2, 0.f);
             
+            if (!vertices.empty())
+            {
+                shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
+                rigidBody.reset(new RigidBody(terrain->world, shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
+            }
+
             vertexArray.load(vertices, colors, normals, texCoords);
+            std::cout << glfwGetTime() << "chunk generation end" << std::endl;
         }
 
         void drawAtPos(int size, VecInt3 pos)
@@ -126,7 +136,11 @@ private:
     private:
         Terrain* terrain;
 
-        inline static const int chunkSize = 4;
+        std::unique_ptr<btTriangleMesh> triangleMesh;
+        std::unique_ptr<btBvhTriangleMeshShape> shape;
+        std::unique_ptr<RigidBody> rigidBody;
+
+        inline static const int chunkSize = 8;
 
         VecInt3 intPos = {0, 0, 0};
 
@@ -145,14 +159,15 @@ private:
                 glm::vec3 x = i + glmPos;
                 vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
             }
+
             for (auto i : marchingCubesNormals[mask])
             {
                 normals.insert(normals.end(), glm::value_ptr(i), glm::value_ptr(i) + 3);
             }
-            for (auto i : marchingCubesShapes[mask])
-            {
-                rigidBodies.emplace_back(new RigidBody(terrain->world, i, 0, glmPos));
-            }
+
+            const std::vector<glm::vec3>& verts = marchingCubesVertices[mask];
+            for (int i = 0; i < verts.size(); i += 3)
+                triangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i+1] + glmPos), toBtVec3(verts[i+2] + glmPos));
         }
 
         bool inChunk(VecInt3 pos)
@@ -180,12 +195,12 @@ private:
         friend class Terrain;
     };
 
+    World& world;
+
     std::set<VecInt3> toRegen;
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
-
-    World& world;
 };
 
 #endif
