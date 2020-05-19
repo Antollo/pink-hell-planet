@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 
+#include "CollisionObject.h"
 #include "utils.h"
 #include "World.h"
 #include <btBulletDynamicsCommon.h>
@@ -11,16 +12,15 @@
 
 class World;
 
-class RigidBody
+class RigidBody : public CollisionObject
 {
 public:
-    RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 position);
+    RigidBody(World* w, btCollisionShape* shape, float mass, glm::vec3 position);
     ~RigidBody();
 
-    glm::vec3 getPosition() const
+    btCollisionObject* getRawBtCollisionObjPtr() override
     {
-        btVector3 v = body->getWorldTransform().getOrigin();
-        return glm::vec3(v.x(), v.y(), v.z());
+        return body;
     }
 
 protected:
@@ -40,10 +40,7 @@ protected:
     btRigidBody* body;
 
 private:
-    btCollisionShape* myShape;
     btDefaultMotionState* motionState;
-
-    World& world;
 };
 
 #endif

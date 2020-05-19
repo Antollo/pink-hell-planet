@@ -12,11 +12,7 @@ class Camera
 public:
     Camera(Window &w, PlayableObject *&p) : window(w), player(p)
     {
-        glm::mat4 V = glm::lookAt(
-            glm::vec3(0.f, 0.f, 0.f),
-            glm::vec3(0.0f, 0.0f, 0.0f),
-            glm::vec3(0.0f, 1.0f, 0.0f));
-        ShaderProgram::setMatrixV(V);
+        update(0);
     }
 
     void consumeKey(int key)
@@ -100,10 +96,10 @@ private:
     Window& window;
     PlayableObject*& player;
     glm::mat4 V;
-    glm::vec3 position, frontDirection, upDirection, rightDirection, oldPosition = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, oldPosition = glm::vec3(0.f, 0.f, 0.f);
     float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0;
     bool forward = false, backward = false, left = false, right = false;
-    static constexpr float freecamSpeed = 1.f;
+    static constexpr float freecamSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;
 };
 

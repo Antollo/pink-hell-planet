@@ -6,7 +6,7 @@
 class PlayableObject : public PhysicsObject
 {
 public:
-    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/4, /*position*/{3, 20, 3}), 
+    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/4, /*position*/{3, 40, 3}),
         forward(false), backward(false), left(false), right(false), up(false) {}
 
     void update(float delta) override

@@ -1,8 +1,8 @@
 
 #include "RigidBody.h"
 
-RigidBody::RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 position)
-    : myShape(shape), world(w)
+RigidBody::RigidBody(World* w, btCollisionShape* shape, float mass, glm::vec3 position)
+    : CollisionObject(w, shape)
 {
     btTransform startTransform;
     startTransform.setIdentity();
@@ -15,12 +15,16 @@ RigidBody::RigidBody(World& w, btCollisionShape* shape, float mass, glm::vec3 po
     btRigidBody::btRigidBodyConstructionInfo rbInfo(btmass, motionState, shape, localInertia);
     body = new btRigidBody(rbInfo);
 
-    world.dynamicsWorld->addRigidBody(body);
+    setBtUserPtr();
+
+    if (world != nullptr)
+        world->dynamicsWorld->addRigidBody(body);
 }
 
 RigidBody::~RigidBody()
 {
-    world.dynamicsWorld->removeCollisionObject(body);
+    if (world != nullptr)
+        world->dynamicsWorld->removeCollisionObject(body);
     delete motionState;
     delete body;
 }

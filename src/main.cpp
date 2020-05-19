@@ -10,6 +10,7 @@ int main()
     DrawableObject::init();
     DummyModel::init();
     Axes::init();
+    Terrain::init();
 
     Game game(window);
     while (window.isOpen())

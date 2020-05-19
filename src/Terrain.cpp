@@ -1,14 +1,28 @@
 
 #include "Terrain.h"
 
+void Terrain::init()
+{
+    TerrainCube::init();
+}
+
+void Terrain::TerrainCube::init()
+{
+    cubeObjects.reserve(chunkSize);
+    for (int i = 1; i < chunkSize; i++)
+    {
+        float half = static_cast<float>(i) / 2;
+        cubeObjects.emplace_back(nullptr, new btBoxShape(btVector3(half, half, half)), glm::vec3(0.f, 0.f, 0.f));
+    }
+}
 
 Terrain::Terrain(World& world) : world(world)
 {
     //TODO reading from vector
-    for (int x = 0; x < 30 * TerrainChunk::chunkSize; x += TerrainChunk::chunkSize)
-        for (int z = 0; z < 30 * TerrainChunk::chunkSize; z += TerrainChunk::chunkSize)
+    for (int x = 0; x < 10 * chunkSize; x += chunkSize)
+        for (int z = 0; z < 10 * chunkSize; z += chunkSize)
             chunks.emplace(getVecInt3(x, 0, z), new TerrainChunk({x, 0, z}, this, true));
-    chunks.emplace(getVecInt3(0, TerrainChunk::chunkSize, 0), new TerrainChunk({0, TerrainChunk::chunkSize, 0}, this, true));
+    chunks.emplace(getVecInt3(0, chunkSize, 0), new TerrainChunk({0, chunkSize, 0}, this, true));
 }
 
 VecInt3 Terrain::getChunkFromPoint(VecInt3 pos)
@@ -16,9 +30,9 @@ VecInt3 Terrain::getChunkFromPoint(VecInt3 pos)
     for (auto& i : pos)
     {
         if (i < 0)
-            i -= TerrainChunk::chunkSize - 1;
-        i /= TerrainChunk::chunkSize;
-        i *= TerrainChunk::chunkSize;
+            i -= chunkSize - 1;
+        i /= chunkSize;
+        i *= chunkSize;
     }
     return pos;
 }
@@ -52,15 +66,21 @@ void Terrain::TerrainCube::addPoints(int d)
             {
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(x, y, 0), d);
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(x, y, size - 1), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(x, y, 1), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(x, y, size - 2), d);
             }
         for (int z = 1; z < size - 1; z++)
         {
             for (int other = 0; other < size - 1; other++)
             {
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(other + 1, 0, z), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(other + 1, 1, z), d);
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(other, size - 1, z), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(other, size - 2, z), d);
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(0, other, z), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(1, other, z), d);
                 chunk->terrain->marchingPointsAdd(intPos + getVecInt3(size - 1, other + 1, z), d);
+                chunk->terrain->marchingPointsAdd(intPos + getVecInt3(size - 2, other + 1, z), d);
             }
         }
     }
@@ -81,6 +101,19 @@ void Terrain::TerrainCube::genBuffers()
                 else
                     i->genBuffers();
             }
+        }
+    }
+}
+
+void Terrain::TerrainChunk::collideWith(CollisionObject* collObj)
+{
+    if (rootTerrainCube)
+    {
+        rootTerrainCube->collideWith(collObj);
+        if (rootTerrainCube->empty())
+        {
+            rootTerrainCube.reset(nullptr);
+            ghostObject.reset(nullptr);
         }
     }
 }

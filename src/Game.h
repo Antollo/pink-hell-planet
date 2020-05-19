@@ -2,6 +2,7 @@
 #define GAME_H_
 
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 
 #include "Axes.h"
@@ -9,6 +10,7 @@
 #include "Clock.h"
 #include "debug.h"
 #include "DummyModel.h"
+#include "GhostObject.h"
 #include "Terrain.h"
 #include "Window.h"
 #include "World.h"
@@ -35,9 +37,12 @@ public:
         {
             clock.reset();
             std::cerr << "fps: " << frames / 2 << std::endl;
+            std::cerr << "worst frametime in last 2s: " << std::setprecision(5) << maxDelta << " (" << 1 / maxDelta << " fps)" << std::endl;
+            maxDelta = delta;
             frames = 0;
             std::cerr << "player position: " << player->getPosition() << std::endl;
         }
+        maxDelta = std::max(maxDelta, delta);
 
         while ((key = window.pollKey()))
             consumeKey(key);
@@ -61,6 +66,13 @@ public:
         window.draw(terrain);
 
         window.swapBuffers();
+
+        static btSphereShape shape(20.f);
+        shape.setMargin(0.f);
+        static RigidBody bigHole(nullptr, static_cast<btCollisionShape*>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
+
+        if (time > 2.f)
+            terrain.collideWith(bigHole);
     }
 
 private:
@@ -126,7 +138,7 @@ private:
     PlayableObject *player;
     Camera camera;
     Axes axes;
-    float time, delta;
+    float time, delta, maxDelta = 42.f;
     int key, frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
     Terrain terrain;

@@ -8,6 +8,7 @@ add_executable(game
     marchingCubesTable.cpp
     World.cpp
     RigidBody.cpp
+    GhostObject.cpp
 )
 
 target_link_libraries(game OpenGL::GL glm::glm glfw glad tinyobjloader lodepng bullet3 BulletDynamics BulletCollision)
