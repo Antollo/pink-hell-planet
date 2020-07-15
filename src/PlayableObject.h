@@ -36,8 +36,8 @@ public:
         }
         if (up)
         {
-            // std::cout << "up\n";
-            v = (M * glm::vec4(0.f, 1.f, 0.f, 0.f)) * 50.f * delta;
+            //v = (M * glm::vec4(0.f, 1.f, 0.f, 0.f)) * 50.f * delta;
+            v = glm::vec4(0.f, 1.f, 0.f, 0.f) * 50.f * delta;
             body->applyCentralImpulse(btVector3(v.x, v.y, v.z));
         }
     }

@@ -4,6 +4,7 @@
 void Terrain::init()
 {
     TerrainCube::init();
+    TerrainChunk::init();
 }
 
 void Terrain::TerrainCube::init()

@@ -27,7 +27,7 @@ public:
 protected:
     const VertexArray &getVertexArray() const override { return vertexArray; }
     const ShaderProgram &getShaderProgram() const override { return defaultTextureShaderProgram; }
-    const Texture &getTexture() const override { return texture; }
+    const Texture &getTexture0() const override { return texture; }
 
 private:
     Axes axes;

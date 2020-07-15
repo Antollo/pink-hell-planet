@@ -46,6 +46,13 @@ public:
         case -GLFW_KEY_D:
             right = false;
             break;
+
+        case GLFW_KEY_KP_ADD:
+            viewDistance += 0.1f;
+            break;
+        case GLFW_KEY_KP_SUBTRACT:
+            viewDistance -= 0.1f;
+            break;
         }
     }
 
@@ -80,7 +87,7 @@ public:
 
         if (player != nullptr)
         {
-            position = (player->getPosition() - glm::normalize(frontDirection)*1.5f + glm::vec3(0.f, 1.f, 0.f)) * 0.2f + oldPosition * 0.8f;
+            position = (player->getPosition() - glm::normalize(frontDirection)*viewDistance + glm::vec3(0.f, 1.f, 0.f)) * 0.2f + oldPosition * 0.8f;
             oldPosition = position;
         }
 
@@ -97,7 +104,7 @@ private:
     PlayableObject*& player;
     glm::mat4 V;
     glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, oldPosition = glm::vec3(0.f, 0.f, 0.f);
-    float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0;
+    float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 1.5f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;

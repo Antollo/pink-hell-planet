@@ -8,7 +8,7 @@ project(pink-hell-planet)
 
 if(MSVC)
     # multithreaded build in MSVC
-    add_compile_options($<$<CXX_COMPILER_ID:MSVC>:/MP>)
+    add_compile_options(/MP)
     if (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
         add_compile_options(/O2)
     endif()

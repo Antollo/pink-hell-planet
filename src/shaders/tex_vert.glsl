@@ -4,11 +4,14 @@
 #define COLOR 1
 #define NORMAL 2
 #define TEXCOORD 3
+#define TANGENT 4
+#define BITANGENT 5
 
-layout (location = POSITION) in vec3 inPosition;
-layout (location = COLOR) in vec3 inColor;
+layout (location = POSITION) in vec3 position;
 layout (location = NORMAL) in vec3 normal;
-layout (location = TEXCOORD) in vec2 inTexCoord;
+layout (location = TEXCOORD) in vec2 texCoord;
+layout (location = TANGENT) in vec3 tangent;
+layout (location = BITANGENT) in vec3 bitangent;
 
 layout (std140) uniform matrices
 {
@@ -18,24 +21,18 @@ layout (std140) uniform matrices
 
 uniform mat4 M;
 
-const vec4 eye = vec4(0, 0, 0, 1);
-
-out float nl;
-out float rv;
-out vec2 outTexCoord;
+out vec3 vNormal;
+out vec3 vPosition;
+out vec2 vTexCoord;
+out vec3 vTangent;
+out vec3 vBitangent;
 
 void main()
 {
-    outTexCoord = inTexCoord;
-    gl_Position =  P * V * M * vec4(inPosition, 1);
-
-    vec4 lp = vec4(1, 1, 1, 1);
-
-    vec4 l = normalize(V * lp - V * M * vec4(inPosition, 1));
-    vec4 n = normalize(V * M * vec4(normal, 0));
-    vec4 r = reflect(-l, n);
-    vec4 v = normalize(vec4(0, 0, 0, 1) - V * M * vec4(inPosition, 1));
-
-    nl = clamp(dot(n, l), 0.1, 1);
-    rv = pow(clamp(dot(r, v), 0, 1), 6);
+    vTexCoord = texCoord;
+    vNormal = normal;
+    vPosition = position;
+    vTangent = tangent;
+    vBitangent = bitangent;
+    //gl_Position =  P * V * M * vPosition;
 }

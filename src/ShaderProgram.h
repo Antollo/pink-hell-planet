@@ -24,7 +24,7 @@ public:
 
         glBindBufferRange(GL_UNIFORM_BUFFER, 0, matrices, 0, 2 * sizeof(glm::mat4));
     }
-    ShaderProgram() : loaded(false) {}
+    ShaderProgram() : loaded(false), vertexShader(0), geometryShader(0), fragmentShader(0), shaderProgram(0) {}
     void load(std::string vertexShaderFilename, std::string fragmentShaderFilename)
     {
         assert(matrices != 0);
@@ -44,14 +44,39 @@ public:
 
         loaded = true;
     }
+    void load(std::string vertexShaderFilename, std::string geometryShaderFilename,  std::string fragmentShaderFilename)
+    {
+        assert(matrices != 0);
+        assert(loaded == false);
+        shaderProgram = glCreateProgram();
+        vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderFilename);
+        geometryShader = loadShader(GL_GEOMETRY_SHADER, geometryShaderFilename);
+        fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentShaderFilename);
+
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, geometryShader);
+        glAttachShader(shaderProgram, fragmentShader);
+
+        link(shaderProgram);
+        glUseProgram(shaderProgram);
+
+        GLuint id = glGetUniformBlockIndex(shaderProgram, "matrices");
+        glUniformBlockBinding(shaderProgram, id, 0);
+
+        loaded = true;
+    }
     ~ShaderProgram()
     {
         if (loaded)
         {
             glDetachShader(shaderProgram, vertexShader);
+            if (geometryShader)
+                glDetachShader(shaderProgram, geometryShader);
             glDetachShader(shaderProgram, fragmentShader);
 
             glDeleteShader(vertexShader);
+            if (geometryShader)
+                glDeleteShader(geometryShader);
             glDeleteShader(fragmentShader);
             glDeleteProgram(shaderProgram);
         }
@@ -88,7 +113,7 @@ private:
     static inline GLuint matrices = 0;
     bool loaded;
   
-    GLuint vertexShader, fragmentShader, shaderProgram;
+    GLuint vertexShader, geometryShader, fragmentShader, shaderProgram;
     static void setMatrixGlobal(GLsizei offset, const float *data)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, matrices);

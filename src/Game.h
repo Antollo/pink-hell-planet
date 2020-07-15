@@ -69,7 +69,7 @@ public:
 
         static btSphereShape shape(20.f);
         shape.setMargin(0.f);
-        static RigidBody bigHole(nullptr, static_cast<btCollisionShape*>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
+        static RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
 
         if (time > 2.f)
             terrain.collideWith(bigHole);
@@ -84,51 +84,47 @@ private:
         case GLFW_KEY_ESCAPE:
             window.close();
             break;
-
-        case GLFW_KEY_W:
-            if (player != nullptr)
+        }
+        if (player != nullptr)
+        {
+            switch (key)
+            {
+            case GLFW_KEY_W:
                 player->goForward(true);
-            break;
-        case -GLFW_KEY_W:
-            if (player != nullptr)
+                break;
+            case -GLFW_KEY_W:
                 player->goForward(false);
-            break;
+                break;
 
-        case GLFW_KEY_S:
-            if (player != nullptr)
+            case GLFW_KEY_S:
                 player->goBackward(true);
-            break;
-        case -GLFW_KEY_S:
-            if (player != nullptr)
+                break;
+            case -GLFW_KEY_S:
                 player->goBackward(false);
-            break;
+                break;
 
-        case GLFW_KEY_A:
-            if (player != nullptr)
+            case GLFW_KEY_A:
                 player->goLeft(true);
-            break;
-        case -GLFW_KEY_A:
-            if (player != nullptr)
+                break;
+            case -GLFW_KEY_A:
                 player->goLeft(false);
-            break;
+                break;
 
-        case GLFW_KEY_D:
-            if (player != nullptr)
-                player->goRight(true);
-            break;
-        case -GLFW_KEY_D:
-            if (player != nullptr)
+            case GLFW_KEY_D:
+                if (player != nullptr)
+                    player->goRight(true);
+                break;
+            case -GLFW_KEY_D:
                 player->goRight(false);
-            break;
+                break;
 
-        case GLFW_KEY_SPACE:
-            if (player != nullptr)
+            case GLFW_KEY_SPACE:
                 player->goUp(true);
-            break;
-        case -GLFW_KEY_SPACE:
-            if (player != nullptr)
+                break;
+            case -GLFW_KEY_SPACE:
                 player->goUp(false);
-            break;
+                break;
+            }
         }
     }
 
