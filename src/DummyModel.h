@@ -10,6 +10,7 @@ public:
     static void init()
     {
         shape = shapeFromVertices(vertexArray.load("PenguinBaseMesh.obj"));
+        shape->setMargin(0.f);
         texture.load("Penguin Diffuse Color.png");
     }
     DummyModel(World &world) : PlayableObject(world, shape.get()) {}
