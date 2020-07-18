@@ -7,13 +7,13 @@
 #include "marchingCubesTable.h"
 #include "RigidBody.h"
 #include "VecInt3.h"
+#include "CollisionObject.h"
 
 #include <vector>
 #include <set>
 #include <iomanip>
 #include <iostream>
 #include <cmath>
-
 
 class Terrain : public Drawable
 {
@@ -44,7 +44,7 @@ public:
         auto v = privateWorld.getColliding(collObj);
         for (auto i : v)
         {
-            TerrainChunk* tc = static_cast<TerrainChunk*>(i->getUserPtr());
+            TerrainChunk* tc = static_cast<TerrainChunk*>(i->getOwnerPtr());
             tc->collideWith(&collObj);
         }
     }
@@ -155,7 +155,7 @@ private:
         TerrainCube* parent;
     };
 
-    class TerrainChunk : public DrawableObject
+    class TerrainChunk : public DrawableObject, public CollisionObject::CollisionObjectOwner
     {
     public:
         TerrainChunk(VecInt3 intPos, Terrain* terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
@@ -164,34 +164,11 @@ private:
                 rootTerrainCube = std::make_unique<TerrainCube>(chunkSize, intPos, this);
                 static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
                 ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
-                ghostObject->setUserPtr(this);
+                ghostObject->setOwnerPtr(this);
             }
         }
 
-        void updateBuffers()
-        {
-            vertices.clear();
-            colors.clear();
-            normals.clear();
-            rigidBody.reset();
-            shape.reset();
-            triangleMesh.reset(new btTriangleMesh());
-
-            drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
-            if (rootTerrainCube)
-                rootTerrainCube->genBuffers();
-
-            colors = std::vector<float>(vertices.size(), 1.f);
-            texCoords = std::vector<float>(vertices.size() / 3 * 2, 0.f);
-            
-            if (!vertices.empty())
-            {
-                shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
-                rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
-            }
-
-            vertexArray.load(vertices, colors, normals, texCoords);
-        }
+        void updateBuffers();
 
         void drawAtPos(int size, VecInt3 pos)
         {
@@ -212,6 +189,12 @@ private:
         }
 
         void collideWith(CollisionObject* collObj);
+
+        glm::vec3 getPartNormal(int partId)
+        {
+            partId *= 9;
+            return glm::vec3(normals[partId], normals[partId + 1], normals[partId + 2]);
+        }
 
     private:
         Terrain* terrain;
@@ -280,6 +263,8 @@ private:
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
+
+    friend bool CustomMaterialCombinerCallback(btManifoldPoint&,	const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int);
 };
 
 #endif

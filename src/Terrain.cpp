@@ -1,8 +1,43 @@
 
 #include "Terrain.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
+#include "BulletCollision/CollisionDispatch/btInternalEdgeUtility.h"
+#include "BulletCollision/CollisionDispatch/btManifoldResult.h"
+#include "utils.h"
+
+
+//TODO move this somewhere, there can be only one callback for all types of objects
+// but nothing except terrain needs custom callback atm
+
+bool CustomMaterialCombinerCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, 
+    const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
+{
+    // btAdjustInternalEdgeContacts(cp, colObj1Wrap, colObj0Wrap, partId1, index1);
+
+    if (colObj1Wrap->getCollisionObject()->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
+    {
+        CollisionObject::CollisionObjectOwner* ownerPtr = static_cast<CollisionObject*>(colObj1Wrap->getCollisionObject()->getUserPointer())->getOwnerPtr();
+        if (ownerPtr) 
+        {
+            Terrain::TerrainChunk* chunk = dynamic_cast<Terrain::TerrainChunk*>(ownerPtr);
+            if (chunk)
+            {
+                cp.m_normalWorldOnB = toBtVec3(chunk->getPartNormal(index1));
+            }
+        }
+    }
+
+    // honestly I have no clue what the value returned by this callback is supposed to represent
+    // it is ignored by bullet internally in this one specific case we have here
+    return false;
+}
 
 void Terrain::init()
 {
+    gContactAddedCallback = CustomMaterialCombinerCallback;
+
     TerrainCube::init();
 }
 
@@ -116,4 +151,35 @@ void Terrain::TerrainChunk::collideWith(CollisionObject* collObj)
             ghostObject.reset(nullptr);
         }
     }
+}
+
+void Terrain::TerrainChunk::updateBuffers()
+{
+    vertices.clear();
+    colors.clear();
+    normals.clear();
+    rigidBody.reset();
+    shape.reset();
+    triangleMesh.reset(new btTriangleMesh());
+
+    drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+    if (rootTerrainCube)
+        rootTerrainCube->genBuffers();
+
+    colors = std::vector<float>(vertices.size(), 1.f);
+    texCoords = std::vector<float>(vertices.size() / 3 * 2, 0.f);
+    
+    if (!vertices.empty())
+    {
+        shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
+        shape->setMargin(0.1f);
+        // btTriangleInfoMap* triangleInfoMap = new btTriangleInfoMap();
+        // btGenerateInternalEdgeInfo(shape.get(), triangleInfoMap);
+
+        rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
+        rigidBody->setOwnerPtr(this);
+        rigidBody->getRawBtCollisionObjPtr()->setCollisionFlags(rigidBody->getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+    }
+
+    vertexArray.load(vertices, colors, normals, texCoords);
 }
