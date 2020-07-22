@@ -7,6 +7,7 @@
 #include "marchingCubesTable.h"
 #include "RigidBody.h"
 #include "VecInt3.h"
+#include "CollisionObject.h"
 
 #include <vector>
 #include <set>
@@ -14,7 +15,6 @@
 #include <iostream>
 #include <cmath>
 #include <glm/gtx/closest_point.hpp>
-
 
 class Terrain : public Drawable
 {
@@ -45,7 +45,7 @@ public:
         auto v = privateWorld.getColliding(collObj);
         for (auto i : v)
         {
-            TerrainChunk* tc = static_cast<TerrainChunk*>(i->getUserPtr());
+            TerrainChunk* tc = static_cast<TerrainChunk*>(i->getOwnerPtr());
             tc->collideWith(&collObj);
         }
     }
@@ -156,7 +156,7 @@ private:
         TerrainCube* parent;
     };
 
-    class TerrainChunk : public DrawableObject
+    class TerrainChunk : public DrawableObject, public CollisionObject::CollisionObjectOwner
     {
     public:
         TerrainChunk(VecInt3 intPos, Terrain* terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
@@ -165,87 +165,11 @@ private:
                 rootTerrainCube = std::make_unique<TerrainCube>(chunkSize, intPos, this);
                 static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
                 ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
-                ghostObject->setUserPtr(this);
+                ghostObject->setOwnerPtr(this);
             }
         }
 
-        void updateBuffers()
-        {
-            vertices.clear();
-            normals.clear();
-            rigidBody.reset();
-            shape.reset();
-            triangleMesh.reset(new btTriangleMesh());
-
-            drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
-            if (rootTerrainCube)
-                rootTerrainCube->genBuffers();
-
-            texCoords.resize(vertices.size() / 3 * 2);
-            tangents.resize(vertices.size());
-            bitangents.resize(vertices.size());
-
-            constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
-
-            for (int i = 0; i < texCoords.size() / 6; i++)
-            {
-                glm::vec3 a(vertices[9 * i],     vertices[9 * i + 1], vertices[9 * i + 2]);
-                glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
-                glm::vec3 c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
-
-                glm::vec3 normal(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
-
-                glm::vec3 tangent;
-                if (normal.y == 0.f)
-                {
-                    tangent = glm::vec3(normal.z, -normal.x, 0.f);
-                }
-                else
-                {
-                    glm::vec3 center((a.x + b.x + c.x) / 3.f, (a.y + b.y + c.y) / 3.f, (a.z + b.z + c.z) / 3.f);
-                    tangent = farPoint - center;
-                    tangent.y = (-normal.z * (tangent.z - center.z) - normal.x * (tangent.x - center.x)) / normal.y + center.y;
-                    tangent = glm::normalize(tangent);
-                }
-
-                glm::vec3 bitangent = VertexArray::computeBitangent(tangent, normal);
-                glm::mat3 tbn(glm::transpose(glm::mat3(tangent, normal, bitangent)));
-
-                glm::vec3 texCoord;
-
-
-                texCoord = tbn * a;
-                texCoords[6 * i] = texCoord.x;
-                texCoords[6 * i + 1] = texCoord.z;
-                
-                texCoord = tbn * b;
-                texCoords[6 * i + 2] = texCoord.x;
-                texCoords[6 * i + 3] = texCoord.z;
-
-                texCoord = tbn * c;
-                texCoords[6 * i + 4] = texCoord.x;
-                texCoords[6 * i + 5] = texCoord.z;
-
-                //if (i < 10)
-                //    std::cout << tbn * center << std::endl;
-
-                tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                bitangents[9 * i] = bitangent.x, bitangents[9 * i + 1] = bitangent.y, bitangents[9 * i + 2] = bitangent.z;
-                bitangents[9 * i + 3] = bitangent.x, bitangents[9 * i + 4] = bitangent.y, bitangents[9 * i + 5] = bitangent.z;
-                bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
-            }
-            
-            if (!vertices.empty())
-            {
-                shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
-                rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
-            }
-
-            vertexArray.load(vertices, normals, texCoords, tangents, bitangents);
-        }
+        void updateBuffers();
 
         void drawAtPos(int size, VecInt3 pos)
         {
@@ -266,6 +190,12 @@ private:
         }
 
         void collideWith(CollisionObject* collObj);
+
+        glm::vec3 getPartNormal(int partId)
+        {
+            partId *= 9;
+            return glm::vec3(normals[partId], normals[partId + 1], normals[partId + 2]);
+        }
 
     private:
         Terrain* terrain;
@@ -370,6 +300,8 @@ private:
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
+
+    friend bool CustomMaterialCombinerCallback(btManifoldPoint&,	const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int);
 };
 
 #endif

@@ -23,8 +23,8 @@ public:
     Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world)
     {
         drawableObjects.push_back(std::make_unique<DummyModel>(world));
-        drawableObjects.push_back(std::make_unique<DummyModel>(world));
-        drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
 
         player = dynamic_cast<PlayableObject *>(drawableObjects.front().get());
         clock.reset();
@@ -48,7 +48,6 @@ public:
             std::cerr << "worst frametime in last 2s: " << std::setprecision(5) << maxDelta << " (" << 1 / maxDelta << " fps)" << std::endl;
             maxDelta = delta;
             frames = 0;
-            std::cerr << "player position: " << player->getPosition() << std::endl;
         }
         maxDelta = std::max(maxDelta, delta);
 
@@ -61,7 +60,10 @@ public:
             window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
 
         camera.update(delta);
-        world.update(delta);
+
+        for(int i = 0; i < 10; i++)
+            world.update(delta / 10);
+
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
 
@@ -80,6 +82,7 @@ public:
         static btSphereShape shape(20.f);
         shape.setMargin(0.f);
         static RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
+
 
         if (time > 2.f)
             terrain.collideWith(bigHole);

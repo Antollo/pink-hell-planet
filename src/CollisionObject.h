@@ -11,7 +11,7 @@ class World;
 class CollisionObject
 {
 public:
-    CollisionObject(World* worldPtr, btCollisionShape* shapePtr) : world(worldPtr), myShape(shapePtr) {}
+    CollisionObject(World* worldPtr, btCollisionShape* shapePtr) : world(worldPtr), myShape(shapePtr), ownerPtr(nullptr) {}
     virtual ~CollisionObject() noexcept {};
 
     virtual btCollisionObject* getRawBtCollisionObjPtr() = 0;
@@ -32,13 +32,16 @@ public:
         getRawBtCollisionObjPtr()->setWorldTransform(transform);
     }
 
-    void setUserPtr(void* ptr)
+    class CollisionObjectOwner {
+        public: virtual ~CollisionObjectOwner() {}
+    };
+    void setOwnerPtr(CollisionObjectOwner* ptr)
     {
-        userPtr = ptr;
+        ownerPtr = ptr;
     }
-    void* getUserPtr()
+    CollisionObjectOwner* getOwnerPtr()
     {
-        return userPtr;
+        return ownerPtr;
     }
 
 protected:
@@ -51,7 +54,7 @@ protected:
 
     World* world;
     btCollisionShape* myShape;
-    void* userPtr;
+    CollisionObjectOwner* ownerPtr;
 };
 
 #endif

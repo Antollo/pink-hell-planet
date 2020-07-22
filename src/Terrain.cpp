@@ -1,8 +1,43 @@
 
 #include "Terrain.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
+#include "BulletCollision/CollisionDispatch/btInternalEdgeUtility.h"
+#include "BulletCollision/CollisionDispatch/btManifoldResult.h"
+#include "utils.h"
+
+
+//TODO move this somewhere, there can be only one callback for all types of objects
+// but nothing except terrain needs custom callback atm
+
+bool CustomMaterialCombinerCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, 
+    const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
+{
+    // btAdjustInternalEdgeContacts(cp, colObj1Wrap, colObj0Wrap, partId1, index1);
+
+    if (colObj1Wrap->getCollisionObject()->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
+    {
+        CollisionObject::CollisionObjectOwner* ownerPtr = static_cast<CollisionObject*>(colObj1Wrap->getCollisionObject()->getUserPointer())->getOwnerPtr();
+        if (ownerPtr) 
+        {
+            Terrain::TerrainChunk* chunk = dynamic_cast<Terrain::TerrainChunk*>(ownerPtr);
+            if (chunk)
+            {
+                cp.m_normalWorldOnB = toBtVec3(chunk->getPartNormal(index1));
+            }
+        }
+    }
+
+    // honestly I have no clue what the value returned by this callback is supposed to represent
+    // it is ignored by bullet internally in this one specific case we have here
+    return false;
+}
 
 void Terrain::init()
 {
+    gContactAddedCallback = CustomMaterialCombinerCallback;
+
     TerrainCube::init();
     TerrainChunk::init();
 }
@@ -117,4 +152,67 @@ void Terrain::TerrainChunk::collideWith(CollisionObject* collObj)
             ghostObject.reset(nullptr);
         }
     }
+}
+
+void Terrain::TerrainChunk::updateBuffers()
+{
+    vertices.clear();
+    normals.clear();
+    rigidBody.reset();
+    shape.reset();
+    triangleMesh.reset(new btTriangleMesh());
+    drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+    if (rootTerrainCube)
+        rootTerrainCube->genBuffers();
+    texCoords.resize(vertices.size() / 3 * 2);
+    tangents.resize(vertices.size());
+    bitangents.resize(vertices.size());
+    constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
+    for (int i = 0; i < texCoords.size() / 6; i++)
+    {
+        glm::vec3 a(vertices[9 * i],     vertices[9 * i + 1], vertices[9 * i + 2]);
+        glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
+        glm::vec3 c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
+        glm::vec3 normal(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
+        glm::vec3 tangent;
+        if (normal.y == 0.f)
+        {
+            tangent = glm::vec3(normal.z, -normal.x, 0.f);
+        }
+        else
+        {
+            glm::vec3 center((a.x + b.x + c.x) / 3.f, (a.y + b.y + c.y) / 3.f, (a.z + b.z + c.z) / 3.f);
+            tangent = farPoint - center;
+            tangent.y = (-normal.z * (tangent.z - center.z) - normal.x * (tangent.x - center.x)) / normal.y + center.y;
+            tangent = glm::normalize(tangent);
+        }
+        glm::vec3 bitangent = VertexArray::computeBitangent(tangent, normal);
+        glm::mat3 tbn(glm::transpose(glm::mat3(tangent, normal, bitangent)));
+        glm::vec3 texCoord;
+        texCoord = tbn * a;
+        texCoords[6 * i] = texCoord.x;
+        texCoords[6 * i + 1] = texCoord.z;
+        
+        texCoord = tbn * b;
+        texCoords[6 * i + 2] = texCoord.x;
+        texCoords[6 * i + 3] = texCoord.z;
+        texCoord = tbn * c;
+        texCoords[6 * i + 4] = texCoord.x;
+        texCoords[6 * i + 5] = texCoord.z;
+        //if (i < 10)
+        //    std::cout << tbn * center << std::endl;
+        tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
+        tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
+        tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
+        bitangents[9 * i] = bitangent.x, bitangents[9 * i + 1] = bitangent.y, bitangents[9 * i + 2] = bitangent.z;
+        bitangents[9 * i + 3] = bitangent.x, bitangents[9 * i + 4] = bitangent.y, bitangents[9 * i + 5] = bitangent.z;
+        bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
+    }
+    
+    if (!vertices.empty())
+    {
+        shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
+        rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
+    }
+    vertexArray.load(vertices, normals, texCoords, tangents, bitangents);
 }

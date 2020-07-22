@@ -1,35 +1,31 @@
 # Pink Hell Planet Project
 
-Clone with:
+## Building
 
-```
-git clone --recurse-submodules <url>
-```
+1. Clone with:
 
-Download `glad` from [https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214910&authkey=ANa6TuYeKnGai4A](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214910&authkey=ANa6TuYeKnGai4A)
-and unpack to `thirdparty/glad/glad` (temporary solution).
+   ```
+   git clone --recurse-submodules <url>
+   ```
 
-Compile with:
+2. Download glad and assets
 
-```
-cmake .
-cmake --build . --config Release
-```
+   Run `init.sh` or `init.ps1` or manually:
 
+   * Download `glad` from [here](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214910&authkey=ANa6TuYeKnGai4A)
+     and unpack to `thirdparty/glad/glad` (temporary solution)
 
+   * Download and unpack models from (washing machine) [here](https://drive.google.com/file/d/1Iqd9X8vdOz4EeJjR4xL109-a1jnuhWYn)
+    and (penguin) [here](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214909&authkey=ADt8ZYAVrLtcSyY)
+    to `bin/`
 
-Copy `src/shaders` folder to folder with binary.
+   * Download and unpack terrain textures from [here](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214929&authkey=AMzTuQnU0EVMqOo) to `bin/`
 
-Download and unpack models from (washing machine) [https://drive.google.com/file/d/1Iqd9X8vdOz4EeJjR4xL109-a1jnuhWYn](https://drive.google.com/file/d/1Iqd9X8vdOz4EeJjR4xL109-a1jnuhWYn)
-and (penguin) [https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214909&authkey=ADt8ZYAVrLtcSyY](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214909&authkey=ADt8ZYAVrLtcSyY)
-to folder with binary.
+   * Copy `src/shaders` folder to `bin/`
 
-Download and unpack terrain textures from [https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214929&authkey=AMzTuQnU0EVMqOo](https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214929&authkey=AMzTuQnU0EVMqOo) to folder with binary.
+3. Compile with:
 
-### OR
-
-Run:
-
-```
-.\init.ps1
-```
+   ```
+   cmake .
+   cmake --build . --config Release
+   ```

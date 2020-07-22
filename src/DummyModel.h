@@ -10,6 +10,7 @@ public:
     static void init()
     {
         shape = shapeFromVertices(vertexArray.load("TV.obj", 70.f));
+        shape->setMargin(0.f);
         texture0.load("TV_DIFF", true);
         texture1.load("TV_SPEC", true);
         texture2.load("TV_NRM");
