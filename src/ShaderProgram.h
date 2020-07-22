@@ -6,6 +6,7 @@
 #include <map>
 #include <list>
 #include <iterator>
+#include <regex>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,20 +15,21 @@
 class ShaderProgram
 {
 public:
+    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + sizeof(float);
     static void init()
     {
-        glGenBuffers(1, &matrices);
+        glGenBuffers(1, &data);
 
-        glBindBuffer(GL_UNIFORM_BUFFER, matrices);
-        glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STREAM_DRAW);
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferData(GL_UNIFORM_BUFFER, dataSize, NULL, GL_STREAM_DRAW);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-        glBindBufferRange(GL_UNIFORM_BUFFER, 0, matrices, 0, 2 * sizeof(glm::mat4));
+        glBindBufferRange(GL_UNIFORM_BUFFER, 0, data, 0, dataSize);
     }
-    ShaderProgram() : loaded(false), vertexShader(0), geometryShader(0), fragmentShader(0), shaderProgram(0) {}
+    ShaderProgram() : loaded(false), validated(false), vertexShader(0), geometryShader(0), fragmentShader(0), shaderProgram(0) {}
     void load(std::string vertexShaderFilename, std::string fragmentShaderFilename)
     {
-        assert(matrices != 0);
+        assert(data != 0);
         assert(loaded == false);
         shaderProgram = glCreateProgram();
         vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderFilename);
@@ -39,14 +41,14 @@ public:
         link(shaderProgram);
         glUseProgram(shaderProgram);
 
-        GLuint id = glGetUniformBlockIndex(shaderProgram, "matrices");
+        GLuint id = glGetUniformBlockIndex(shaderProgram, "data");
         glUniformBlockBinding(shaderProgram, id, 0);
 
         loaded = true;
     }
-    void load(std::string vertexShaderFilename, std::string geometryShaderFilename,  std::string fragmentShaderFilename)
+    void load(std::string vertexShaderFilename, std::string geometryShaderFilename, std::string fragmentShaderFilename)
     {
-        assert(matrices != 0);
+        assert(data != 0);
         assert(loaded == false);
         shaderProgram = glCreateProgram();
         vertexShader = loadShader(GL_VERTEX_SHADER, vertexShaderFilename);
@@ -60,7 +62,7 @@ public:
         link(shaderProgram);
         glUseProgram(shaderProgram);
 
-        GLuint id = glGetUniformBlockIndex(shaderProgram, "matrices");
+        GLuint id = glGetUniformBlockIndex(shaderProgram, "data");
         glUniformBlockBinding(shaderProgram, id, 0);
 
         loaded = true;
@@ -93,42 +95,49 @@ public:
     }
     static void setMatrixP(const glm::mat4 &matrix)
     {
-        glBindBuffer(GL_UNIFORM_BUFFER, matrices);
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(matrix));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     static void setMatrixV(const glm::mat4 &matrix)
     {
-        glBindBuffer(GL_UNIFORM_BUFFER, matrices);
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(matrix));
+        glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(glm::inverse(matrix)));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static void setTime(const float &number)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), sizeof(float), &number);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     void use() const
     {
         assert(loaded == true);
+        if (!validated)
+        {
+            validated = true;
+            validate(shaderProgram);
+        }
         glUseProgram(shaderProgram);
     }
 
 private:
-    static inline GLuint matrices = 0;
+    static inline GLuint data = 0;
     bool loaded;
-  
+    mutable bool validated;
+
     GLuint vertexShader, geometryShader, fragmentShader, shaderProgram;
-    static void setMatrixGlobal(GLsizei offset, const float *data)
+    static void setMatrixGlobal(GLsizei offset, const float *matrix)
     {
-        glBindBuffer(GL_UNIFORM_BUFFER, matrices);
-        glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4), data);
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, offset, sizeof(glm::mat4), matrix);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     GLuint loadShader(const GLenum type, std::string fileName)
     {
-        std::ifstream file(fileName);
-        if (!file.good())
-            errorAndExit("File ", fileName, " not good");
-        std::string source((std::istreambuf_iterator<char>(file)),
-                           std::istreambuf_iterator<char>());
-        if (source.empty())
-            errorAndExit("File ", fileName, " empty");
+        std::string source(readAll(fileName));
 
         GLuint shader = glCreateShader(type);
         const GLchar *sourcePtr = source.c_str();
@@ -162,6 +171,10 @@ private:
             glGetProgramInfoLog(program, logLength, nullptr, log.data());
             errorAndExit(log);
         }
+    }
+    void validate(GLuint program) const
+    {
+        GLint status;
 
         glValidateProgram(program);
         glGetProgramiv(program, GL_VALIDATE_STATUS, &status);
@@ -175,6 +188,29 @@ private:
             glGetProgramInfoLog(program, logLength, nullptr, log.data());
             errorAndExit(log);
         }
+    }
+    void include(std::string &source)
+    {
+        std::regex regex("#include\\s+\"(\\S+)\"");
+        std::smatch results;
+
+        while (std::regex_search(source, results, regex))
+        {
+            source.replace(results[0].first, results[0].second, readAll(std::string(results[1].first, results[1].second)));
+        }
+    }
+    std::string readAll(const std::string &fileName)
+    {
+        std::ifstream file(fileName);
+        if (!file.good())
+            errorAndExit("File ", fileName, " not good");
+        std::string source((std::istreambuf_iterator<char>(file)),
+                           std::istreambuf_iterator<char>());
+        if (source.empty())
+            errorAndExit("File ", fileName, " empty");
+        
+        include(source);
+        return source;
     }
 };
 

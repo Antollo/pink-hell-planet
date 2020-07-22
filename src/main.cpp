@@ -1,7 +1,9 @@
 #include "Game.h"
 
-#include "VecInt3.h"
-#include "Terrain.h"
+#ifdef _WIN32
+extern "C" __declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+extern "C" __declspec(dllexport) unsigned long AmdPowerXpressRequestHighPerformance = 1;
+#endif
 
 int main()
 {
@@ -11,6 +13,8 @@ int main()
     DummyModel::init();
     Axes::init();
     Terrain::init();
+    Skybox::init();
+    Fireflies::init();
 
     Game game(window);
     while (window.isOpen())

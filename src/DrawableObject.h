@@ -12,8 +12,7 @@ class DrawableObject : public Drawable
 public:
     static void init()
     {
-        defaultColorShaderProgram.load("shaders/color_vert.glsl", "shaders/color_frag.glsl");
-        defaultTextureShaderProgram.load("shaders/tex_vert.glsl", "shaders/tex_geom.glsl", "shaders/tex_frag.glsl");
+        defaultTexture3d.load("skybox", true);
     }
     DrawableObject() : M(1.0f) {}
     virtual void update(float delta) {}
@@ -45,6 +44,12 @@ public:
             glBindTexture(GL_TEXTURE_2D, getTexture3().getTextureId());
             getShaderProgram().setUniform1i("tex3", 3);
         }
+        if (getTexture3d().getTextureId() != 0)
+        {
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, getTexture3d().getTextureId());
+            getShaderProgram().setUniform1i("cube", 4);
+        }
         glBindVertexArray(getVertexArray().getVertexArrayId());
         glDrawArrays(GL_TRIANGLES, 0, getVertexArray().getLength());
         glBindVertexArray(0);
@@ -54,14 +59,15 @@ protected:
     glm::mat4 M;
 
     virtual const VertexArray &getVertexArray() const = 0;
-    virtual const ShaderProgram &getShaderProgram() const { return defaultColorShaderProgram; }
-    virtual const Texture &getTexture0() const { return defaultTexture; }
-    virtual const Texture &getTexture1() const { return defaultTexture; }
-    virtual const Texture &getTexture2() const { return defaultTexture; }
-    virtual const Texture &getTexture3() const { return defaultTexture; }
+    virtual const ShaderProgram &getShaderProgram() const = 0;
+    virtual const Texture2d &getTexture0() const { return defaultTexture; }
+    virtual const Texture2d &getTexture1() const { return defaultTexture; }
+    virtual const Texture2d &getTexture2() const { return defaultTexture; }
+    virtual const Texture2d &getTexture3() const { return defaultTexture; }
+    virtual const Texture3d &getTexture3d() const { return defaultTexture3d; }
 
-    static inline Texture defaultTexture;
-    static inline ShaderProgram defaultColorShaderProgram, defaultTextureShaderProgram;
+    static inline Texture2d defaultTexture;
+    static inline Texture3d defaultTexture3d;
 };
 
 #endif /* !DRAWABLEOBJECT_H_ */

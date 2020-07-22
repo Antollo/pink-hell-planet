@@ -12,6 +12,8 @@
 #include "DummyModel.h"
 #include "GhostObject.h"
 #include "Terrain.h"
+#include "Skybox.h"
+#include "Fireflies.h"
 #include "Window.h"
 #include "World.h"
 
@@ -26,10 +28,16 @@ public:
 
         player = dynamic_cast<PlayableObject *>(drawableObjects.front().get());
         clock.reset();
+        clock60Pi.reset();
     }
 
     void operator()()
     {
+        time = clock60Pi.getTime();
+        ShaderProgram::setTime(time);
+        if (time >= glm::pi<float>() * 60.f)
+            clock60Pi.reset();
+
         frames++;
         time = clock.getTime();
         delta = clock.getDelta();
@@ -64,6 +72,8 @@ public:
 
         terrain.updateBuffers();
         window.draw(terrain);
+        window.draw(skybox);
+        window.draw(fireflies);
 
         window.swapBuffers();
 
@@ -129,11 +139,13 @@ private:
     }
 
     Window &window;
-    Clock clock;
+    Clock clock, clock60Pi;
     World world;
     PlayableObject *player;
     Camera camera;
     Axes axes;
+    Skybox skybox;
+    Fireflies fireflies;
     float time, delta, maxDelta = 42.f;
     int key, frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;

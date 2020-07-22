@@ -40,7 +40,8 @@ public:
         glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
         glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-        glfwWindowHint(GLFW_SAMPLES, 4);
+        glfwWindowHint(GLFW_SAMPLES, 8);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 
         window = glfwCreateWindow(width, height, title, nullptr, nullptr);
         if (!window)
@@ -62,10 +63,15 @@ public:
 
         P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
 
+        glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_MULTISAMPLE);
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glFrontFace(GL_CW);
         //glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
     ~Window()

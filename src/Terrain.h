@@ -185,295 +185,57 @@ private:
             tangents.resize(vertices.size());
             bitangents.resize(vertices.size());
 
+            constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
+
             for (int i = 0; i < texCoords.size() / 6; i++)
             {
-                glm::vec3 a(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]);
+                glm::vec3 a(vertices[9 * i],     vertices[9 * i + 1], vertices[9 * i + 2]);
                 glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
                 glm::vec3 c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
 
-                glm::vec3 minVec(glm::min(a.x, glm::min(b.x, c.x)), glm::min(a.y, glm::min(b.y, c.y)), glm::min(a.z, glm::min(b.z, c.z)));
-                glm::vec3 maxVec(glm::max(a.x, glm::max(b.x, c.x)), glm::max(a.y, glm::max(b.y, c.y)), glm::max(a.z, glm::max(b.z, c.z)));
-                glm::vec3 distances(glm::distance(minVec.x, maxVec.x), glm::distance(minVec.y, maxVec.y), glm::distance(minVec.z, maxVec.z));
-                float maxDistance(glm::max(distances.x, glm::max(distances.y, distances.z)));
+                glm::vec3 normal(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
 
-                glm::vec3 e1(b - a);
-                glm::vec3 e2(c - a);
-
-                if (a.y == b.y && a.y == c.y)
+                glm::vec3 tangent;
+                if (normal.y == 0.f)
                 {
-                    texCoords[6 * i] = (a.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 1] = (a.z - minVec.z) / maxDistance;
-
-                    texCoords[6 * i + 2] = (b.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 3] = (b.z - minVec.z) / maxDistance;
-
-                    texCoords[6 * i + 4] = (c.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 5] = (c.z - minVec.z) / maxDistance;
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                }
-                else if (a.x == b.x && a.x == c.x)
-                {
-                    texCoords[6 * i] = (a.y - minVec.y) / maxDistance;
-                    texCoords[6 * i + 1] = (a.z - minVec.z) / maxDistance;
-
-                    texCoords[6 * i + 2] = (b.y - minVec.y) / maxDistance;
-                    texCoords[6 * i + 3] = (b.z - minVec.z) / maxDistance;
-
-                    texCoords[6 * i + 4] = (c.y - minVec.y) / maxDistance;
-                    texCoords[6 * i + 5] = (c.z - minVec.z) / maxDistance;
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                }
-                else if (a.z == b.z && a.z == c.z)
-                {
-                    texCoords[6 * i] = (a.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 1] = -(a.y - minVec.y) / maxDistance;
-
-                    texCoords[6 * i + 2] = (b.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 3] = -(b.y - minVec.y) / maxDistance;
-
-                    texCoords[6 * i + 4] = (c.x - minVec.x) / maxDistance;
-                    texCoords[6 * i + 5] = -(c.y - minVec.y) / maxDistance;
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                }
-                else if (a.y == b.y)
-                {
-                    glm::vec3 x = glm::closestPointOnLine(c, a, b);
-                    float d = glm::distance(a, b);
-                    float h = glm::distance(x, c);
-                    if(c.y < a.y)
-                    {
-                        float l = glm::distance(x, b);
-                        maxDistance = glm::max(d, glm::max(h, l));
-
-                        texCoords[6 * i] = 0.f;
-                        texCoords[6 * i + 1] = d / maxDistance;
-
-                        texCoords[6 * i + 2] = 0.f;
-                        texCoords[6 * i + 3] = 0.f;
-
-                        texCoords[6 * i + 4] = h / maxDistance;
-                        texCoords[6 * i + 5] = l / maxDistance;
-                    }
-                    else
-                    {
-                        float l = glm::distance(x, a);
-
-                        texCoords[6 * i] = h / maxDistance;
-                        texCoords[6 * i + 1] = 0.f;
-
-                        texCoords[6 * i + 2] = h / maxDistance;
-                        texCoords[6 * i + 3] = d / maxDistance;
-
-                        texCoords[6 * i + 4] = 0.f;
-                        texCoords[6 * i + 5] = l / maxDistance;
-                    }
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                    
-                }
-                else if (a.y == c.y)
-                {
-                    glm::vec3 x = glm::closestPointOnLine(b, a, c);
-                    float d = glm::distance(a, c);
-                    float h = glm::distance(x, b);
-                    if(b.y < a.y)
-                    {
-                        float l = glm::distance(x, a);
-                        maxDistance = glm::max(d, glm::max(h, l));
-
-                        texCoords[6 * i] = 0.f;
-                        texCoords[6 * i + 1] = 0.f;
-
-                        texCoords[6 * i + 2] = h / maxDistance; 
-                        texCoords[6 * i + 3] = l / maxDistance; 
-
-                        texCoords[6 * i + 4] = 0.f;
-                        texCoords[6 * i + 5] = d / maxDistance;
-                    }
-                    else
-                    {
-                        float l = glm::distance(x, c);
-
-                        texCoords[6 * i] = h / maxDistance;
-                        texCoords[6 * i + 1] = d / maxDistance;
-
-                        texCoords[6 * i + 2] = 0.f;
-                        texCoords[6 * i + 3] = l / maxDistance;
-
-                        texCoords[6 * i + 4] = h / maxDistance;
-                        texCoords[6 * i + 5] = 0.f;
-                    }
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                }
-                else if (b.y == c.y)
-                {
-                    glm::vec3 x = glm::closestPointOnLine(c, b, c);
-                    float d = glm::distance(b, c);
-                    float h = glm::distance(x, a);
-                    if(a.y < b.y)
-                    {
-                        float l = glm::distance(x, c);
-                        maxDistance = glm::max(d, glm::max(h, l));
-
-                        texCoords[6 * i] = h / maxDistance;
-                        texCoords[6 * i + 1] = l / maxDistance;
-
-                        texCoords[6 * i + 2] = 0.f;
-                        texCoords[6 * i + 3] = d / maxDistance;
-
-                        texCoords[6 * i + 4] = 0.f;
-                        texCoords[6 * i + 5] = 0.f;
-                    }
-                    else
-                    {
-                        float l = glm::distance(x, b);
-
-                        texCoords[6 * i] = 0.f;
-                        texCoords[6 * i + 1] = l / maxDistance;
-
-                        texCoords[6 * i + 2] = h / maxDistance;
-                        texCoords[6 * i + 3] = 0.f;
-
-                        texCoords[6 * i + 4] = h / maxDistance;
-                        texCoords[6 * i + 5] = d / maxDistance;
-                    }
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(-VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
-                    
+                    tangent = glm::vec3(normal.z, -normal.x, 0.f);
                 }
                 else
                 {
-                    glm::vec3 ba = b - a;
-                    glm::vec3 ca = c - a;
-                    float angle = glm::abs(glm::acos(glm::dot(glm::normalize(ba), glm::normalize(ca))));
-
-                    texCoords[6 * i] = 0;
-                    texCoords[6 * i + 1] = 0;
-
-                    texCoords[6 * i + 2] = glm::length(ba);
-                    texCoords[6 * i + 3] = 0;
-
-                    float caLength = glm::length(ca);
-                    texCoords[6 * i + 4] = glm::cos(angle) * caLength;
-                    texCoords[6 * i + 5] = glm::sin(angle) * caLength;
-
-                    float maxLength = glm::max(texCoords[6 * i + 2], glm::max(texCoords[6 * i + 4], texCoords[6 * i + 5]));
-
-                    texCoords[6 * i + 2] /= maxLength;
-                    texCoords[6 * i + 4] /= maxLength;
-                    texCoords[6 * i + 5] /= maxLength;
-
-                    glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	                glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-
-                    glm::vec3 tangent(VertexArray::computeTangent(e1, e2, t1, t2));
-
-                    glm::vec3 bitangentA(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2])));
-                    glm::vec3 bitangentB(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5])));
-                    glm::vec3 bitangentC(VertexArray::computeBitangent(tangent, glm::vec3(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8])));
-
-                    tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-                    tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-                    tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-
-                    bitangents[9 * i] = bitangentA.x, bitangents[9 * i + 1] = bitangentA.y, bitangents[9 * i + 2] = bitangentA.z;
-                    bitangents[9 * i + 3] = bitangentB.x, bitangents[9 * i + 4] = bitangentB.y, bitangents[9 * i + 5] = bitangentB.z;
-                    bitangents[9 * i + 6] = bitangentC.x, bitangents[9 * i + 7] = bitangentC.y, bitangents[9 * i + 8] = bitangentC.z;
+                    glm::vec3 center((a.x + b.x + c.x) / 3.f, (a.y + b.y + c.y) / 3.f, (a.z + b.z + c.z) / 3.f);
+                    tangent = farPoint - center;
+                    tangent.y = (-normal.z * (tangent.z - center.z) - normal.x * (tangent.x - center.x)) / normal.y + center.y;
+                    tangent = glm::normalize(tangent);
                 }
+
+                glm::vec3 bitangent = VertexArray::computeBitangent(tangent, normal);
+                glm::mat3 tbn(glm::transpose(glm::mat3(tangent, normal, bitangent)));
+
+                glm::vec3 texCoord;
+
+
+                texCoord = tbn * a;
+                texCoords[6 * i] = texCoord.x;
+                texCoords[6 * i + 1] = texCoord.z;
+                
+                texCoord = tbn * b;
+                texCoords[6 * i + 2] = texCoord.x;
+                texCoords[6 * i + 3] = texCoord.z;
+
+                texCoord = tbn * c;
+                texCoords[6 * i + 4] = texCoord.x;
+                texCoords[6 * i + 5] = texCoord.z;
+
+                //if (i < 10)
+                //    std::cout << tbn * center << std::endl;
+
+                tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
+                tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
+                tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
+
+                bitangents[9 * i] = bitangent.x, bitangents[9 * i + 1] = bitangent.y, bitangents[9 * i + 2] = bitangent.z;
+                bitangents[9 * i + 3] = bitangent.x, bitangents[9 * i + 4] = bitangent.y, bitangents[9 * i + 5] = bitangent.z;
+                bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
             }
             
             if (!vertices.empty())
@@ -568,19 +330,37 @@ private:
 
         static void init()
         {
-            texture0.load("Slime_DIFF.png");
-            texture1.load("Slime_SPEC.png");
-            texture2.load("Slime_NRM.png");
-            texture3.load("Slime_OCC.png");
-        }
-        static inline Texture texture0, texture1, texture2, texture3;
-    protected:
-        const ShaderProgram &getShaderProgram() const override { return defaultTextureShaderProgram; }
-        const Texture &getTexture0() const override { return texture0; }
-        const Texture &getTexture1() const override { return texture1; }
-        const Texture &getTexture2() const override { return texture2; }
-        const Texture &getTexture3() const override { return texture3; }
+            slimeShader.load("shaders/slime_vert.glsl", "shaders/slime_frag.glsl");
 
+            texture0.load("Slime_DIFF", true);
+            texture1.load("Slime_SPEC", true);
+            texture2.load("Slime_NRM");
+            texture3.load("Slime_HGT");
+
+            /*texture0.load("bricks3b_diffuse", true);
+            texture1.load("bricks3b_specular", true);
+            texture2.load("bricks3b_normal");
+            texture3.load("bricks3b_height");*/
+
+            /*texture0.load("bricks2_diffuse", true);
+            texture1.load("bricks2_diffuse", true);
+            texture2.load("bricks2_normal");
+            texture3.load("bricks2_height");*/
+        }
+        static inline Texture2d texture0, texture1, texture2, texture3;
+        static inline ShaderProgram slimeShader;
+    protected:
+        const ShaderProgram &getShaderProgram() const override { return slimeShader; }
+        const Texture2d &getTexture0() const override { return texture0; }
+        const Texture2d &getTexture1() const override { return texture1; }
+        const Texture2d &getTexture2() const override { return texture2; }
+        const Texture2d &getTexture3() const override { return texture3; }
+        void draw(Window *window) const override
+        {
+            glFrontFace(GL_CCW);
+            DrawableObject::draw(window);
+            glFrontFace(GL_CW);
+        }
     };
 
     World& world;
