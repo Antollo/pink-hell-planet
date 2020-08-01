@@ -30,7 +30,7 @@ public:
             glDeleteVertexArrays(1, &vertexArray);
         }
     }
-    std::vector<float> load(const char *modelFilename, const float& scale = 1.f)
+    std::vector<float> load(const char *modelFilename, const float &scale = 1.f)
     {
         std::vector<float> vertices, colors, normals, texCoords;
         loadObjFile(modelFilename, vertices, colors, normals, texCoords, scale);
@@ -52,15 +52,15 @@ public:
             updateVertexArray(vertices);
         return vertices;
     }
-    const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords)
+    const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals)
     {
         std::vector<float> tangents(vertices.size()), bitangents(vertices.size());
-        computeTangentAndBitangentVectors(vertices, normals, texCoords, tangents, bitangents);
+        computeTangentAndBitangentVectors(vertices, normals, {}, tangents, bitangents);
 
         if (vertexArray == 0)
-            createVertexArray(vertices, colors, normals, texCoords, tangents, bitangents);
+            createVertexArray(vertices, colors, normals, {}, {}, {});
         else
-            updateVertexArray(vertices, colors, normals, texCoords, tangents, bitangents);
+            updateVertexArray(vertices, colors, normals, {}, {}, {});
         return vertices;
     }
     const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
@@ -72,15 +72,24 @@ public:
         return vertices;
     }
     GLuint getVertexArrayId() const { return vertexArray; }
-    GLsizei getLength() const { return length; }
+    GLsizei getLength(GLuint primitiveType = GL_TRIANGLES) const
+    {
+        switch (primitiveType)
+        {
+        case GL_POINTS:
+            return length / 3;
+        default:
+            return length;
+        }
+    }
 
-    static inline glm::vec3 computeTangent(const glm::vec3& e1, const glm::vec3& e2, const glm::vec2& t1, const glm::vec2& t2)
+    static inline glm::vec3 computeTangent(const glm::vec3 &e1, const glm::vec3 &e2, const glm::vec2 &t1, const glm::vec2 &t2)
     {
         float r = 1.0 / (t1.x * t2.y - t1.y * t2.x);
         return glm::normalize((e1 * t2.y - e2 * t1.y) * r);
     }
 
-    static inline glm::vec3 computeBitangent(const glm::vec3& tangent, const glm::vec3& normal)
+    static inline glm::vec3 computeBitangent(const glm::vec3 &tangent, const glm::vec3 &normal)
     {
         return glm::normalize(glm::cross(tangent, normal));
     }
@@ -114,7 +123,7 @@ private:
             glm::vec3 e2(glm::vec3(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]) - glm::vec3(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]));
 
             glm::vec2 t1(glm::vec2(texCoords[6 * i + 2], texCoords[6 * i + 3]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
-	        glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
+            glm::vec2 t2(glm::vec2(texCoords[6 * i + 4], texCoords[6 * i + 5]) - glm::vec2(texCoords[6 * i], texCoords[6 * i + 1]));
 
             glm::vec3 tangent(computeTangent(e1, e2, t1, t2));
 
@@ -135,11 +144,11 @@ private:
     void createVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
     {
         assert(loaded == false);
-        //assert(vertices.size() == colors.size());
+        /*assert(vertices.size() == colors.size());
         assert(vertices.size() == normals.size());
         assert(vertices.size() * 2 == texCoords.size() * 3);
         assert(vertices.size() == tangents.size());
-        assert(vertices.size() == bitangents.size());
+        assert(vertices.size() == bitangents.size());*/
         glGenVertexArrays(1, &vertexArray);
         glBindVertexArray(vertexArray);
         loadBuffer(vertices.data(), vertices.size(), bufferIndex::POSITION, vertexBuffer);
@@ -155,11 +164,11 @@ private:
     void updateVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
     {
         assert(loaded == true);
-        //assert(vertices.size() == colors.size());
+        /*assert(vertices.size() == colors.size());
         assert(vertices.size() == normals.size());
         assert(vertices.size() * 2 == texCoords.size() * 3);
         assert(vertices.size() == tangents.size());
-        assert(vertices.size() == bitangents.size());
+        assert(vertices.size() == bitangents.size());*/
         glBindVertexArray(vertexArray);
         updateBuffer(vertices.data(), vertices.size(), bufferIndex::POSITION, vertexBuffer);
         updateBuffer(colors.data(), colors.size(), bufferIndex::COLOR, colorBuffer);
@@ -188,16 +197,25 @@ private:
         glBindVertexArray(0);
         length = vertices.size();
     }
-    void loadBuffer(const GLfloat *data, int length, bufferIndex index, GLuint& buffer, GLint size = 3)
+    void loadBuffer(const GLfloat *data, int length, bufferIndex index, GLuint &buffer, GLint size = 3)
     {
+        if (length == 0)
+            return;
         glGenBuffers(1, &buffer);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
         glBufferData(GL_ARRAY_BUFFER, length * sizeof(GLfloat), data, GL_STATIC_DRAW);
         glVertexAttribPointer(static_cast<GLuint>(index), size, GL_FLOAT, GL_FALSE, 0, nullptr);
         glEnableVertexAttribArray(static_cast<GLuint>(index));
     }
-    void updateBuffer(const GLfloat *data, int length, bufferIndex index, GLuint buffer, GLint size = 3)
+    void updateBuffer(const GLfloat *data, int length, bufferIndex index, GLuint &buffer, GLint size = 3)
     {
+        if (length == 0)
+            return;
+        if (buffer == 0)
+        {
+            loadBuffer(data, length, index, buffer, size);
+            return;
+        }
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
         glBufferData(GL_ARRAY_BUFFER, length * sizeof(GLfloat), data, GL_DYNAMIC_DRAW);
     }

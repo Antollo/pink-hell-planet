@@ -68,6 +68,8 @@ protected:
 
     static inline Texture2d defaultTexture;
     static inline Texture3d defaultTexture3d;
+    static inline VertexArray defaultVertexArray;
+    static inline ShaderProgram defaultShaderProgram;
 };
 
 #endif /* !DRAWABLEOBJECT_H_ */

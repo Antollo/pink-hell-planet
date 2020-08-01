@@ -16,6 +16,7 @@
 #include "Fireflies.h"
 #include "Window.h"
 #include "World.h"
+#include "ParticleSystem.h"
 
 class Game
 {
@@ -66,16 +67,20 @@ public:
 
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
+        
+        particleSystem.update();
 
         window.clear();
         window.draw(axes);
         for (auto &objectPtr : drawableObjects)
             window.draw(*objectPtr);
-
+        
         terrain.updateBuffers();
         window.draw(terrain);
         window.draw(skybox);
         window.draw(fireflies);
+        
+        window.draw(particleSystem);
 
         window.swapBuffers();
 
@@ -149,6 +154,7 @@ private:
     Axes axes;
     Skybox skybox;
     Fireflies fireflies;
+    ParticleSystem particleSystem;
     float time, delta, maxDelta = 42.f;
     int key, frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;

@@ -12,7 +12,7 @@ public:
         lastTime = time;
         return delta;
     }
-    float getTime() { return glfwGetTime() - resetTime; }
+    float getTime() const { return glfwGetTime() - resetTime; }
     void reset()
     {
         resetTime = resetTime + getTime();

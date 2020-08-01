@@ -15,6 +15,7 @@ int main()
     Terrain::init();
     Skybox::init();
     Fireflies::init();
+    ParticleSystem::init();
 
     Game game(window);
     while (window.isOpen())

@@ -9,9 +9,12 @@ layout(max_vertices = firefliesVerticesCount) out;
 in vec3 vPosition[];
 
 out vec2 gTexCoord;
+out float gAlpha;
 
 void emitFirefly(vec4 posV)
 {
+    gAlpha = sin(time + posV.x + posV.y + posV.z) * 0.3 + 0.7;
+
     gl_Position = P * (posV + vec4(-0.5, -0.5, 0, 0));
     gTexCoord = vec2(0, 0);
     EmitVertex();

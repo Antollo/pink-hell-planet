@@ -29,14 +29,7 @@ public:
             0.f, 1.f, 0.f,
             0.f, 0.f, 1.f,
             0.f, 0.f, 1.f};
-        std::vector<float> texCoords{
-            0.f, 0.f,
-            0.f, 0.f,
-            0.f, 0.f,
-            0.f, 0.f,
-            0.f, 0.f,
-            0.f, 0.f};
-        vertexArray.load(vertices, colors, normals, texCoords);
+        vertexArray.load(vertices, colors, normals);
         simpleShaderProgram.load("shaders/simple_vert.glsl", "shaders/simple_frag.glsl");
     }
 

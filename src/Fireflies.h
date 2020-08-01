@@ -15,6 +15,7 @@ public:
     void draw(Window *window) const override
     {
         getShaderProgram().use();
+        glDepthMask(GL_FALSE);
         glEnable(GL_BLEND);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, getTexture0().getTextureId());
@@ -23,6 +24,7 @@ public:
         glDrawArrays(GL_POINTS, 0, getVertexArray().getLength());
         glBindVertexArray(0);
         glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
     }
 
 protected:

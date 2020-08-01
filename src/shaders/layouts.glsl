@@ -6,6 +6,7 @@
 #define BITANGENT 5
 
 layout (location = POSITION) in vec3 position;
+layout (location = COLOR) in vec3 color;
 layout (location = NORMAL) in vec3 normal;
 layout (location = TEXCOORD) in vec2 texCoord;
 layout (location = TANGENT) in vec3 tangent;
