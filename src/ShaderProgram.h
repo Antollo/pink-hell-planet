@@ -115,12 +115,16 @@ public:
     void use() const
     {
         assert(loaded == true);
+        glUseProgram(shaderProgram);
+    }
+    void validate() const
+    {
+        assert(loaded == true);
         if (!validated)
         {
             validated = true;
-            validate(shaderProgram);
+            _validate(shaderProgram);
         }
-        glUseProgram(shaderProgram);
     }
 
 private:
@@ -172,7 +176,7 @@ private:
             errorAndExit(log);
         }
     }
-    void validate(GLuint program) const
+    void _validate(GLuint program) const
     {
         GLint status;
 

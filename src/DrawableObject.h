@@ -50,6 +50,7 @@ public:
             glBindTexture(GL_TEXTURE_CUBE_MAP, getTexture3d().getTextureId());
             getShaderProgram().setUniform1i("cube", 4);
         }
+        getShaderProgram().validate();
         glBindVertexArray(getVertexArray().getVertexArrayId());
         glDrawArrays(GL_TRIANGLES, 0, getVertexArray().getLength());
         glBindVertexArray(0);
