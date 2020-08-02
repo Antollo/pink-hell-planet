@@ -38,7 +38,7 @@ inline void loadObjFile(const std::string &modelFilename, std::vector<float> &ve
                 vertices[vertices.size() - 2] /= scale;
                 vertices[vertices.size() - 3] /= scale;
                 normals.insert(normals.end(), attrib.normals.begin() + 3 * idx.normal_index, attrib.normals.begin() + 3 * idx.normal_index + 3);
-                if (3 * idx.vertex_index + 3 < attrib.colors.size())
+                if (3 * idx.vertex_index + 3 < int(attrib.colors.size()))
                     colors.insert(colors.end(), attrib.colors.begin() + 3 * idx.vertex_index, attrib.colors.begin() + 3 * idx.vertex_index + 3);
                 else
                     colors.insert(colors.end(), ones.begin(), ones.end());

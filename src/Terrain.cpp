@@ -168,7 +168,7 @@ void Terrain::TerrainChunk::updateBuffers()
     tangents.resize(vertices.size());
     bitangents.resize(vertices.size());
     constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
-    for (int i = 0; i < texCoords.size() / 6; i++)
+    for (size_t i = 0; i < texCoords.size() / 6; i++)
     {
         glm::vec3 a(vertices[9 * i],     vertices[9 * i + 1], vertices[9 * i + 2]);
         glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);

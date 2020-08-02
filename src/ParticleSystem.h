@@ -26,6 +26,7 @@ public:
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, getTexture0().getTextureId());
         getShaderProgram().setUniform1i("tex0", 0);
+        getShaderProgram().validate();
         glBindVertexArray(v.getVertexArray().getVertexArrayId());
         glDrawArrays(GL_POINTS, 0, v.getVertexArray().getLength(GL_POINTS));
         glBindVertexArray(0);
