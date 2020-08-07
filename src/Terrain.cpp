@@ -212,7 +212,11 @@ void Terrain::TerrainChunk::updateBuffers()
     if (!vertices.empty())
     {
         shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
+        shape->setMargin(0.1f);
+
         rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
+        rigidBody->setOwnerPtr(this);
+        rigidBody->getRawBtCollisionObjPtr()->setCollisionFlags(rigidBody->getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     }
     vertexArray.load(vertices, normals, texCoords, tangents, bitangents);
 }
