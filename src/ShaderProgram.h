@@ -15,7 +15,7 @@
 class ShaderProgram
 {
 public:
-    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + sizeof(float);
+    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + 2 * sizeof(float);
     static void init()
     {
         glGenBuffers(1, &data);
@@ -93,6 +93,11 @@ public:
         GLuint location = glGetUniformLocation(shaderProgram, name);
         glUniform1i(location, i);
     }
+    void setUniform1f(const char *name, float f) const
+    {
+        GLuint location = glGetUniformLocation(shaderProgram, name);
+        glUniform1f(location, f);
+    }
     static void setMatrixP(const glm::mat4 &matrix)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
@@ -110,6 +115,12 @@ public:
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), sizeof(float), &number);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static void setAlpha(const float &alpha)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4) + sizeof(float), sizeof(float), &alpha);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     void use() const

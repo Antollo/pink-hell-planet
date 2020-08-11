@@ -18,4 +18,5 @@ public:
         m.getOpenGLMatrix(glm::value_ptr(M));
     }
 };
+
 #endif /* !PHYSICSOBJECT_H_ */

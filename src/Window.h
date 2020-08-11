@@ -51,6 +51,7 @@ public:
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
         glfwSetKeyCallback(window, keyCallback);
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
         glfwSetCursorPosCallback(window, cursorPosCallback);
 
         glfwMakeContextCurrent(window);
@@ -120,13 +121,11 @@ public:
 
     int pollKey()
     {
-        if (!keys.empty())
-        {
-            int key = keys.front();
-            keys.pop();
-            return key;
-        }
-        return 0;
+        return popOrZero(keys);
+    }
+    int pollMouseButton()
+    {
+        return popOrZero(mouseButtons);
     }
 
     void draw(const Drawable &drawable)
@@ -154,6 +153,7 @@ private:
 
     double _width, _height;
     std::queue<int> keys;
+    std::queue<int> mouseButtons;
     double xPosOld, yPosOld;
     float xDiff, yDiff;
     bool firstUpdate;
@@ -180,6 +180,20 @@ private:
             break;
         }
     }
+    static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
+    {
+        Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        switch (action)
+        {
+        case GLFW_PRESS:
+            obj.mouseButtons.push(button);
+            break;
+
+        case GLFW_RELEASE:
+            obj.mouseButtons.push(-button);
+            break;
+        }
+    }
     static void cursorPosCallback(GLFWwindow *window, double xPos, double yPos)
     {
         Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
@@ -195,6 +209,14 @@ private:
             obj.xPosOld = xPos;
             obj.yPosOld = yPos;
         }
+    }
+    static int popOrZero(std::queue<int>& q)
+    {
+        if (q.empty())
+            return 0;
+        int r = q.front();
+        q.pop();
+        return r;
     }
 };
 

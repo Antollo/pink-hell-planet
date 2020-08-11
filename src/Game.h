@@ -23,11 +23,11 @@ class Game
 public:
     Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world)
     {
-        drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
 
-        player = dynamic_cast<PlayableObject *>(drawableObjects.front().get());
+        player = new DummyModel(world);// dynamic_cast<PlayableObject *>(drawableObjects.front().get());
         clock.reset();
         clock60Pi.reset();
     }
@@ -52,8 +52,16 @@ public:
         }
         maxDelta = std::max(maxDelta, delta);
 
-        while ((key = window.pollKey()))
+        while (int key = window.pollKey())
             consumeKey(key);
+        while (int button = window.pollMouseButton())
+            consumeButton(button);
+
+        float xDiff, yDiff;
+        window.getCursorDiff(xDiff, yDiff);
+        camera.consumeCursorDiff(xDiff, yDiff);
+        if (player != nullptr)
+            player->consumeCursorDiff(xDiff, yDiff);
 
         if (time < 1.f)
             window.setClearColor(0.5f * time, time, 1.f - time);
@@ -68,19 +76,26 @@ public:
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
         
+        player->update(delta);
+        
         particleSystem.update();
+
+        for (auto &objectPtr : drawableObjects)
+            window.draw(*objectPtr);
+        window.draw(*player);
 
         window.clear();
         window.draw(axes);
-        for (auto &objectPtr : drawableObjects)
-            window.draw(*objectPtr);
         
         terrain.updateBuffers();
         window.draw(terrain);
         window.draw(skybox);
+
         window.draw(fireflies);
-        
+
         window.draw(particleSystem);
+
+        window.draw(*player);
 
         window.swapBuffers();
 
@@ -94,56 +109,26 @@ public:
     }
 
 private:
-    void consumeKey(int key)
+    void consumeKey(int glfwKeyCode)
     {
-        camera.consumeKey(key);
-        switch (key)
+        switch (glfwKeyCode)
         {
         case GLFW_KEY_ESCAPE:
             window.close();
             break;
         }
+
         if (player != nullptr)
         {
-            switch (key)
-            {
-            case GLFW_KEY_W:
-                player->goForward(true);
-                break;
-            case -GLFW_KEY_W:
-                player->goForward(false);
-                break;
-
-            case GLFW_KEY_S:
-                player->goBackward(true);
-                break;
-            case -GLFW_KEY_S:
-                player->goBackward(false);
-                break;
-
-            case GLFW_KEY_A:
-                player->goLeft(true);
-                break;
-            case -GLFW_KEY_A:
-                player->goLeft(false);
-                break;
-
-            case GLFW_KEY_D:
-                if (player != nullptr)
-                    player->goRight(true);
-                break;
-            case -GLFW_KEY_D:
-                player->goRight(false);
-                break;
-
-            case GLFW_KEY_SPACE:
-                player->goUp(true);
-                break;
-            case -GLFW_KEY_SPACE:
-                player->goUp(false);
-                break;
-            }
+            player->consumeKey(glfwKeyCode);
         }
+        else
+            camera.consumeKey(glfwKeyCode);
+    }
+    void consumeButton(int glfwButtonCode)
+    {
+        if (player != nullptr)
+            player->consumeButton(glfwButtonCode);
     }
 
     Window &window;
@@ -156,7 +141,7 @@ private:
     Fireflies fireflies;
     ParticleSystem particleSystem;
     float time, delta, maxDelta = 42.f;
-    int key, frames = 0;
+    int frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
     Terrain terrain;
 };
