@@ -36,6 +36,8 @@ public:
     {
         time = clock60Pi.getTime();
         ShaderProgram::setTime(time);
+        particleSystem.update(time);
+
         if (time >= glm::pi<float>() * 60.f)
             clock60Pi.reset();
 
@@ -67,8 +69,12 @@ public:
 
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
-        
-        particleSystem.update();
+
+        if (testExplosionClock.getTime() >= 6.f)
+        {
+            testExplosionClock.reset();
+            particleSystem.generate(glm::vec3(glm::linearRand(0.f, 80.f), 10.f, glm::linearRand(0.f, 80.f)));
+        }
 
         window.clear();
         window.draw(axes);
@@ -79,7 +85,6 @@ public:
         window.draw(terrain);
         window.draw(skybox);
         window.draw(fireflies);
-        
         window.draw(particleSystem);
 
         window.swapBuffers();
@@ -147,7 +152,7 @@ private:
     }
 
     Window &window;
-    Clock clock, clock60Pi;
+    Clock clock, clock60Pi, testExplosionClock;;
     World world;
     PlayableObject *player;
     Camera camera;

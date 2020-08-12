@@ -40,5 +40,6 @@ const Firefly fireflies[firefliesCount] = Firefly[firefliesCount](
 vec4 fireflyPos(Firefly a)
 {
     float t = time * timeScale;
+    // trajectories of Lissajous knots
     return vec4(a.s * vec3(cos(a.n.x * t + a.f.x), cos(a.n.y * t + a.f.y), cos(a.n.z * t + a.f.z)), 0) + vec4(a.t, 1);
 }

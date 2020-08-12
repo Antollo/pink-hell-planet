@@ -11,11 +11,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include "error.h"
+#include "ParticleGroupLight.h"
 
 class ShaderProgram
 {
 public:
-    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + sizeof(float);
+    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + sizeof(glm::vec4) + ParticleGroupLight::count * sizeof(ParticleGroupLight);
     static void init()
     {
         glGenBuffers(1, &data);
@@ -110,6 +111,12 @@ public:
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), sizeof(float), &number);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static void setParticleGroupLight(const ParticleGroupLight &light, int index)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4) + sizeof(glm::vec4) + index * sizeof(ParticleGroupLight), sizeof(ParticleGroupLight), &light);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     void use() const

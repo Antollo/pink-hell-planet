@@ -21,7 +21,7 @@ in vec3 gViewerTBN;
 
 out vec4 color;
 
-vec4 addLight(vec4 lpV, vec4 v, vec4 n, vec2 texCoords) 
+vec4 addLight(vec4 lpV, vec4 v, vec4 n, vec3 diffuseTexColor, vec3 specularTexColor) 
 {
     vec4 l = normalize(lpV - gPositionVM);
     vec4 r = reflect(-l, n);
@@ -31,7 +31,7 @@ vec4 addLight(vec4 lpV, vec4 v, vec4 n, vec2 texCoords)
     float dist = distance(lpV, gPositionVM);
     float att = (1 / (0.01 * pow(dist, 2) + 0.01 * dist + 1)) * 0.5;
 
-    return vec4(att * (texture(tex0, texCoords).rgb * nl + texture(tex1, texCoords).rgb * rv), 0);
+    return vec4(att * (diffuseTexColor * nl + specularTexColor * rv), 0);
 }
 
 vec2 parallaxMapping(vec2 texCoords)
@@ -83,8 +83,18 @@ void main()
     }
     
     color = vec4(0.005 * texture(tex0, texCoords).rgb, 1);
+
+    vec3 diffuseTexColor = texture(tex0, texCoords).rgb;
+    vec3 specularTexColor = texture(tex1, texCoords).rgb;
+
     for (int i = 0; i < firefliesCount; i++)
-        color += addLight(V * fireflyPos(fireflies[i]), v, n, texCoords);
+        color += addLight(V * fireflyPos(fireflies[i]), v, n, diffuseTexColor, specularTexColor);
+
+    for (int i = 0; i < particleGroupLightCount; i++)
+    {
+        float m = clamp(pow(5 / (-lights[i].startTime + time + 0.1) - 0.5, 3), 0, 2);
+        color += addLight(V * vec4(lights[i].position, 1), v, n, mix(diffuseTexColor, vec3(1, 0.5, 0.5), 0.1), mix(specularTexColor, vec3(1, 0.5, 0.5), 0.7)) * m;
+    }
 
     vec3 r = mat3(invV) * reflect(-v.xyz, n.xyz);
     color += sqrt(1 - pow(dot(v.xyz, n.xyz), 2)) * 0.1 * vec4(texture(cube, r).rgb, 0);
