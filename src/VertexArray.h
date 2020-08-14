@@ -72,16 +72,7 @@ public:
         return vertices;
     }
     GLuint getVertexArrayId() const { return vertexArray; }
-    GLsizei getLength(GLuint primitiveType = GL_TRIANGLES) const
-    {
-        switch (primitiveType)
-        {
-        case GL_POINTS:
-            return length / 3;
-        default:
-            return length;
-        }
-    }
+    GLsizei getLength() const { return length / 3; }
 
     static inline glm::vec3 computeTangent(const glm::vec3 &e1, const glm::vec3 &e2, const glm::vec2 &t1, const glm::vec2 &t2)
     {

@@ -17,6 +17,9 @@ public:
                                              "shaders/particleSystem_frag.glsl");
 
         texture.load("firefly_DIFF", true, true);
+
+        for (int i = 0; i < particleGroupCount; i++)
+            ShaderProgram::setParticleGroupLight(ParticleGroupLight(glm::vec3(0.f, 0.f, 0.f), -10.f), i);
     }
 
     void draw(Window *window) const override
@@ -28,14 +31,16 @@ public:
         glBindTexture(GL_TEXTURE_2D, getTexture0().getTextureId());
         getShaderProgram().setUniform1i("tex0", 0);
         getShaderProgram().validate();
+        float temp = ShaderProgram::getTime();
         for (auto &particleGroup : particleGroups)
         {
             if (particleGroup.getTime() > 6.f)
                 continue;
             ShaderProgram::setTime(particleGroup.getTime());
             glBindVertexArray(particleGroup.getVertexArray().getVertexArrayId());
-            glDrawArrays(GL_POINTS, 0, particleGroup.getVertexArray().getLength(GL_POINTS));
+            glDrawArrays(GL_POINTS, 0, particleGroup.getVertexArray().getLength());
         }
+        ShaderProgram::setTime(temp);
         glBindVertexArray(0);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);

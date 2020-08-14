@@ -9,6 +9,7 @@ add_executable(game
     World.cpp
     RigidBody.cpp
     GhostObject.cpp
+    CollisionObject.cpp
 )
 
 target_link_libraries(game OpenGL::GL glm::glm glfw glad tinyobjloader lodepng bullet3 BulletDynamics BulletCollision)

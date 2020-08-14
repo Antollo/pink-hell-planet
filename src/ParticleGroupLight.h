@@ -9,7 +9,7 @@ public:
     ParticleGroupLight(const glm::vec3 &position, float time)
         : groupPosition(position), startTime(time) {}
         
-    static constexpr int count = 10;
+    static constexpr int count = 8;
 private:
     glm::vec3 groupPosition;
     float startTime;

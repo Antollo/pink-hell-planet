@@ -92,6 +92,8 @@ void main()
 
     for (int i = 0; i < particleGroupLightCount; i++)
     {
+        if (-lights[i].startTime + time > 6)
+            continue;
         float m = clamp(pow(5 / (-lights[i].startTime + time + 0.1) - 0.5, 3), 0, 2);
         color += addLight(V * vec4(lights[i].position, 1), v, n, mix(diffuseTexColor, vec3(1, 0.5, 0.5), 0.1), mix(specularTexColor, vec3(1, 0.5, 0.5), 0.7)) * m;
     }

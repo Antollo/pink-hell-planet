@@ -50,9 +50,15 @@ public:
             glBindTexture(GL_TEXTURE_CUBE_MAP, getTexture3d().getTextureId());
             getShaderProgram().setUniform1i("cube", 4);
         }
+        if (getAlpha() != 1)
+        {
+            glEnable(GL_BLEND);
+            getShaderProgram().setAlpha(getAlpha());
+        }
         getShaderProgram().validate();
         glBindVertexArray(getVertexArray().getVertexArrayId());
         glDrawArrays(GL_TRIANGLES, 0, getVertexArray().getLength());
+        glDisable(GL_BLEND);
         glBindVertexArray(0);
     }
 
@@ -66,6 +72,7 @@ protected:
     virtual const Texture2d &getTexture2() const { return defaultTexture; }
     virtual const Texture2d &getTexture3() const { return defaultTexture; }
     virtual const Texture3d &getTexture3d() const { return defaultTexture3d; }
+    virtual float getAlpha() const { return 1; }
 
     static inline Texture2d defaultTexture;
     static inline Texture3d defaultTexture3d;

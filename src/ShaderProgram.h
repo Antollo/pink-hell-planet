@@ -15,8 +15,16 @@
 
 class ShaderProgram
 {
+private:
+    static constexpr size_t pOffset = 0;
+    static constexpr size_t vOffset = pOffset + sizeof(glm::mat4);
+    static constexpr size_t invVOffset = vOffset + sizeof(glm::mat4);
+    static constexpr size_t lightsOffset = invVOffset + sizeof(glm::mat4);
+    static constexpr size_t timeOffset = lightsOffset + ParticleGroupLight::count * sizeof(ParticleGroupLight);
+    static constexpr size_t alphaOffset = timeOffset + sizeof(float);
+    static constexpr size_t dataSize = alphaOffset + sizeof(float);
+
 public:
-    static constexpr size_t dataSize = 3 * sizeof(glm::mat4) + sizeof(glm::vec4) + ParticleGroupLight::count * sizeof(ParticleGroupLight);
     static void init()
     {
         glGenBuffers(1, &data);
@@ -94,29 +102,44 @@ public:
         GLuint location = glGetUniformLocation(shaderProgram, name);
         glUniform1i(location, i);
     }
+    void setUniform1f(const char *name, float f) const
+    {
+        GLuint location = glGetUniformLocation(shaderProgram, name);
+        glUniform1f(location, f);
+    }
     static void setMatrixP(const glm::mat4 &matrix)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(glm::mat4), glm::value_ptr(matrix));
+        glBufferSubData(GL_UNIFORM_BUFFER, pOffset, sizeof(glm::mat4), glm::value_ptr(matrix));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     static void setMatrixV(const glm::mat4 &matrix)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
-        glBufferSubData(GL_UNIFORM_BUFFER, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(matrix));
-        glBufferSubData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(glm::inverse(matrix)));
+        glBufferSubData(GL_UNIFORM_BUFFER, vOffset, sizeof(glm::mat4), glm::value_ptr(matrix));
+        glBufferSubData(GL_UNIFORM_BUFFER, invVOffset, sizeof(glm::mat4), glm::value_ptr(glm::inverse(matrix)));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     static void setTime(const float &number)
     {
+        time = number;
         glBindBuffer(GL_UNIFORM_BUFFER, data);
-        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4), sizeof(float), &number);
+        glBufferSubData(GL_UNIFORM_BUFFER, timeOffset, sizeof(float), &number);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static float getTime()
+    {
+        return time;
     }
     static void setParticleGroupLight(const ParticleGroupLight &light, int index)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
-        glBufferSubData(GL_UNIFORM_BUFFER, 3 * sizeof(glm::mat4) + sizeof(glm::vec4) + index * sizeof(ParticleGroupLight), sizeof(ParticleGroupLight), &light);
+        glBufferSubData(GL_UNIFORM_BUFFER, lightsOffset + index * sizeof(ParticleGroupLight), sizeof(ParticleGroupLight), &light);
+    }
+    static void setAlpha(const float &alpha)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, alphaOffset, sizeof(float), &alpha);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     void use() const
@@ -136,6 +159,7 @@ public:
 
 private:
     static inline GLuint data = 0;
+    static inline float time = 0.f;
     bool loaded;
     mutable bool validated;
 

@@ -47,14 +47,17 @@ void main()
     vec3 diffuseTexColor = texture(tex0, texCoords).rgb;
     vec3 specularTexColor = texture(tex1, texCoords).rgb;
     for (int i = 0; i < firefliesCount; i++)
-        color += addLight(V * fireflyPos(fireflies[i]), v, n, diffuseTexColor, specularTexColor);
+        color += addLight(V * fireflyPos(fireflies[i]), v, n, diffuseTexColor, specularTexColor) * 10;
 
     for (int i = 0; i < particleGroupLightCount; i++)
     {
+        if (-lights[i].startTime + time > 6)
+            continue;
         float m = clamp(pow(5 / (-lights[i].startTime + time + 0.1) - 0.5, 3), 0, 2);
         color += addLight(V * vec4(lights[i].position, 1), v, n, mix(diffuseTexColor, vec3(1, 0.5, 0.5), 0.1), mix(specularTexColor, vec3(1, 0.5, 0.5), 0.7)) * m;
     }
     
     vec3 r = mat3(invV) * reflect(-v.xyz, n.xyz);
-    color += sqrt(1 - pow(dot(v.xyz, n.xyz), 2)) * 0.8 * vec4(pow(texture(tex3, texCoords).rgb, vec3(2, 2, 2)) * texture(cube, r).rgb, 0);
+    color += sqrt(1 - pow(dot(v.xyz, n.xyz), 2)) * 0.8 * vec4(pow(texture(tex3, texCoords).rgb, vec3(2, 2, 2)) * texture(cube, r).rgb, 1);
+    color.a = alpha;
 }

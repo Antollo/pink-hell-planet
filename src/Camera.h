@@ -15,9 +15,9 @@ public:
         update(0);
     }
 
-    void consumeKey(int key)
+    void consumeKey(int glfwKeyCode)
     {
-        switch (key)
+        switch (glfwKeyCode)
         {
         case GLFW_KEY_W:
             forward = true;
@@ -55,25 +55,16 @@ public:
             break;
         }
     }
+    void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
+    {
+        yaw += yCursorDiff * mouseSensitivity;
+        pitch -= xCursorDiff * mouseSensitivity;
+    }
 
     void update(float delta)
     {
-        float distance = freecamSpeed * delta;
-
-        if (forward)
-            position += frontDirection * distance;
-        if (backward)
-            position -= frontDirection * distance;
-
-        if (right)
-            position -= rightDirection * distance;
-        if (left)
-            position += rightDirection * distance;
-
-        window.getCursorDiff(xCursorDiff, yCursorDiff);
-
-        yaw += yCursorDiff * mouseSensitivity;
-        pitch -= xCursorDiff * mouseSensitivity;
+        if (player == nullptr)
+            freeCamPositionUpdate(delta);
 
         frontDirection.z = sin(yaw) * cos(pitch);
         frontDirection.x = sin(yaw) * sin(pitch);
@@ -87,27 +78,59 @@ public:
 
         if (player != nullptr)
         {
-            position = (player->getPosition() - glm::normalize(frontDirection) * viewDistance + glm::vec3(0.f, 0.5f, 0.f)) * 0.2f + oldPosition * 0.8f;
+            float newPosWeight = std::min(newPositionFactor * delta, 1.f);
+            position = (player->getPosition() - glm::normalize(frontDirection) * viewDistance + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1-newPosWeight);
             oldPosition = position;
+            averagePosition = player->getPosition() * player->getZoom() + position * (1 - player->getZoom());
+        }
+        else
+        {
+            averagePosition = position;
         }
 
         V = glm::lookAt(
-            position,
-            position + glm::normalize(frontDirection),
+            averagePosition,
+            averagePosition + glm::normalize(frontDirection),
             glm::normalize(upDirection));
 
         ShaderProgram::setMatrixV(V);
     }
 
 private:
+    void updateYawPitch()
+    {
+        if (player != nullptr)
+        {
+            yaw = player->getYaw();
+            pitch = player->getPitch();
+        }
+    }
+    void freeCamPositionUpdate(float delta)
+    {
+        float distance = freecamSpeed * delta;
+        if (player == nullptr)
+        {
+            if (forward)
+                position += frontDirection * distance;
+            if (backward)
+                position -= frontDirection * distance;
+
+            if (right)
+                position -= rightDirection * distance;
+            if (left)
+                position += rightDirection * distance;
+        }
+    }
+
     Window& window;
     PlayableObject*& player;
     glm::mat4 V;
-    glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, oldPosition = glm::vec3(0.f, 0.f, 0.f);
-    float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 1.7f;
+    glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
+    float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 6.f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;
+    static constexpr float newPositionFactor = 26.f;
 };
 
 #endif /* !CAMERA_H_ */

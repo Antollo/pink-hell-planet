@@ -24,7 +24,8 @@ bool CustomMaterialCombinerCallback(btManifoldPoint& cp, const btCollisionObject
             Terrain::TerrainChunk* chunk = dynamic_cast<Terrain::TerrainChunk*>(ownerPtr);
             if (chunk)
             {
-                cp.m_normalWorldOnB = toBtVec3(chunk->getPartNormal(index1));
+                glm::vec3 normal = chunk->getPartNormal(index1);
+                cp.m_normalWorldOnB = toBtVec3(normal);
             }
         }
     }
@@ -212,7 +213,12 @@ void Terrain::TerrainChunk::updateBuffers()
     if (!vertices.empty())
     {
         shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
+        shape->setMargin(0.f);
+        // btGenerateInternalEdgeInfo(shape.get(), new btTriangleInfoMap());
+
         rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
+        rigidBody->setOwnerPtr(this);
+        rigidBody->getRawBtCollisionObjPtr()->setCollisionFlags(rigidBody->getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     }
     vertexArray.load(vertices, normals, texCoords, tangents, bitangents);
 }

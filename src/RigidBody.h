@@ -24,19 +24,6 @@ public:
     }
 
 protected:
-    static std::unique_ptr<btCollisionShape> shapeFromVertices(const std::vector<float>& vertices)
-    {
-        btConvexHullShape* shape = new btConvexHullShape(vertices.data(), vertices.size() / 3, 3 * sizeof(float));
-        shape->optimizeConvexHull();
-        return std::unique_ptr<btCollisionShape>(shape);
-    }
-    static std::unique_ptr<btCollisionShape> shapeFromVertices(std::vector<float>&& vertices)
-    {
-        btConvexHullShape* shape = new btConvexHullShape(vertices.data(), vertices.size() / 3, 3 * sizeof(float));
-        shape->optimizeConvexHull();
-        return std::unique_ptr<btCollisionShape>(shape);
-    }
-
     btRigidBody* body;
 
 private:

@@ -1,6 +1,8 @@
 #ifndef COLLISIONOBJECT_H_
 #define COLLISIONOBJECT_H_
 
+#include <memory>
+#include <vector>
 #include <btBulletDynamicsCommon.h>
 #include <glm/glm.hpp>
 
@@ -11,6 +13,8 @@ class World;
 class CollisionObject
 {
 public:
+    static void init();
+
     CollisionObject(World* worldPtr, btCollisionShape* shapePtr) : world(worldPtr), myShape(shapePtr), ownerPtr(nullptr) {}
     virtual ~CollisionObject() noexcept {};
 
@@ -44,7 +48,11 @@ public:
         return ownerPtr;
     }
 
+    virtual void contactAddedCallback(CollisionObject* other) {}
+
 protected:
+    static std::unique_ptr<btCollisionShape> shapeFromVertices(const std::vector<float>& vertices);
+    static std::unique_ptr<btCollisionShape> boundingBoxShape(const std::vector<float>& vertices);
     // Should be called by constructors of derived classes
     // when getRawBtCollisionObjPtr() is ready to return the pointer
     void setBtUserPtr()
