@@ -71,7 +71,6 @@ void main()
         texCoords = mix(gTexCoord, parallaxMapping(gTexCoord), m);
     }
     
-    
     vec4 v = normalize(vec4(0, 0, 0, 1) - gPositionVM);
     vec4 n = gNormalVM;
 

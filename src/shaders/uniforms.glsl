@@ -15,6 +15,7 @@ layout (std140) uniform data
     // "The array stride (the bytes between array elements) is always rounded up to the size of a vec4"
     // https://www.khronos.org/opengl/wiki/Interface_Block_(GLSL)#Memory_layout
     // I spent way too much time debugging it.
+    vec4 globalColor;
     float time;
     float alpha;
 };

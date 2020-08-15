@@ -95,7 +95,7 @@ private:
                 other[i * 3 + 2] = 1.f;
             }
 
-            vertexArray.load(position, velocity, other);
+            vertexArray.loadVerticesColorsNormals(position, velocity, other);
 
             static int i = 0;
             ShaderProgram::setParticleGroupLight(ParticleGroupLight(center, globalTime), i);

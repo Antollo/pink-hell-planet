@@ -10,13 +10,19 @@
 class Texture
 {
 public:
-    Texture() : loaded(false), texture(0) {}
+    Texture(GLuint id = 0) : loaded(id), texture(id) {}
+    Texture(Texture &&other) : Texture(other.getTextureId()) { other.loaded = false; }
+    Texture &operator=(Texture &&other)
+    {
+        texture = other.getTextureId();
+        loaded = texture;
+        other.loaded = false;
+        return *this;
+    }
     virtual ~Texture()
     {
         if (loaded)
-        {
             glDeleteTextures(1, &texture);
-        }
     }
     virtual void load(const std::string &imageFilename, bool srgb, bool alpha, bool anisotropicFiltering) = 0;
 
@@ -30,6 +36,7 @@ protected:
 class Texture2d : public Texture
 {
 public:
+    Texture2d(GLuint id = 0) : Texture(id) {}
     void load(const std::string &imageFilename, bool srgb = false, bool alpha = false, bool anisotropicFiltering = true) override
     {
         assert(loaded == false);
@@ -58,6 +65,32 @@ public:
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        loaded = true;
+    }
+    void load(GLsizei width, GLsizei height, GLenum format, const void *data, bool anisotropicFiltering = true)
+    {
+        assert(loaded == false);
+        glActiveTexture(GL_TEXTURE0);
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+        if (anisotropicFiltering)
+        {
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            float maxAnisotropy;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glm::min(maxAnisotropy, 8.f));
+        }
+        else
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        }
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         loaded = true;

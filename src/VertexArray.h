@@ -9,6 +9,7 @@
 class VertexArray
 {
 public:
+    using fVecR = const std::vector<float> &;
     VertexArray()
         : vertexArray(0), vertexBuffer(0), colorBuffer(0), normalBuffer(0), texCoordBuffer(0), tangentBuffer(0), bitangentBuffer(0), length(0), loaded(false) {}
     ~VertexArray()
@@ -44,7 +45,7 @@ public:
             updateVertexArray(vertices, colors, normals, texCoords, tangents, bitangents);
         return vertices;
     }
-    const std::vector<float> &load(const std::vector<float> &vertices)
+    fVecR loadVertices(fVecR vertices)
     {
         if (vertexArray == 0)
             createVertexArray(vertices);
@@ -52,7 +53,23 @@ public:
             updateVertexArray(vertices);
         return vertices;
     }
-    const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals)
+    fVecR loadVerticesTexCoords(fVecR vertices, fVecR texCoords)
+    {
+        if (vertexArray == 0)
+            createVertexArray(vertices, {}, {}, texCoords, {}, {});
+        else
+            updateVertexArray(vertices, {}, {}, texCoords, {}, {});
+        return vertices;
+    }
+    fVecR loadVerticesColors(fVecR vertices, fVecR colors)
+    {
+        if (vertexArray == 0)
+            createVertexArray(vertices, colors, {}, {}, {}, {});
+        else
+            updateVertexArray(vertices, colors, {}, {}, {}, {});
+        return vertices;
+    }
+    fVecR loadVerticesColorsNormals(fVecR vertices, fVecR colors, fVecR normals)
     {
         std::vector<float> tangents(vertices.size()), bitangents(vertices.size());
         computeTangentAndBitangentVectors(vertices, normals, {}, tangents, bitangents);
@@ -63,7 +80,7 @@ public:
             updateVertexArray(vertices, colors, normals, {}, {}, {});
         return vertices;
     }
-    const std::vector<float> &load(const std::vector<float> &vertices, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
+    fVecR loadVerticesNormalsTexCoordsTangentsBitangents(fVecR vertices, fVecR normals, fVecR texCoords, fVecR tangents, fVecR bitangents)
     {
         if (vertexArray == 0)
             createVertexArray(vertices, {}, normals, texCoords, tangents, bitangents);
@@ -106,7 +123,7 @@ private:
     GLsizei length;
     bool loaded;
 
-    void computeTangentAndBitangentVectors(const std::vector<float> &vertices, const std::vector<float> &normals, const std::vector<float> &texCoords, std::vector<float> &tangents, std::vector<float> &bitangents) const
+    void computeTangentAndBitangentVectors(fVecR vertices, fVecR normals, fVecR texCoords, std::vector<float> &tangents, std::vector<float> &bitangents) const
     {
         for (size_t i = 0; i < texCoords.size() / 6; i++)
         {
@@ -132,7 +149,7 @@ private:
         }
     }
 
-    void createVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
+    void createVertexArray(fVecR vertices, fVecR colors, fVecR normals, fVecR texCoords, fVecR tangents, fVecR bitangents)
     {
         assert(loaded == false);
         /*assert(vertices.size() == colors.size());
@@ -152,7 +169,7 @@ private:
         length = vertices.size();
         loaded = true;
     }
-    void updateVertexArray(const std::vector<float> &vertices, const std::vector<float> &colors, const std::vector<float> &normals, const std::vector<float> &texCoords, const std::vector<float> &tangents, const std::vector<float> &bitangents)
+    void updateVertexArray(fVecR vertices, fVecR colors, fVecR normals, fVecR texCoords, fVecR tangents, fVecR bitangents)
     {
         assert(loaded == true);
         /*assert(vertices.size() == colors.size());
@@ -170,7 +187,7 @@ private:
         glBindVertexArray(0);
         length = vertices.size();
     }
-    void createVertexArray(const std::vector<float> &vertices)
+    void createVertexArray(fVecR vertices)
     {
         assert(loaded == false);
         glGenVertexArrays(1, &vertexArray);
@@ -180,7 +197,7 @@ private:
         length = vertices.size();
         loaded = true;
     }
-    void updateVertexArray(const std::vector<float> &vertices)
+    void updateVertexArray(fVecR vertices)
     {
         assert(loaded == true);
         glBindVertexArray(vertexArray);

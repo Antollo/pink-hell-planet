@@ -13,3 +13,6 @@
 [submodule "thirdparty/bullet3/bullet3"]
 	path = thirdparty/bullet3/bullet3
 	url = https://github.com/bulletphysics/bullet3
+[submodule "thirdparty/freetype2/freetype2"]
+	path = thirdparty/freetype2/freetype2
+	url = https://git.savannah.nongnu.org/r/freetype/freetype2.git

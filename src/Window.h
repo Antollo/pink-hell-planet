@@ -22,7 +22,12 @@ public:
 class Window
 {
 public:
-    Window(int width, int height, const char *title) : _width(width), _height(height), xPosOld(0.0), yPosOld(0.0), xDiff(0.0), yDiff(0.0),  firstUpdate(true)
+    Window(int width, int height, const char *title)
+        : _width(width), _height(height),
+          xPosOld(0.0), yPosOld(0.0),
+          xDiff(0.0), yDiff(0.0),
+          firstUpdate(true), projectionMode(ProjectionMode::perspective),
+          orthoP(glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f))
     {
         if (!glfwInit())
             errorAndExit("glfwInit failed");
@@ -62,7 +67,7 @@ public:
 
         std::cout << "OpenGL context version: " << reinterpret_cast<const char *>(glGetString(GL_VERSION)) << std::endl;
 
-        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
+        perspectiveP = glm::perspective(glm::radians(50.f), getAspectRatio(), 0.01f, 1000.0f);
 
         glDepthFunc(GL_LEQUAL);
         glEnable(GL_DEPTH_TEST);
@@ -71,7 +76,6 @@ public:
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glFrontFace(GL_CW);
-        //glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
@@ -110,7 +114,7 @@ public:
     {
         if (firstUpdate)
         {
-            ShaderProgram::setMatrixP(P);
+            ShaderProgram::setMatrixP(perspectiveP);
             firstUpdate = false;
         }
         xDiff = 0.0;
@@ -139,32 +143,51 @@ public:
         y = yDiff;
     }
 
-    void refreshMatrixP()
+    float getAspectRatio() const { return _width / _height; }
+    float getHeight() const { return _height; }
+    float getWidth() const { return _width; }
+
+    enum class ProjectionMode
     {
-        P = glm::perspective(glm::radians(50.f), float(_width / _height), 0.01f, 1000.0f);
-        ShaderProgram::setMatrixP(P);
+        perspective,
+        ortho
+    };
+
+    void setProjectionMode(ProjectionMode newProjectionMode)
+    {
+        if (projectionMode != newProjectionMode)
+        {
+            if (newProjectionMode == ProjectionMode::ortho)
+                ShaderProgram::setMatrixP(orthoP);
+            else if (newProjectionMode == ProjectionMode::perspective)
+                ShaderProgram::setMatrixP(perspectiveP);
+            projectionMode = newProjectionMode;
+        }
     }
 
 private:
     friend class Drawable;
 
-    glm::mat4 P;
     GLFWwindow *window;
-
-    double _width, _height;
+    float _width, _height;
     std::queue<int> keys;
     std::queue<int> mouseButtons;
     double xPosOld, yPosOld;
     float xDiff, yDiff;
     bool firstUpdate;
+    ProjectionMode projectionMode;
+    glm::mat4 perspectiveP;
+    glm::mat4 orthoP;
+
     static void framebufferSizeCallback(GLFWwindow *window, int width, int height)
     {
         glViewport(0, 0, width, height);
         Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
         obj._width = width;
         obj._height = height;
-        obj.P = glm::perspective(glm::radians(50.f), float(obj._width / obj._height), 0.01f, 1000.0f);
-        ShaderProgram::setMatrixP(obj.P);
+        obj.perspectiveP = glm::perspective(glm::radians(50.f), obj.getAspectRatio(), 0.01f, 1000.0f);
+        if (obj.projectionMode == ProjectionMode::perspective)
+            ShaderProgram::setMatrixP(obj.perspectiveP);
     }
     static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
     {
@@ -210,7 +233,7 @@ private:
             obj.yPosOld = yPos;
         }
     }
-    static int popOrZero(std::queue<int>& q)
+    static int popOrZero(std::queue<int> &q)
     {
         if (q.empty())
             return 0;

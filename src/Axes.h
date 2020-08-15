@@ -22,14 +22,7 @@ public:
             0.f, 1.f, 0.f,
             0.f, 0.f, 1.f,
             0.f, 0.f, 1.f};
-        std::vector<float> normals{
-            1.f, 0.f, 0.f,
-            1.f, 0.f, 0.f,
-            0.f, 1.f, 0.f,
-            0.f, 1.f, 0.f,
-            0.f, 0.f, 1.f,
-            0.f, 0.f, 1.f};
-        vertexArray.load(vertices, colors, normals);
+        vertexArray.loadVerticesColors(vertices, colors);
         simpleShaderProgram.load("shaders/simple_vert.glsl", "shaders/simple_frag.glsl");
     }
 
@@ -38,11 +31,7 @@ public:
         float lineWidth;
         glGetFloatv(GL_LINE_WIDTH, &lineWidth);
         glLineWidth(8.f);
-        getShaderProgram().use();
-        getShaderProgram().setUniformMatrix4fv("M", M);
-        glBindVertexArray(getVertexArray().getVertexArrayId());
-        glDrawArrays(GL_LINES, 0, getVertexArray().getLength());
-        glBindVertexArray(0);
+        DrawableObject::draw(window);
         glLineWidth(lineWidth);
     }
     void setMatrixM(const glm::mat4 &matrix) { M = matrix; }
@@ -50,6 +39,7 @@ public:
 protected:
     const VertexArray &getVertexArray() const override { return vertexArray; }
     const ShaderProgram &getShaderProgram() const override { return simpleShaderProgram; }
+    GLenum getMode() const override { return GL_LINES; };
 
 private:
     static inline VertexArray vertexArray;

@@ -9,7 +9,7 @@ public:
     static void init()
     {
         skyboxShaderProgram.load("shaders/sky_vert.glsl", "shaders/sky_frag.glsl");
-        vertexArray.load({
+        vertexArray.loadVertices({
                           -1.0f, 1.0f, -1.0f,
                           -1.0f, -1.0f, -1.0f,
                           1.0f, -1.0f, -1.0f,

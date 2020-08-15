@@ -26,6 +26,6 @@
 3. Compile with:
 
    ```
-   cmake .
-   cmake --build . --config Release
+   cmake build
+   cmake --build build --config Release
    ```

@@ -220,5 +220,5 @@ void Terrain::TerrainChunk::updateBuffers()
         rigidBody->setOwnerPtr(this);
         rigidBody->getRawBtCollisionObjPtr()->setCollisionFlags(rigidBody->getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     }
-    vertexArray.load(vertices, normals, texCoords, tangents, bitangents);
+    vertexArray.loadVerticesNormalsTexCoordsTangentsBitangents(vertices, normals, texCoords, tangents, bitangents);
 }

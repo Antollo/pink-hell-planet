@@ -17,6 +17,7 @@
 #include "Window.h"
 #include "World.h"
 #include "ParticleSystem.h"
+#include "Text.h"
 
 class Game
 {
@@ -27,9 +28,11 @@ public:
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
 
-        player = new DummyModel(world);// dynamic_cast<PlayableObject *>(drawableObjects.front().get());
+        player = new DummyModel(world); // dynamic_cast<PlayableObject *>(drawableObjects.front().get());
         clock.reset();
         clock60Pi.reset();
+        fpsText.setPosition({-0.95f, 0.9f});
+        fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
     }
 
     void operator()()
@@ -44,6 +47,8 @@ public:
         frames++;
         time = clock.getTime();
         delta = clock.getDelta();
+        fps = (9.f * fps + 1.f / delta) / 10.f;
+        fpsText.setText("fps: " + std::to_string(int(fps + 0.5f)));
         if (time >= 2.f)
         {
             clock.reset();
@@ -72,7 +77,7 @@ public:
 
         camera.update(delta);
 
-        for(int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
             world.update(delta / 10);
 
         for (auto &objectPtr : drawableObjects)
@@ -83,31 +88,30 @@ public:
             testExplosionClock.reset();
             particleSystem.generate(glm::vec3(glm::linearRand(0.f, 80.f), 10.f, glm::linearRand(0.f, 80.f)));
         }
-        
+
         player->update(delta);
+
+        Text::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getHeight());
+
+        window.clear();
+
+        terrain.updateBuffers();
 
         for (auto &objectPtr : drawableObjects)
             window.draw(*objectPtr);
-        window.draw(*player);
 
-        window.clear();
-        window.draw(axes);
-        
-        terrain.updateBuffers();
         window.draw(terrain);
         window.draw(skybox);
-
         window.draw(fireflies);
         window.draw(particleSystem);
-
         window.draw(*player);
+        window.draw(fpsText);
 
         window.swapBuffers();
 
         static btSphereShape shape(20.f);
         shape.setMargin(0.f);
         static RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
-
 
         if (time > 2.f)
             terrain.collideWith(bigHole);
@@ -137,7 +141,8 @@ private:
     }
 
     Window &window;
-    Clock clock, clock60Pi, testExplosionClock;;
+    Clock clock, clock60Pi, testExplosionClock;
+    Text fpsText;
     World world;
     PlayableObject *player;
     Camera camera;
@@ -145,7 +150,7 @@ private:
     Skybox skybox;
     Fireflies fireflies;
     ParticleSystem particleSystem;
-    float time, delta, maxDelta = 42.f;
+    float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
     std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
     Terrain terrain;

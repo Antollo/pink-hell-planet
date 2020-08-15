@@ -20,7 +20,8 @@ private:
     static constexpr size_t vOffset = pOffset + sizeof(glm::mat4);
     static constexpr size_t invVOffset = vOffset + sizeof(glm::mat4);
     static constexpr size_t lightsOffset = invVOffset + sizeof(glm::mat4);
-    static constexpr size_t timeOffset = lightsOffset + ParticleGroupLight::count * sizeof(ParticleGroupLight);
+    static constexpr size_t colorOffset = lightsOffset + ParticleGroupLight::count * sizeof(ParticleGroupLight);
+    static constexpr size_t timeOffset = colorOffset + sizeof(glm::vec4);
     static constexpr size_t alphaOffset = timeOffset + sizeof(float);
     static constexpr size_t dataSize = alphaOffset + sizeof(float);
 
@@ -118,6 +119,12 @@ public:
         glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, vOffset, sizeof(glm::mat4), glm::value_ptr(matrix));
         glBufferSubData(GL_UNIFORM_BUFFER, invVOffset, sizeof(glm::mat4), glm::value_ptr(glm::inverse(matrix)));
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static void setColor(const glm::vec4 &color)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, colorOffset, sizeof(glm::vec4), glm::value_ptr(color));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
     static void setTime(const float &number)

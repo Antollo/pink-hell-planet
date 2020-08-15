@@ -51,28 +51,36 @@ public:
             getShaderProgram().setUniform1i("cube", 4);
         }
         if (getAlpha() != 1)
-        {
             glEnable(GL_BLEND);
-            getShaderProgram().setAlpha(getAlpha());
-        }
+        else if (getBlend())
+            glEnable(GL_BLEND);
+        getShaderProgram().setAlpha(getAlpha());
+        if (!getDepthMask())
+            glDepthMask(GL_FALSE);
+        window->setProjectionMode(getProjectionMode());
         getShaderProgram().validate();
         glBindVertexArray(getVertexArray().getVertexArrayId());
-        glDrawArrays(GL_TRIANGLES, 0, getVertexArray().getLength());
+        glDrawArrays(getMode(), 0, getVertexArray().getLength());
         glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
         glBindVertexArray(0);
     }
 
 protected:
     glm::mat4 M;
 
-    virtual const VertexArray &getVertexArray() const = 0;
-    virtual const ShaderProgram &getShaderProgram() const = 0;
+    virtual const VertexArray &getVertexArray() const { return defaultVertexArray; }
+    virtual const ShaderProgram &getShaderProgram() const { return defaultShaderProgram; }
     virtual const Texture2d &getTexture0() const { return defaultTexture; }
     virtual const Texture2d &getTexture1() const { return defaultTexture; }
     virtual const Texture2d &getTexture2() const { return defaultTexture; }
     virtual const Texture2d &getTexture3() const { return defaultTexture; }
     virtual const Texture3d &getTexture3d() const { return defaultTexture3d; }
     virtual float getAlpha() const { return 1; }
+    virtual bool getBlend() const { return false; };
+    virtual bool getDepthMask() const { return true; };
+    virtual GLenum getMode() const { return GL_TRIANGLES; };
+    virtual Window::ProjectionMode getProjectionMode() const { return Window::ProjectionMode::perspective; };
 
     static inline Texture2d defaultTexture;
     static inline Texture3d defaultTexture3d;
