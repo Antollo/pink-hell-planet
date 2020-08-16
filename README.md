@@ -25,7 +25,17 @@
 
 3. Compile with:
 
+   - Windows
+
    ```
-   cmake build
+   cmake -A Win32 -B build
+   cmake --build build --config Release
+   ```
+   
+   - Linux+
+   
+
+   ```
+   cmake -B build
    cmake --build build --config Release
    ```

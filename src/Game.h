@@ -18,11 +18,12 @@
 #include "World.h"
 #include "ParticleSystem.h"
 #include "Text.h"
+#include "Crosshair.h"
 
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world)
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(player)
     {
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
@@ -90,8 +91,9 @@ public:
         }
 
         player->update(delta);
+        crosshair.update();
 
-        Text::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getHeight());
+        GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
 
         window.clear();
 
@@ -106,6 +108,7 @@ public:
         window.draw(particleSystem);
         window.draw(*player);
         window.draw(fpsText);
+        window.draw(crosshair);
 
         window.swapBuffers();
 
@@ -145,6 +148,7 @@ private:
     Text fpsText;
     World world;
     PlayableObject *player;
+    Crosshair crosshair;
     Camera camera;
     Axes axes;
     Skybox skybox;

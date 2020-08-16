@@ -43,17 +43,7 @@ private:
         {
             DrawableObject::draw(window);
         }
-        void setPosition(const glm::vec2 &newPosition) override
-        {
-            position = newPosition;
-            M = glm::scale(glm::translate(glm::vec3(newPosition.x, newPosition.y, 0.f)), glm::vec3(scale / aspectRatio, scale, scale));
-        }
-        float getOffset() const { return scale * offset / aspectRatio / 64.f; }
-        static void setAspectRatioAndScale(float newAspectRatio, float newScale)
-        {
-            aspectRatio = newAspectRatio;
-            scale = newScale;
-        }
+        float getOffset() const { return getScale() * offset / 64.f; }
 
     protected:
         const VertexArray &getVertexArray() const override { return vertexArray; }
@@ -70,8 +60,6 @@ private:
         glm::vec2 size;
         glm::vec2 bearing;
         float offset;
-        static inline float aspectRatio = 1.f;
-        static inline float scale = 0.001f;
     };
 
 public:
@@ -132,10 +120,6 @@ public:
             wcharToGlyph[character].draw(window);
             temp.x += (wcharToGlyph[character].getOffset());
         }
-    }
-    static void setAspectRatioAndScale(float newAspectRatio, float newScale)
-    {
-        Glyph::setAspectRatioAndScale(newAspectRatio, newScale);
     }
 
 private:

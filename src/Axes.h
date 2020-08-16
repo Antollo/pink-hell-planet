@@ -28,11 +28,8 @@ public:
 
     void draw(Window *window) const override
     {
-        float lineWidth;
-        glGetFloatv(GL_LINE_WIDTH, &lineWidth);
         glLineWidth(8.f);
         DrawableObject::draw(window);
-        glLineWidth(lineWidth);
     }
     void setMatrixM(const glm::mat4 &matrix) { M = matrix; }
 

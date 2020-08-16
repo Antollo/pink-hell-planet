@@ -1,8 +1,9 @@
-set(BUILD_UNIT_TESTS OFF)
-set(BUILD_CPU_DEMOS OFF)
-set(BUILD_BULLET2_DEMOS OFF)
-set(BUILD_EXTRAS OFF)
-set(USE_GLUT OFF)
+set(BUILD_UNIT_TESTS OFF CACHE BOOL "disable tests" FORCE)
+set(BUILD_CPU_DEMOS OFF CACHE BOOL "disable demos" FORCE)
+set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "disable demos" FORCE)
+set(BUILD_EXTRAS OFF CACHE BOOL "disable extras" FORCE)
+set(USE_GLUT OFF CACHE BOOL "disable glut" FORCE)
+
 add_subdirectory(bullet3)
 
 add_library(bullet3 INTERFACE)

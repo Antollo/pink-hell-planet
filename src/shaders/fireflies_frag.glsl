@@ -12,5 +12,5 @@ void main()
     vec4 c = texture(tex0, gTexCoord);
     if (c.a == 0)
         discard;
-    color = vec4(c.rgb, c.a * gAlpha);
+    color = vec4(c.rgb, pow(c.a * gAlpha, 0.7));
 }

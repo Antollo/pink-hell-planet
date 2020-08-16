@@ -16,6 +16,7 @@ int main()
     Skybox::init();
     Fireflies::init();
     ParticleSystem::init();
+    GuiObject::init();
     Text::init();
 
     Game game(window);

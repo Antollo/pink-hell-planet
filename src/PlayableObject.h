@@ -7,11 +7,11 @@
 class PlayableObject : public PhysicsObject
 {
 public:
-    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/4, /*position*/{3, 30, 3}),
-        forward(false), backward(false), left(false), right(false), up(false)
+    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/ 4, /*position*/ {3, 30, 3}),
+                                                        forward(false), backward(false), left(false), right(false), up(false)
     {
         body->setAngularFactor(btVector3(0, 0, 0));
-        body->setFriction(0.f);
+        body->setFriction(0.1f); // TODO: find better solution?
         body->setMassProps(0.2f, body->getLocalInertia());
     }
 
@@ -41,7 +41,7 @@ public:
             body->applyCentralImpulse(btVector3(v.x, v.y, v.z));
         }
         if (right)
-        { 
+        {
             v = (M * glm::vec4(-1.f, 0.f, 0.f, 0.f)) * speed * delta;
             body->applyCentralImpulse(btVector3(v.x, v.y, v.z));
         }
@@ -87,7 +87,7 @@ public:
         case GLFW_KEY_D:
             goRight(pressed);
             break;
-            
+
         case GLFW_KEY_SPACE:
             goUp(pressed);
             break;
@@ -109,6 +109,7 @@ public:
     float getZoom() { return zoom; }
 
 protected:
+    friend class Crosshair;
     float getAlpha() const override { return std::pow(1 - zoom, 2); }
 
     bool forward = false, backward = false, left = false, right = false, up = false, isZooming = false;
