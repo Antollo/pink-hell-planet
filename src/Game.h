@@ -5,7 +5,6 @@
 #include <iomanip>
 #include <cmath>
 
-#include "Axes.h"
 #include "Camera.h"
 #include "Clock.h"
 #include "debug.h"
@@ -19,6 +18,7 @@
 #include "ParticleSystem.h"
 #include "Text.h"
 #include "Crosshair.h"
+#include "Bot.h"
 
 class Game
 {
@@ -29,7 +29,14 @@ public:
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
 
-        player = new DummyModel(world); // dynamic_cast<PlayableObject *>(drawableObjects.front().get());
+        auto newPlayer = std::make_shared<DummyModel>(world);
+        player = newPlayer.get();
+        drawableObjects.push_back(newPlayer);
+
+        auto newBot = std::make_shared<Bot>(world);
+        newBot->target(newPlayer);
+        drawableObjects.push_back(newBot);
+
         clock.reset();
         clock60Pi.reset();
         fpsText.setPosition({-0.95f, 0.9f});
@@ -90,7 +97,6 @@ public:
             particleSystem.generate(glm::vec3(glm::linearRand(0.f, 80.f), 10.f, glm::linearRand(0.f, 80.f)));
         }
 
-        player->update(delta);
         crosshair.update();
 
         GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
@@ -100,7 +106,8 @@ public:
         terrain.updateBuffers();
 
         for (auto &objectPtr : drawableObjects)
-            window.draw(*objectPtr);
+            if (objectPtr.get() != player)
+                window.draw(*objectPtr);
 
         window.draw(terrain);
         window.draw(skybox);
@@ -150,13 +157,12 @@ private:
     PlayableObject *player;
     Crosshair crosshair;
     Camera camera;
-    Axes axes;
     Skybox skybox;
     Fireflies fireflies;
     ParticleSystem particleSystem;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
-    std::vector<std::unique_ptr<DrawableObject>> drawableObjects;
+    std::vector<std::shared_ptr<DrawableObject>> drawableObjects;
     Terrain terrain;
 };
 

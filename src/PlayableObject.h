@@ -11,7 +11,7 @@ public:
                                                         forward(false), backward(false), left(false), right(false), up(false)
     {
         body->setAngularFactor(btVector3(0, 0, 0));
-        body->setFriction(0.1f); // TODO: find better solution?
+        body->setFriction(friction); // TODO: find better solution?
         body->setMassProps(0.2f, body->getLocalInertia());
     }
 
@@ -110,6 +110,7 @@ public:
 
 protected:
     friend class Crosshair;
+    static constexpr float friction = 0.1f;
     float getAlpha() const override { return std::pow(1 - zoom, 2); }
 
     bool forward = false, backward = false, left = false, right = false, up = false, isZooming = false;

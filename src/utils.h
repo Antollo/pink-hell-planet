@@ -3,12 +3,18 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <glm/glm.hpp>
-
 #include <array>
+
+constexpr float pi = 3.14159265358979323846;
 
 inline const btVector3& toBtVec3(const glm::vec3& vec)
 {
     return *reinterpret_cast<const btVector3*>(&vec);
+}
+
+inline const glm::vec3& toGlmVec3(const btVector3& vec)
+{
+    return *reinterpret_cast<const glm::vec3*>(&vec);
 }
 
 template<typename T>

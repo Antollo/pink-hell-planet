@@ -29,7 +29,7 @@ public:
         lines1.setColor({1.f, 1.f, 1.f, 0.5f});
 
         for (int i = 0; i < 16; i++)
-            dots1.insert(dots1.end(), {cosf(float(i) * 3.14f / 8.f) * 100.f, sinf(float(i) * 3.14f / 8.f) * 100.f});
+            dots1.insert(dots1.end(), {cosf(float(i) * pi / 8.f) * 100.f, sinf(float(i) * pi / 8.f) * 100.f});
 
         dots1.insert(dots1.end(), {0.f, 0.f});
 
@@ -81,7 +81,7 @@ public:
         lines2.setColor({1.f, 1.f, 1.f, 0.5f});
 
         for (int i = 0; i < 32; i++)
-            dots2.insert(dots2.end(), {cosf(float(i) * 3.14f / 16.f) * 500.f, sinf(float(i) * 3.14f / 16.f) * 500.f});
+            dots2.insert(dots2.end(), {cosf(float(i) * pi / 16.f) * 500.f, sinf(float(i) * pi / 16.f) * 500.f});
 
         dots2.insert(dots2.end(), {
                                       /*
@@ -127,17 +127,29 @@ public:
     }
     void update()
     {
-        lines1.setPosition();
-        dots1.setPosition();
-        lines1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
-        dots1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
+        if (player != nullptr)
+        {
+            lines1.setPosition();
+            dots1.setPosition();
+            lines1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
+            dots1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
 
-        lines2.setPosition();
-        dots2.setPosition();
-        triangles.setPosition();
-        lines2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
-        dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
-        triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - player->getAlpha())});
+            lines2.setPosition();
+            dots2.setPosition();
+            triangles.setPosition();
+            lines2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
+            dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
+            triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - player->getAlpha())});
+        }
+        else
+        {
+            lines1.setColor({1.f, 1.f, 1.f, 0.f});
+            dots1.setColor({1.f, 1.f, 1.f, 0.f});
+
+            lines2.setColor({1.f, 1.f, 1.f, 0.f});
+            dots2.setColor({1.f, 1.f, 1.f, 0.f});
+            triangles.setColor({1.f, 1.f, 1.f, 0.f});
+        }
     }
 
 protected:

@@ -19,16 +19,6 @@ public:
         tvShaderProgram.load("shaders/tv_vert.glsl", "shaders/tv_frag.glsl");
     }
     DummyModel(World &world) : PlayableObject(world, shape.get()) {}
-    void update(float delta) override
-    {
-        PlayableObject::update(delta);
-        axes.setMatrixM(M);
-    }
-    void draw(Window *window) const override
-    {
-        DrawableObject::draw(window);
-        window->draw(axes);
-    }
 
 protected:
     const VertexArray &getVertexArray() const override { return vertexArray; }
@@ -39,7 +29,6 @@ protected:
     const Texture2d &getTexture3() const override { return texture3; }
 
 private:
-    Axes axes;
     static inline ShaderProgram tvShaderProgram;
     static inline VertexArray vertexArray;
     static inline Texture2d texture0, texture1, texture2, texture3;
