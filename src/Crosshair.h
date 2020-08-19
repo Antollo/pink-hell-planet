@@ -12,8 +12,8 @@ public:
     Crosshair(Camera &c)
         : camera(c),
           lines1(ShapeArray::Type::lines),
-          dots1(ShapeArray::Type::points),
           lines2(ShapeArray::Type::lines),
+          dots1(ShapeArray::Type::points),
           dots2(ShapeArray::Type::points),
           triangles(ShapeArray::Type::triangles)
     {
@@ -187,11 +187,11 @@ protected:
     }
 
 private:
+    Camera &camera;
     ShapeArray lines1, lines2;
     ShapeArray dots1, dots2;
     ShapeArray triangles;
     Text distance;
-    Camera &camera;
     glm::vec3 pos;
 };
 

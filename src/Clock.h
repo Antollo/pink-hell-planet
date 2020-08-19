@@ -1,6 +1,8 @@
 #ifndef CLOCK_H_
 #define CLOCK_H_
 
+#include <GLFW/glfw3.h>
+
 class Clock
 {
 public:

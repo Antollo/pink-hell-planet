@@ -155,15 +155,15 @@ private:
     Text fpsText;
     World world;
     PlayableObject *player;
-    Crosshair crosshair;
     Camera camera;
+    Terrain terrain;
+    Crosshair crosshair;
     Skybox skybox;
     Fireflies fireflies;
     ParticleSystem particleSystem;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
     std::vector<std::shared_ptr<DrawableObject>> drawableObjects;
-    Terrain terrain;
 };
 
 #endif /* !GAME_H_ */

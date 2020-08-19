@@ -65,7 +65,7 @@ void main()
 {
     vec2 texCoords = gTexCoord;
     // Parallax mapping = 30-40 fps on integrated graphics
-    if  (gDistance < 12)
+    if (graphicSetting != graphicSettingLow && gDistance < 12)
     {
         float m = clamp((-gDistance + 12) / 3, 0, 1);
         texCoords = mix(gTexCoord, parallaxMapping(gTexCoord), m);
@@ -99,5 +99,4 @@ void main()
 
     vec3 r = mat3(invV) * reflect(-v.xyz, n.xyz);
     color += sqrt(1 - pow(dot(v.xyz, n.xyz), 2)) * 0.1 * vec4(texture(cube, r).rgb, 0);
-
 }

@@ -6,21 +6,13 @@
 #include <array>
 #include "Clock.h"
 #include "DrawableObject.h"
+#include "GlobalConfig.hpp"
+#include "Axes.h"
 
 class ParticleSystem : public DrawableObject
 {
 public:
-    static void init()
-    {
-        particleSystemDrawShaderProgram.load("shaders/particleSystem_vert.glsl",
-                                             "shaders/particleSystem_geom.glsl",
-                                             "shaders/particleSystem_frag.glsl");
-
-        texture.load("firefly_DIFF", true, true);
-
-        for (int i = 0; i < particleGroupCount; i++)
-            ShaderProgram::setParticleGroupLight(ParticleGroupLight(glm::vec3(0.f, 0.f, 0.f), -10.f), i);
-    }
+    static void init(GlobalConfig::GraphicSetting setting);
 
     void draw(Window *window) const override
     {
@@ -106,8 +98,10 @@ private:
         float getTime() const { return clock.getTime(); }
         void drawAxes(Window *window) const { axes.draw(window); }
 
+        static void setVerticesCount(int count) { verticesCount = count; }
+
     private:
-        static constexpr int verticesCount = 20000;
+        static inline int verticesCount = 20000;
         VertexArray vertexArray;
         Clock clock;
         Axes axes;

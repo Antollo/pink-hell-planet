@@ -10,7 +10,9 @@
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
 #include "error.h"
+#include "GlobalConfig.hpp"
 #include "ParticleGroupLight.h"
 
 class ShaderProgram
@@ -23,10 +25,11 @@ private:
     static constexpr size_t colorOffset = lightsOffset + ParticleGroupLight::count * sizeof(ParticleGroupLight);
     static constexpr size_t timeOffset = colorOffset + sizeof(glm::vec4);
     static constexpr size_t alphaOffset = timeOffset + sizeof(float);
-    static constexpr size_t dataSize = alphaOffset + sizeof(float);
+    static constexpr size_t graphicSettingOffset = alphaOffset + sizeof(int);
+    static constexpr size_t dataSize = graphicSettingOffset + sizeof(float);
 
 public:
-    static void init()
+    static void init(GlobalConfig::GraphicSetting setting)
     {
         glGenBuffers(1, &data);
 
@@ -35,6 +38,8 @@ public:
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         glBindBufferRange(GL_UNIFORM_BUFFER, 0, data, 0, dataSize);
+
+        setGraphicSetting(setting);
     }
     ShaderProgram() : loaded(false), validated(false), vertexShader(0), geometryShader(0), fragmentShader(0), shaderProgram(0) {}
     void load(std::string vertexShaderFilename, std::string fragmentShaderFilename)
@@ -121,6 +126,11 @@ public:
         glBufferSubData(GL_UNIFORM_BUFFER, invVOffset, sizeof(glm::mat4), glm::value_ptr(glm::inverse(matrix)));
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
+    static void setParticleGroupLight(const ParticleGroupLight &light, int index)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        glBufferSubData(GL_UNIFORM_BUFFER, lightsOffset + index * sizeof(ParticleGroupLight), sizeof(ParticleGroupLight), &light);
+    }
     static void setColor(const glm::vec4 &color)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
@@ -134,20 +144,22 @@ public:
         glBufferSubData(GL_UNIFORM_BUFFER, timeOffset, sizeof(float), &number);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
-    static float getTime()
-    {
-        return time;
-    }
-    static void setParticleGroupLight(const ParticleGroupLight &light, int index)
-    {
-        glBindBuffer(GL_UNIFORM_BUFFER, data);
-        glBufferSubData(GL_UNIFORM_BUFFER, lightsOffset + index * sizeof(ParticleGroupLight), sizeof(ParticleGroupLight), &light);
-    }
     static void setAlpha(const float &alpha)
     {
         glBindBuffer(GL_UNIFORM_BUFFER, data);
         glBufferSubData(GL_UNIFORM_BUFFER, alphaOffset, sizeof(float), &alpha);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static void setGraphicSetting(GlobalConfig::GraphicSetting setting)
+    {
+        glBindBuffer(GL_UNIFORM_BUFFER, data);
+        int s = setting;
+        glBufferSubData(GL_UNIFORM_BUFFER, graphicSettingOffset, sizeof(int), &s);
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    }
+    static float getTime()
+    {
+        return time;
     }
     void use() const
     {
@@ -245,11 +257,11 @@ private:
     {
         std::ifstream file(fileName);
         if (!file.good())
-            errorAndExit("File ", fileName, " not good");
+            errorAndExit("File", fileName, "not good");
         std::string source((std::istreambuf_iterator<char>(file)),
                            std::istreambuf_iterator<char>());
         if (source.empty())
-            errorAndExit("File ", fileName, " empty");
+            errorAndExit("File", fileName, "empty");
         
         include(source);
         return source;

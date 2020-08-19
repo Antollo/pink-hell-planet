@@ -44,7 +44,7 @@ public:
         unsigned int width, height, error;
         error = lodepng::decode(bytes, width, height, imageFilename + ".png");
         if (error != 0)
-            errorAndExit("Texture ", imageFilename + ".png", " not loaded");
+            errorAndExit("Texture", imageFilename + ".png", "not loaded");
         glActiveTexture(GL_TEXTURE0);
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -126,7 +126,7 @@ public:
 
             error = lodepng::decode(bytes, width, height, ithImageFilename);
             if (error != 0)
-                errorAndExit("Texture ", ithImageFilename, " not loaded");
+                errorAndExit("Texture", ithImageFilename, "not loaded");
 
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, alpha ? (srgb ? GL_SRGB_ALPHA : GL_RGBA) : (srgb ? GL_SRGB : GL_RGB), width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bytes.data());
         }

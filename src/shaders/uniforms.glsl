@@ -6,6 +6,10 @@ struct ParticleGroupLight
 
 #define particleGroupLightCount 8
 
+// maps to GlobalConfig::GraphicSetting
+const int graphicSettingLow = 0;
+const int graphicSettingNormal = 1;
+
 layout (std140) uniform data
 {
     mat4 P;
@@ -18,6 +22,7 @@ layout (std140) uniform data
     vec4 globalColor;
     float time;
     float alpha;
+    int graphicSetting;
 };
 
 uniform mat4 M;

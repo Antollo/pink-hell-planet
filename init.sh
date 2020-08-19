@@ -14,5 +14,6 @@ download_zip 'https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2
 download_zip 'https://onedrive.live.com/download?cid=F7B2E5ED214ED032&resid=F7B2E5ED214ED032%214929&authkey=AMzTuQnU0EVMqOo' ./bin
 
 cp -r ./src/shaders ./bin;
+cp ./src/config/config.default.json ./bin/config.json
 
 echo 'Done!!!';
