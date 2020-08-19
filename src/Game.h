@@ -23,7 +23,7 @@
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(player)
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera)
     {
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));
         // drawableObjects.push_back(std::make_unique<DummyModel>(world));

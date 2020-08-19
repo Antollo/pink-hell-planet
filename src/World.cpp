@@ -1,7 +1,7 @@
 
 #include "World.h"
 
-#include "CollisionObject.h"
+#include "RigidBody.h"
 #include "ContactCallback.h"
 #include "GhostObject.h"
 

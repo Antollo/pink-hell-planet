@@ -96,6 +96,10 @@ public:
         ShaderProgram::setMatrixV(V);
     }
 
+    const PlayableObject* getPlayer() const { return player; }
+    glm::vec3 getFrontDirection() const {return frontDirection; }
+
+
 private:
     void updateYawPitch()
     {

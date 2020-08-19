@@ -20,12 +20,6 @@ public:
 
     virtual btCollisionObject* getRawBtCollisionObjPtr() = 0;
 
-    glm::vec3 getPosition()
-    {
-        btVector3 v = getRawBtCollisionObjPtr()->getWorldTransform().getOrigin();
-        return glm::vec3(v.x(), v.y(), v.z());
-    }
-
     void setPositionNoRotation(glm::vec3 position)
     {
         static btTransform transform;
@@ -36,9 +30,12 @@ public:
         getRawBtCollisionObjPtr()->setWorldTransform(transform);
     }
 
-    class CollisionObjectOwner {
-        public: virtual ~CollisionObjectOwner() {}
+    class CollisionObjectOwner
+    {
+    public:
+        virtual ~CollisionObjectOwner() {}
     };
+    
     void setOwnerPtr(CollisionObjectOwner* ptr)
     {
         ownerPtr = ptr;

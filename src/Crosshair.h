@@ -2,13 +2,15 @@
 #define A15B603B_ED5B_45A4_96FF_36ED181556A2
 
 #include "ShapeArray.h"
+#include "Text.h"
 #include "PlayableObject.h"
+#include "Camera.h"
 
 class Crosshair : public Drawable
 {
 public:
-    Crosshair(PlayableObject *&p)
-        : player(p),
+    Crosshair(Camera &c)
+        : camera(c),
           lines1(ShapeArray::Type::lines),
           dots1(ShapeArray::Type::points),
           lines2(ShapeArray::Type::lines),
@@ -124,22 +126,42 @@ public:
                                           });
 
         triangles.setColor({1.f, 1.f, 1.f, 0.02f});
+
+        distance.setPosition({0.5f, 0.f});
+        distance.setColor({1.f, 1.f, 1.f, 0.5f});
     }
     void update()
     {
+        auto player = camera.getPlayer();
         if (player != nullptr)
         {
+            float alpha = player->getAlpha();
             lines1.setPosition();
             dots1.setPosition();
-            lines1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
-            dots1.setColor({1.f, 1.f, 1.f, 0.5f * player->getAlpha()});
+            lines1.setColor({1.f, 1.f, 1.f, 0.5f * alpha});
+            dots1.setColor({1.f, 1.f, 1.f, 0.5f * alpha});
 
             lines2.setPosition();
             dots2.setPosition();
             triangles.setPosition();
-            lines2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
-            dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - player->getAlpha())});
-            triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - player->getAlpha())});
+            lines2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+            dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+            triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - alpha)});
+            distance.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+
+            static int i = 0;
+
+            if (i == 0)
+            {
+                auto raycastResult = player->getRaycastResults(camera.getFrontDirection() * 1000.f);
+                if (raycastResult->m_hitPointWorld.size())
+                    distance.setText(std::to_string((int)std::round(glm::distance(player->getPosition(), toGlmVec3(raycastResult->m_hitPointWorld[0])))));
+                else
+                    distance.setText("inf");
+            }
+            i++;
+            if (i > 10)
+                i = 0;
         }
         else
         {
@@ -161,13 +183,16 @@ protected:
         lines2.draw(window);
         dots2.draw(window);
         triangles.draw(window);
+        distance.draw(window);
     }
 
 private:
     ShapeArray lines1, lines2;
     ShapeArray dots1, dots2;
     ShapeArray triangles;
-    PlayableObject *&player;
+    Text distance;
+    Camera &camera;
+    glm::vec3 pos;
 };
 
 #endif /* A15B603B_ED5B_45A4_96FF_36ED181556A2 */

@@ -5,7 +5,6 @@
 #include <BulletCollision/CollisionShapes/btTriangleShape.h>
 
 #include "CollisionObject.h"
-#include "RigidBody.h"
 
 class RigidBody;
 
@@ -29,10 +28,17 @@ public:
         dynamicsWorld->stepSimulation(delta, 10);
     }
 
-    std::vector<CollisionObject*> getColliding(CollisionObject& body);
+    std::vector<CollisionObject *> getColliding(CollisionObject &body);
 
-    bool areColliding(CollisionObject& a, CollisionObject& b);
-    bool pointInShape(CollisionObject& object, glm::vec3 point);
+    bool areColliding(CollisionObject &a, CollisionObject &b);
+    bool pointInShape(CollisionObject &object, glm::vec3 point);
+
+    std::unique_ptr<btCollisionWorld::AllHitsRayResultCallback> getRaycastResults(const glm::vec3 &begin, const glm::vec3 &end)
+    {
+        std::unique_ptr<btCollisionWorld::AllHitsRayResultCallback> callback = std::make_unique<btCollisionWorld::AllHitsRayResultCallback>(toBtVec3(begin), toBtVec3(end));
+        dynamicsWorld->rayTest(toBtVec3(begin), toBtVec3(end), *callback);
+        return callback;
+    }
 
 private:
     friend class RigidBody;
@@ -43,7 +49,7 @@ private:
     btSequentialImpulseConstraintSolver *solver;
     btDiscreteDynamicsWorld *dynamicsWorld;
 
-    RigidBody* ground;
+    RigidBody *ground;
     btCollisionShape *groundShape;
 };
 
