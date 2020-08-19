@@ -23,6 +23,7 @@ int main()
     ParticleSystem::init(config.getGraphicSetting());
     GuiObject::init();
     Text::init();
+    Bullet::init();
 
     Game game(window);
     while (window.isOpen())

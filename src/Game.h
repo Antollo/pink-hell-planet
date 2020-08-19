@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <cmath>
 
+#include "Axes.h"
+#include "Bullet.h"
 #include "Camera.h"
 #include "Clock.h"
 #include "debug.h"
@@ -36,6 +38,8 @@ public:
         auto newBot = std::make_shared<Bot>(world);
         newBot->target(newPlayer);
         drawableObjects.push_back(newBot);
+
+        drawableObjects.emplace_back(new Bullet(world));
 
         clock.reset();
         clock60Pi.reset();
