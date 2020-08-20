@@ -14,6 +14,7 @@ int main()
 
     Window window(config.getResX(), config.getResY(), "game");
     ShaderProgram::init(config.getGraphicSetting());
+    CollisionObject::init();
     DrawableObject::init();
     DummyModel::init();
     Axes::init();

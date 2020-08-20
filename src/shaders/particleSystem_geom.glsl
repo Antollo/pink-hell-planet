@@ -20,7 +20,7 @@ void main()
     {
         gAlpha = sqrt(clamp(vLifetime[0] - time, 0, 1));
 
-        gl_Position = P * (vPositionVM[0] + vec4(size, -size, 0, 0));
+        gl_Position = P * (vPositionVM[0] + vec4(-size, -size, 0, 0));
         gTexCoord = vec2(0, 0);
         EmitVertex();
         gl_Position = P * (vPositionVM[0] + vec4(size, -size, 0, 0));

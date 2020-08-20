@@ -1,7 +1,7 @@
 
 #include "RigidBody.h"
 
-RigidBody::RigidBody(World* w, btCollisionShape* shape, float mass, glm::vec3 position)
+RigidBody::RigidBody(World* w, btCollisionShape* shape, float mass, const glm::vec3 &position)
     : CollisionObject(w, shape)
 {
     btTransform startTransform;

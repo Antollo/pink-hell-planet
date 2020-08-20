@@ -28,17 +28,26 @@ public:
         dynamicsWorld->stepSimulation(delta, 10);
     }
 
-    std::vector<CollisionObject *> getColliding(CollisionObject &body);
+    std::vector<CollisionObject *> getColliding(CollisionObject &body) const;
 
-    bool areColliding(CollisionObject &a, CollisionObject &b);
-    bool pointInShape(CollisionObject &object, glm::vec3 point);
+    bool areColliding(CollisionObject &a, CollisionObject &b) const;
+    bool pointInShape(CollisionObject &object, glm::vec3 point) const;
 
-    std::unique_ptr<btCollisionWorld::AllHitsRayResultCallback> getRaycastResults(const glm::vec3 &begin, const glm::vec3 &end)
+    std::unique_ptr<btCollisionWorld::AllHitsRayResultCallback> getAllRaycastResults(const glm::vec3 &begin, const glm::vec3 &end) const
     {
         std::unique_ptr<btCollisionWorld::AllHitsRayResultCallback> callback = std::make_unique<btCollisionWorld::AllHitsRayResultCallback>(toBtVec3(begin), toBtVec3(end));
         dynamicsWorld->rayTest(toBtVec3(begin), toBtVec3(end), *callback);
         return callback;
     }
+
+    std::unique_ptr<btCollisionWorld::ClosestRayResultCallback> getRaycastResult(const glm::vec3 &begin, const glm::vec3 &end) const
+    {
+        std::unique_ptr<btCollisionWorld::ClosestRayResultCallback> callback = std::make_unique<btCollisionWorld::ClosestRayResultCallback>(toBtVec3(begin), toBtVec3(end));
+        dynamicsWorld->rayTest(toBtVec3(begin), toBtVec3(end), *callback);
+        return callback;
+    }
+
+    static constexpr float g = -9.81f;
 
 private:
     friend class RigidBody;

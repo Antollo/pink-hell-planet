@@ -153,11 +153,11 @@ public:
 
             if (i == 0)
             {
-                auto raycastResult = player->getRaycastResults(camera.getFrontDirection() * 1000.f);
-                if (raycastResult->m_hitPointWorld.size())
-                    distance.setText(std::to_string((int)std::round(glm::distance(player->getPosition(), toGlmVec3(raycastResult->m_hitPointWorld[0])))));
-                else
+                glm::vec3 v = player->getRaycastAim();
+                if (std::isnan(v.x) || std::isnan(v.y) || !std::isnan(v.z))
                     distance.setText("inf");
+                else
+                    distance.setText(std::to_string(int(glm::distance(player->getPosition(), v) + 0.5f)));
             }
             i++;
             if (i > 10)

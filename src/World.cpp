@@ -14,7 +14,7 @@ World::World()
     overlappingPairCache = new btDbvtBroadphase();
     solver = new btSequentialImpulseConstraintSolver;
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-    dynamicsWorld->setGravity(btVector3(0.f, -10.f, 0.f));
+    dynamicsWorld->setGravity(btVector3(0.f, g, 0.f));
 
     /*
     [*] ehhhhhhhhhhhhh hhhhhh h h hh  h hh hh  h h hh
@@ -23,7 +23,7 @@ World::World()
     */
 }
 
-std::vector<CollisionObject*> World::getColliding(CollisionObject& body)
+std::vector<CollisionObject*> World::getColliding(CollisionObject& body) const
 {
     std::vector<CollisionObject*> res;
     ContactCallback cb([&res, &body](CollisionObject* first, CollisionObject* second){
@@ -38,7 +38,7 @@ std::vector<CollisionObject*> World::getColliding(CollisionObject& body)
     return res;
 }
 
-bool World::areColliding(CollisionObject& a, CollisionObject& b)
+bool World::areColliding(CollisionObject& a, CollisionObject& b) const
 {
     bool res = false;
     ContactCallback cb([&res](CollisionObject* first, CollisionObject* second) {
@@ -48,7 +48,7 @@ bool World::areColliding(CollisionObject& a, CollisionObject& b)
     return res;
 }
 
-bool World::pointInShape(CollisionObject& object, glm::vec3 point)
+bool World::pointInShape(CollisionObject& object, glm::vec3 point) const
 {
     static btSphereShape sphere(0.f);
     static GhostObject colObj(nullptr, &sphere, point);

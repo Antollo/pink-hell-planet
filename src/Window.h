@@ -22,6 +22,22 @@ public:
 class Window
 {
 public:
+    enum class MouseButton
+    {
+        none = 0,
+        left = 1,
+        right = 2
+    };
+
+    struct MouseButtonEvent
+    {
+        MouseButtonEvent() : button(MouseButton::none), down(false) {}
+        MouseButtonEvent(MouseButton b, bool d) : button(b), down(d) {}
+        operator bool() const { return button != MouseButton::none; }
+        MouseButton button;
+        bool down;
+    };
+
     Window(int width, int height, const char *title)
         : _width(width), _height(height),
           xPosOld(0.0), yPosOld(0.0),
@@ -127,7 +143,7 @@ public:
     {
         return popOrZero(keys);
     }
-    int pollMouseButton()
+    MouseButtonEvent pollMouseButton()
     {
         return popOrZero(mouseButtons);
     }
@@ -171,7 +187,7 @@ private:
     GLFWwindow *window;
     float _width, _height;
     std::queue<int> keys;
-    std::queue<int> mouseButtons;
+    std::queue<MouseButtonEvent> mouseButtons;
     double xPosOld, yPosOld;
     float xDiff, yDiff;
     bool firstUpdate;
@@ -209,11 +225,11 @@ private:
         switch (action)
         {
         case GLFW_PRESS:
-            obj.mouseButtons.push(button);
+            obj.mouseButtons.push({static_cast<MouseButton>(button + 1), true});
             break;
 
         case GLFW_RELEASE:
-            obj.mouseButtons.push(-button);
+            obj.mouseButtons.push({static_cast<MouseButton>(button + 1), false});
             break;
         }
     }
@@ -233,11 +249,12 @@ private:
             obj.yPosOld = yPos;
         }
     }
-    static int popOrZero(std::queue<int> &q)
+    template <class T>
+    static T popOrZero(std::queue<T> &q)
     {
         if (q.empty())
-            return 0;
-        int r = q.front();
+            return T();
+        T r = q.front();
         q.pop();
         return r;
     }

@@ -23,4 +23,5 @@ Remove-Item "$env:TEMP\9mm.zip" -ErrorAction SilentlyContinue -Force -Confirm:$f
 
 Copy-Item -Path ".\src\shaders" -Destination ".\bin\Release" -Force -Recurse
 Copy-Item -Path ".\src\config\config.default.json" -Destination ".\bin\Release" -Force -Recurse
+Rename-Item -Path ".\bin\Release\config.default.json" -NewName "config.json" -Force
 Write-Host "Done"

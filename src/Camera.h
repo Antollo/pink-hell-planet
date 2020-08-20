@@ -64,11 +64,17 @@ public:
     void update(float delta)
     {
         if (player == nullptr)
+        {
             freeCamPositionUpdate(delta);
-
-        frontDirection.z = sin(yaw) * cos(pitch);
-        frontDirection.x = sin(yaw) * sin(pitch);
-        frontDirection.y = cos(yaw);
+            frontDirection.z = sin(yaw) * cos(pitch);
+            frontDirection.x = sin(yaw) * sin(pitch);
+            frontDirection.y = cos(yaw);
+            frontDirection = glm::normalize(frontDirection);
+        }
+        else
+        {
+            frontDirection = player->getFrontDirection();
+        }
 
         rightDirection.x = cos(pitch);
         rightDirection.y = 0.f;
@@ -79,7 +85,7 @@ public:
         if (player != nullptr)
         {
             float newPosWeight = std::min(newPositionFactor * delta, 1.f);
-            position = (player->getPosition() - glm::normalize(frontDirection) * viewDistance + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1-newPosWeight);
+            position = (player->getPosition() - frontDirection * viewDistance + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1 - newPosWeight);
             oldPosition = position;
             averagePosition = player->getPosition() * player->getZoom() + position * (1 - player->getZoom());
         }
@@ -90,15 +96,14 @@ public:
 
         V = glm::lookAt(
             averagePosition,
-            averagePosition + glm::normalize(frontDirection),
+            averagePosition + frontDirection,
             glm::normalize(upDirection));
 
         ShaderProgram::setMatrixV(V);
     }
 
-    const PlayableObject* getPlayer() const { return player; }
-    glm::vec3 getFrontDirection() const {return frontDirection; }
-
+    const PlayableObject *getPlayer() const { return player; }
+    glm::vec3 getFrontDirection() const { return frontDirection; }
 
 private:
     void updateYawPitch()
@@ -126,8 +131,8 @@ private:
         }
     }
 
-    Window& window;
-    PlayableObject*& player;
+    Window &window;
+    PlayableObject *&player;
     glm::mat4 V;
     glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
     float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 6.f;

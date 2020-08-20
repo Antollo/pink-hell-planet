@@ -19,13 +19,13 @@
 class Terrain : public Drawable
 {
 public:
-    Terrain(World& world);
+    Terrain(World &world);
 
     static void init();
 
-    void draw(Window* window) const override;
+    void draw(Window *window) const override;
     void updateBuffers();
-    
+
     void marchingPointsAdd(VecInt3 v, int d)
     {
         if (d == 1)
@@ -40,12 +40,12 @@ public:
             toRegen.insert(getChunkFromPoint(v - i));
     }
 
-    void collideWith(CollisionObject& collObj)
+    void collideWith(CollisionObject &collObj)
     {
         auto v = privateWorld.getColliding(collObj);
         for (auto i : v)
         {
-            TerrainChunk* tc = static_cast<TerrainChunk*>(i->getOwnerPtr());
+            TerrainChunk *tc = static_cast<TerrainChunk *>(i->getOwnerPtr());
             tc->collideWith(&collObj);
         }
     }
@@ -53,13 +53,12 @@ public:
 private:
     inline static const int chunkSize = 8; // must be power of 2
 
-
     class TerrainChunk;
     class TerrainCube
     {
     public:
-        TerrainCube(int size, VecInt3 pos, Terrain::TerrainChunk* chunkPtr, CollisionObject* collsion = nullptr)
-            : size(size), intPos(pos), glmPos(VecInt3ToVec3(pos)), center(glmPos + glm::vec3(float(size - 1)/2, float(size - 1)/2, float(size - 1)/2)),
+        TerrainCube(int size, VecInt3 pos, Terrain::TerrainChunk *chunkPtr, CollisionObject *collsion = nullptr)
+            : size(size), intPos(pos), glmPos(VecInt3ToVec3(pos)), center(glmPos + glm::vec3(float(size - 1) / 2, float(size - 1) / 2, float(size - 1) / 2)),
               chunk(chunkPtr)
         {
             if (collsion != nullptr)
@@ -80,7 +79,7 @@ private:
 
         void genBuffers();
 
-        void makeChilds(CollisionObject* collObj)
+        void makeChilds(CollisionObject *collObj)
         {
             addPoints(-1);
             whole = false;
@@ -98,18 +97,21 @@ private:
             }
         }
 
-        void collideWith(CollisionObject* collObj)
+        void collideWith(CollisionObject *collObj)
         {
             float fhalf = float(size) / 2;
-            GhostObject fromscratch(nullptr, new btBoxShape(btVector3(fhalf, fhalf, fhalf)), center);
+
             if (whole)
+            {
+                std::unique_ptr<btBoxShape> boxShape(new btBoxShape(btVector3(fhalf, fhalf, fhalf)));
                 {
-                    if(chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
+                    GhostObject fromscratch(nullptr, boxShape.get(), center);
+                    if (chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
                     {
                         toDelete = true;
                         for (size_t i = 0; i < 8; i++)
                             if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + float(size - 1) * VecInt3ToVec3(cubeVer[i])))
-                                // removing '!' from the line above has funny result
+                            // removing '!' from the line above has funny result
                             {
                                 toDelete = false;
                                 break;
@@ -118,8 +120,9 @@ private:
                             makeChilds(collObj);
                     }
                 }
+            }
             else
-                for (auto& i : childs)
+                for (auto &i : childs)
                     if (i)
                     {
                         if (i->toDelete)
@@ -152,16 +155,17 @@ private:
         VecInt3 intPos;
         glm::vec3 glmPos;
         glm::vec3 center;
-        TerrainChunk* chunk;
-        TerrainCube* parent;
+        TerrainChunk *chunk;
+        TerrainCube *parent;
     };
 
     class TerrainChunk : public DrawableObject, public CollisionObject::CollisionObjectOwner
     {
     public:
-        TerrainChunk(VecInt3 intPos, Terrain* terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
+        TerrainChunk(VecInt3 intPos, Terrain *terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
         {
-            if (fill) {
+            if (fill)
+            {
                 rootTerrainCube = std::make_unique<TerrainCube>(chunkSize, intPos, this);
                 static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
                 ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
@@ -175,10 +179,10 @@ private:
         {
             for (int x = -1; x < size; x++)
                 for (int y = -1; y < size; y++)
-                    {
-                        getOneCube(pos + getVecInt3(x, y, -1));
-                        getOneCube(pos + getVecInt3(x, y, size - 1));
-                    }
+                {
+                    getOneCube(pos + getVecInt3(x, y, -1));
+                    getOneCube(pos + getVecInt3(x, y, size - 1));
+                }
             for (int z = 0; z < size - 1; z++)
                 for (int other = -1; other < size - 1; other++)
                 {
@@ -189,7 +193,7 @@ private:
                 }
         }
 
-        void collideWith(CollisionObject* collObj);
+        void collideWith(CollisionObject *collObj);
 
         glm::vec3 getPartNormal(int partId)
         {
@@ -198,7 +202,7 @@ private:
         }
 
     private:
-        Terrain* terrain;
+        Terrain *terrain;
 
         std::unique_ptr<btTriangleMesh> triangleMesh;
         std::unique_ptr<btBvhTriangleMeshShape> shape;
@@ -229,9 +233,9 @@ private:
                 normals.insert(normals.end(), glm::value_ptr(i), glm::value_ptr(i) + 3);
             }
 
-            const std::vector<glm::vec3>& verts = marchingCubesVertices[mask];
+            const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             for (size_t i = 0; i < verts.size(); i += 3)
-                triangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i+1] + glmPos), toBtVec3(verts[i+2] + glmPos));
+                triangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i + 1] + glmPos), toBtVec3(verts[i + 2] + glmPos));
         }
 
         bool inChunk(VecInt3 pos)
@@ -244,15 +248,14 @@ private:
         }
 
         std::unique_ptr<TerrainCube> rootTerrainCube;
-        
+
         std::vector<float> vertices;
         std::vector<float> normals;
         std::vector<float> texCoords;
         std::vector<float> tangents;
         std::vector<float> bitangents;
 
-
-        const VertexArray& getVertexArray() const override { return vertexArray; }
+        const VertexArray &getVertexArray() const override { return vertexArray; }
 
         VertexArray vertexArray;
         friend class TerrainCube;
@@ -279,6 +282,7 @@ private:
         }
         static inline Texture2d texture0, texture1, texture2, texture3;
         static inline ShaderProgram slimeShader;
+
     protected:
         const ShaderProgram &getShaderProgram() const override { return slimeShader; }
         const Texture2d &getTexture0() const override { return texture0; }
@@ -293,7 +297,7 @@ private:
         }
     };
 
-    World& world;
+    World &world;
     World privateWorld;
 
     std::set<VecInt3> toRegen;
@@ -301,7 +305,7 @@ private:
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
 
-    friend bool CustomMaterialCombinerCallback(btManifoldPoint&,	const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int);
+    friend bool CustomMaterialCombinerCallback(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int);
 };
 
 #endif

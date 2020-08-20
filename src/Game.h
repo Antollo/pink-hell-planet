@@ -27,9 +27,23 @@ class Game
 public:
     Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera)
     {
-        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
-        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
-        // drawableObjects.push_back(std::make_unique<DummyModel>(world));
+        Bullet::setExplosionCallback([this](const glm::vec3 &v) {
+            btSphereShape shape(5.f);
+            shape.setMargin(0.f);
+            RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, v);
+            terrain.collideWith(bigHole);
+            particleSystem.generate(v);
+            std::cout << "\nDarkness blacker than black and darker than dark,\n"
+                         "I beseech thee, combine with my deep crimson.\n"
+                         "The time of awakening cometh.\n"
+                         "Justice, fallen upon the infallible boundary,\n"
+                         "appear now as an intangible distortions!\n"
+                         "I desire for my torrent of power a destructive force:\n"
+                         "a destructive force without equal!\n"
+                         "Return all creation to cinders,\n"
+                         "and come from the abyss!\n"
+                         "Explosion!\n\n";
+        });
 
         auto newPlayer = std::make_shared<DummyModel>(world);
         player = newPlayer.get();
@@ -38,8 +52,6 @@ public:
         auto newBot = std::make_shared<Bot>(world);
         newBot->target(newPlayer);
         drawableObjects.push_back(newBot);
-
-        drawableObjects.emplace_back(new Bullet(world));
 
         clock.reset();
         clock60Pi.reset();
@@ -73,8 +85,8 @@ public:
 
         while (int key = window.pollKey())
             consumeKey(key);
-        while (int button = window.pollMouseButton())
-            consumeButton(button);
+        while (auto ev = window.pollMouseButton())
+            consumeButton(ev);
 
         float xDiff, yDiff;
         window.getCursorDiff(xDiff, yDiff);
@@ -95,12 +107,6 @@ public:
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
 
-        if (testExplosionClock.getTime() >= 6.f)
-        {
-            testExplosionClock.reset();
-            particleSystem.generate(glm::vec3(glm::linearRand(0.f, 80.f), 10.f, glm::linearRand(0.f, 80.f)));
-        }
-
         crosshair.update();
 
         GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
@@ -117,18 +123,12 @@ public:
         window.draw(skybox);
         window.draw(fireflies);
         window.draw(particleSystem);
-        window.draw(*player);
+        if (player != nullptr)
+            window.draw(*player);
         window.draw(fpsText);
         window.draw(crosshair);
 
         window.swapBuffers();
-
-        static btSphereShape shape(20.f);
-        shape.setMargin(0.f);
-        static RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, glm::vec3(50.f, 20.f, 50.f));
-
-        if (time > 2.f)
-            terrain.collideWith(bigHole);
     }
 
 private:
@@ -148,14 +148,15 @@ private:
         else
             camera.consumeKey(glfwKeyCode);
     }
-    void consumeButton(int glfwButtonCode)
+
+    void consumeButton(Window::MouseButtonEvent ev)
     {
         if (player != nullptr)
-            player->consumeButton(glfwButtonCode);
+            player->consumeButton(ev);
     }
 
     Window &window;
-    Clock clock, clock60Pi, testExplosionClock;
+    Clock clock, clock60Pi;
     Text fpsText;
     World world;
     PlayableObject *player;

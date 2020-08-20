@@ -67,6 +67,24 @@ public:
             zoom = 0;
         if (zoom > 1)
             zoom = 1;
+
+        auto it = bullets.begin();
+        while (it != bullets.end())
+        {
+            (*it)->update(delta);
+            if (!(*it)->isAlive())
+                it = bullets.erase(it);
+            else
+                it++;
+        }
+    }
+
+    void draw(Window *window) const override
+    {
+        for (auto &bullet : bullets)
+            bullet->draw(window);
+
+        PhysicsObject::draw(window);
     }
 
     void consumeKey(int glfwKeyCode)
@@ -93,20 +111,36 @@ public:
             break;
         }
     }
-    void consumeButton(int glfwButtonCode)
+    void consumeButton(Window::MouseButtonEvent ev)
     {
-        if (abs(glfwButtonCode) == GLFW_MOUSE_BUTTON_2)
-            isZooming = glfwButtonCode > 0;
+        if (ev.button == Window::MouseButton::right)
+            isZooming = ev.down;
+        else if (ev.button == Window::MouseButton::left && ev.down)
+            shoot();
     }
     void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
     {
         yaw += yCursorDiff * mouseSensitivity;
         pitch -= xCursorDiff * mouseSensitivity;
+
+        frontDirection.z = sin(yaw) * cos(pitch);
+        frontDirection.x = sin(yaw) * sin(pitch);
+        frontDirection.y = cos(yaw);
+
+        frontDirection = glm::normalize(frontDirection);
     }
+
+    glm::vec3 getFrontDirection() const { return frontDirection; }
 
     float getYaw() { return yaw; }
     float getPitch() { return pitch; }
     float getZoom() { return zoom; }
+
+    glm::vec3 getRaycastAim() const
+    {
+        auto result = world->getRaycastResult(getPosition() + getFrontDirection(), getFrontDirection() * 1000.f);
+        return result->hasHit() ? toGlmVec3(result->m_hitPointWorld) : glm::vec3(NAN, NAN, NAN);
+    }
 
 protected:
     friend class Crosshair;
@@ -118,6 +152,8 @@ protected:
     float positionPitch = 0;
     float zoom = 0;
     float jumpCooldownRemaining = 0.f;
+    glm::vec3 frontDirection;
+    std::vector<std::unique_ptr<Bullet>> bullets;
 
     void goForward(bool x) { forward = x; }
     void goBackward(bool x) { backward = x; }
@@ -125,11 +161,55 @@ protected:
     void goRight(bool x) { right = x; }
     void goUp(bool x) { up = x; }
 
+    void shoot()
+    {
+        glm::vec3 dir;
+
+        glm::vec3 a = getPosition() + getFrontDirection() * bulletSpawnDistance;
+        glm::vec3 b = getRaycastAim();
+
+        if (std::isnan(b.x) || std::isnan(b.y) || std::isnan(b.z))
+            dir = getFrontDirection();
+        else
+        {
+            float v = bulletImpulse / Bullet::mass;
+            float v2 = v * v;
+            float d = glm::distance(glm::vec2(a.x, a.z), glm::vec2(b.x, b.z));
+            float g = World::g;
+            float y = b.y - a.y;
+
+            // https://www.forrestthewoods.com/blog/solving_ballistic_trajectories/
+            // TODO: fix it
+
+            float theta = std::atan((v2 - std::sqrt(v2 * v2 - g * (g * d * d + 2.f * v2 * y))) / (g * d));
+
+            //std::cout << "t " << theta << std::endl;
+            //std::cout << "y " << pi / 2 - yaw << std::endl;
+
+            dir.z = cos(theta) * cos(pitch);
+            dir.x = cos(theta) * sin(pitch);
+            dir.y = sin(theta);
+
+            dir = glm::normalize(dir);
+        }
+
+        btTransform transform;
+
+        transform.setOrigin(toBtVec3(a));
+        transform.setRotation(btQuaternion(pitch, yaw, 0.f));
+
+        bullets.emplace_back(new Bullet(*world));
+        bullets.back()->setTransform(transform);
+        bullets.back()->applyCentralImpulse(dir * bulletImpulse);
+    }
+
 private:
-    static inline constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
-    static inline constexpr float maxSpeed = 10.f;
+    static constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
+    static constexpr float maxSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;
-    static inline constexpr float zoomTime = 0.3f;
-    static inline constexpr float jumpCooldown = 1.86f;
+    static constexpr float zoomTime = 0.3f;
+    static constexpr float jumpCooldown = 1.86f;
+    static constexpr float bulletImpulse = 60.f;
+    static constexpr float bulletSpawnDistance = 3.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

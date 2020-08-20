@@ -7,21 +7,20 @@
 #include "BulletCollision/CollisionDispatch/btManifoldResult.h"
 #include "utils.h"
 
-
 //TODO move this somewhere, there can be only one callback for all types of objects
 // but nothing except terrain needs custom callback atm
 
-bool CustomMaterialCombinerCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, 
-    const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
+bool CustomMaterialCombinerCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
+                                    const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1)
 {
     // btAdjustInternalEdgeContacts(cp, colObj1Wrap, colObj0Wrap, partId1, index1);
 
     if (colObj1Wrap->getCollisionObject()->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
     {
-        CollisionObject::CollisionObjectOwner* ownerPtr = static_cast<CollisionObject*>(colObj1Wrap->getCollisionObject()->getUserPointer())->getOwnerPtr();
-        if (ownerPtr) 
+        CollisionObject::CollisionObjectOwner *ownerPtr = static_cast<CollisionObject *>(colObj1Wrap->getCollisionObject()->getUserPointer())->getOwnerPtr();
+        if (ownerPtr)
         {
-            Terrain::TerrainChunk* chunk = dynamic_cast<Terrain::TerrainChunk*>(ownerPtr);
+            Terrain::TerrainChunk *chunk = dynamic_cast<Terrain::TerrainChunk *>(ownerPtr);
             if (chunk)
             {
                 glm::vec3 normal = chunk->getPartNormal(index1);
@@ -37,7 +36,8 @@ bool CustomMaterialCombinerCallback(btManifoldPoint& cp, const btCollisionObject
 
 void Terrain::init()
 {
-    gContactAddedCallback = CustomMaterialCombinerCallback;
+    CollisionObject::addGlobalContactCallback(CustomMaterialCombinerCallback);
+    //gContactAddedCallback = CustomMaterialCombinerCallback;
 
     TerrainCube::init();
     TerrainChunk::init();
@@ -53,7 +53,7 @@ void Terrain::TerrainCube::init()
     }
 }
 
-Terrain::Terrain(World& world) : world(world)
+Terrain::Terrain(World &world) : world(world)
 {
     //TODO reading from vector
     for (int x = 0; x < 10 * chunkSize; x += chunkSize)
@@ -64,7 +64,7 @@ Terrain::Terrain(World& world) : world(world)
 
 VecInt3 Terrain::getChunkFromPoint(VecInt3 pos)
 {
-    for (auto& i : pos)
+    for (auto &i : pos)
     {
         if (i < 0)
             i -= chunkSize - 1;
@@ -76,7 +76,7 @@ VecInt3 Terrain::getChunkFromPoint(VecInt3 pos)
 
 void Terrain::draw(Window *window) const
 {
-    for (auto& i : chunks)
+    for (auto &i : chunks)
         i.second->draw(window);
 }
 
@@ -86,7 +86,7 @@ void Terrain::updateBuffers()
     {
         auto it = chunks.find(i);
         if (it == chunks.end())
-            it = chunks.emplace(i, new TerrainChunk(i, (Terrain*)this, false)).first;
+            it = chunks.emplace(i, new TerrainChunk(i, (Terrain *)this, false)).first;
         it->second->updateBuffers();
     }
     toRegen.clear();
@@ -129,7 +129,7 @@ void Terrain::TerrainCube::genBuffers()
         chunk->drawAtPos(size, intPos);
     else
     {
-        for (auto& i : childs)
+        for (auto &i : childs)
         {
             if (i)
             {
@@ -142,7 +142,7 @@ void Terrain::TerrainCube::genBuffers()
     }
 }
 
-void Terrain::TerrainChunk::collideWith(CollisionObject* collObj)
+void Terrain::TerrainChunk::collideWith(CollisionObject *collObj)
 {
     if (rootTerrainCube)
     {
@@ -171,7 +171,7 @@ void Terrain::TerrainChunk::updateBuffers()
     constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
     for (size_t i = 0; i < texCoords.size() / 6; i++)
     {
-        glm::vec3 a(vertices[9 * i],     vertices[9 * i + 1], vertices[9 * i + 2]);
+        glm::vec3 a(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]);
         glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
         glm::vec3 c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
         glm::vec3 normal(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
@@ -193,7 +193,7 @@ void Terrain::TerrainChunk::updateBuffers()
         texCoord = tbn * a;
         texCoords[6 * i] = texCoord.x;
         texCoords[6 * i + 1] = texCoord.z;
-        
+
         texCoord = tbn * b;
         texCoords[6 * i + 2] = texCoord.x;
         texCoords[6 * i + 3] = texCoord.z;
@@ -209,7 +209,7 @@ void Terrain::TerrainChunk::updateBuffers()
         bitangents[9 * i + 3] = bitangent.x, bitangents[9 * i + 4] = bitangent.y, bitangents[9 * i + 5] = bitangent.z;
         bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
     }
-    
+
     if (!vertices.empty())
     {
         shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));

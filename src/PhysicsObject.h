@@ -9,7 +9,7 @@
 class PhysicsObject : public DrawableObject, public RigidBody
 {
 public:
-    PhysicsObject(World &w, btCollisionShape *shape, float mass, glm::vec3 position) : RigidBody(&w, shape, mass, position) {}
+    PhysicsObject(World &w, btCollisionShape *shape, float mass, const glm::vec3 &position) : RigidBody(&w, shape, mass, position) {}
 
     void update(float delta) override
     {

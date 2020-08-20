@@ -5,15 +5,14 @@
 #include <LinearMath/btTransform.h>
 #include "debug.h"
 
-std::unique_ptr<btCollisionShape> CollisionObject::shapeFromVertices(const std::vector<float>& vertices)
+std::unique_ptr<btCollisionShape> CollisionObject::shapeFromVertices(const std::vector<float> &vertices)
 {
-    btConvexHullShape* shape = new btConvexHullShape(vertices.data(), vertices.size() / 3, 3 * sizeof(float));
+    btConvexHullShape *shape = new btConvexHullShape(vertices.data(), vertices.size() / 3, 3 * sizeof(float));
     shape->optimizeConvexHull();
     return std::unique_ptr<btCollisionShape>(shape);
 }
 
-
-std::unique_ptr<btCollisionShape> CollisionObject::boundingBoxShape(const std::vector<float>& vertices)
+std::unique_ptr<btCollisionShape> CollisionObject::boundingBoxShape(const std::vector<float> &vertices)
 {
     std::array<std::vector<float>, 3> splitVertices;
     for (size_t i = 0; i < vertices.size(); i++)
@@ -23,11 +22,11 @@ std::unique_ptr<btCollisionShape> CollisionObject::boundingBoxShape(const std::v
     std::array<std::array<float, 2>, 3> pairs;
     for (int i = 0; i < 3; i++)
         pairs[i] = {*std::min_element(splitVertices[i].begin(), splitVertices[i].end()), *std::max_element(splitVertices[i].begin(), splitVertices[i].end())};
-    
+
     float margin = pairs[0][1] - pairs[0][0];
     for (int i = 1; i < 3; i++)
         margin = std::min(margin, pairs[i][1] - pairs[i][0]);
-    
+
     margin *= 0.1;
     for (int i = 0; i < 3; i++)
     {
@@ -35,7 +34,7 @@ std::unique_ptr<btCollisionShape> CollisionObject::boundingBoxShape(const std::v
         pairs[i][1] -= margin;
     }
 
-    btCompoundShape* shape = new btCompoundShape(true, 9);
+    btCompoundShape *shape = new btCompoundShape(true, 9);
 
     for (auto i : pairs[0])
         for (auto j : pairs[1])
@@ -51,18 +50,20 @@ std::unique_ptr<btCollisionShape> CollisionObject::boundingBoxShape(const std::v
     return std::unique_ptr<btCollisionShape>(shape);
 }
 
-bool customContactAddedCallback(btManifoldPoint& cp, const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0, 
-    const btCollisionObjectWrapper* colObj1Wrap, int partId1, int index1)
+bool CollisionObject::customContactAddedCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
+                                                 const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1)
 {
-	CollisionObject* co1 = reinterpret_cast<CollisionObject*>(colObj0Wrap->getCollisionObject()->getUserPointer());
-	CollisionObject* co2 = reinterpret_cast<CollisionObject*>(colObj1Wrap->getCollisionObject()->getUserPointer());
+    CollisionObject *co1 = static_cast<CollisionObject *>(colObj0Wrap->getCollisionObject()->getUserPointer());
+    CollisionObject *co2 = static_cast<CollisionObject *>(colObj1Wrap->getCollisionObject()->getUserPointer());
 
     co1->contactAddedCallback(co2);
     co2->contactAddedCallback(co1);
 
+    for (auto &callback : globalContactCallbacks)
+        callback(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1);
+
     return true;
 }
-
 
 extern ContactAddedCallback gContactAddedCallback;
 
