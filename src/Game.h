@@ -4,6 +4,10 @@
 #include <iostream>
 #include <iomanip>
 #include <cmath>
+#include <future>
+#include <atomic>
+#include <condition_variable>
+#include <thread>
 
 #include "Axes.h"
 #include "Bullet.h"
@@ -33,16 +37,6 @@ public:
             RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, v);
             terrain.collideWith(bigHole);
             particleSystem.generate(v);
-            std::cout << "\nDarkness blacker than black and darker than dark,\n"
-                         "I beseech thee, combine with my deep crimson.\n"
-                         "The time of awakening cometh.\n"
-                         "Justice, fallen upon the infallible boundary,\n"
-                         "appear now as an intangible distortions!\n"
-                         "I desire for my torrent of power a destructive force:\n"
-                         "a destructive force without equal!\n"
-                         "Return all creation to cinders,\n"
-                         "and come from the abyss!\n"
-                         "Explosion!\n\n";
         });
 
         auto newPlayer = std::make_shared<DummyModel>(world);
@@ -57,6 +51,35 @@ public:
         clock60Pi.reset();
         fpsText.setPosition({-0.95f, 0.9f});
         fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        running = true;
+        mainReady = true;
+
+        physicsThread = std::async(std::launch::async, [this] {
+            while (running)
+            {
+                std::unique_lock<std::mutex> lk(mutex);
+                while (mainReady)
+                    cv.wait(lk);
+
+                for (int i = 0; i < 10; i++)
+                    world.update(delta / 10);
+
+                mainReady = true;
+                cv.notify_one();
+            }
+        });
+    }
+
+    ~Game()
+    {
+        mainReady = false;
+        running = false;
+        cv.notify_one();
+        if (physicsThread.valid())
+            physicsThread.get();
+
+        Bullet::setExplosionCallback([](const glm::vec3 &) {});
     }
 
     void operator()()
@@ -101,9 +124,6 @@ public:
 
         camera.update(delta);
 
-        for (int i = 0; i < 10; i++)
-            world.update(delta / 10);
-
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
 
@@ -111,9 +131,12 @@ public:
 
         GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
 
-        window.clear();
-
         terrain.updateBuffers();
+
+        mainReady = false;
+        cv.notify_one();
+
+        window.clear();
 
         for (auto &objectPtr : drawableObjects)
             if (objectPtr.get() != player)
@@ -129,9 +152,14 @@ public:
         window.draw(crosshair);
 
         window.swapBuffers();
+
+        std::unique_lock<std::mutex> lk(mutex);
+        while (!mainReady)
+            cv.wait(lk);
     }
 
 private:
+    friend class std::condition_variable;
     void consumeKey(int glfwKeyCode)
     {
         switch (glfwKeyCode)
@@ -142,9 +170,7 @@ private:
         }
 
         if (player != nullptr)
-        {
             player->consumeKey(glfwKeyCode);
-        }
         else
             camera.consumeKey(glfwKeyCode);
     }
@@ -169,6 +195,11 @@ private:
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
     std::vector<std::shared_ptr<DrawableObject>> drawableObjects;
+
+    std::future<void> physicsThread;
+    std::atomic<bool> running, mainReady;
+    std::condition_variable cv;
+    std::mutex mutex;
 };
 
 #endif /* !GAME_H_ */

@@ -38,7 +38,7 @@ public:
         bool down;
     };
 
-    Window(int width, int height, const char *title)
+    Window(int width, int height, const char *title, bool visible = false)
         : _width(width), _height(height),
           xPosOld(0.0), yPosOld(0.0),
           xDiff(0.0), yDiff(0.0),
@@ -63,6 +63,7 @@ public:
         glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
         glfwWindowHint(GLFW_SAMPLES, 8);
         glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
+        glfwWindowHint(GLFW_VISIBLE, visible ? GLFW_TRUE : GLFW_FALSE);
 
         window = glfwCreateWindow(width, height, title, nullptr, nullptr);
         if (!window)
@@ -179,6 +180,16 @@ public:
                 ShaderProgram::setMatrixP(perspectiveP);
             projectionMode = newProjectionMode;
         }
+    }
+
+    void hide()
+    {
+        glfwHideWindow(window);
+    }
+
+    void show()
+    {
+        glfwShowWindow(window);
     }
 
 private:

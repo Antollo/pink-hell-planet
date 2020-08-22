@@ -17,7 +17,12 @@ public:
     void setPosition(const glm::vec2 &newPosition = glm::vec2(0.f, 0.f))
     {
         position = newPosition;
-        M = glm::scale(glm::translate(glm::vec3(newPosition.x, newPosition.y, 0.f)), glm::vec3(getScale(), getScale() * getAspectRatio(), getScale()));
+        updateMatrixM();
+    }
+    void setPositionOffset(const glm::vec2 &newPositionOffset = glm::vec2(0.f, 0.f))
+    {
+        positionOffset = newPositionOffset;
+        updateMatrixM();
     }
     virtual void setColor(const glm::vec4 &newColor)
     {
@@ -57,8 +62,15 @@ protected:
     }
     glm::vec4 color;
     glm::vec2 position;
+    glm::vec2 positionOffset;
 
 private:
+    void updateMatrixM()
+    {
+        M = glm::scale(
+            glm::translate(glm::vec3(position.x + positionOffset.x * getScale(), position.y + positionOffset.y * getScale() * getAspectRatio(), 0.f)),
+            glm::vec3(getScale(), getScale() * getAspectRatio(), getScale()));
+    }
     static inline ShaderProgram guiShaderProgram;
     static inline float aspectRatio = 1.f;
     static inline float scale = 0.001f;

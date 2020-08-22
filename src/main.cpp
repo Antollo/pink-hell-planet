@@ -27,6 +27,7 @@ int main()
     Bullet::init();
 
     Game game(window);
+    window.show();
     while (window.isOpen())
         game();
 

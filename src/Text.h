@@ -43,7 +43,7 @@ private:
         {
             DrawableObject::draw(window);
         }
-        float getOffset() const { return getScale() * offset / 64.f; }
+        float getGlyphOffset() const { return offset / 64.f; }
 
     protected:
         const VertexArray &getVertexArray() const override { return vertexArray; }
@@ -63,6 +63,7 @@ private:
     };
 
 public:
+    static constexpr float fontSize = 32.f;
     static void init()
     {
         Glyph::init();
@@ -74,7 +75,7 @@ public:
         if (FT_New_Face(ft, "PressStart2P-Regular.ttf", 0, &face))
             errorAndExit("FT_New_Face");
 
-        FT_Set_Pixel_Sizes(face, 0, 32);
+        FT_Set_Pixel_Sizes(face, 0, fontSize);
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -95,6 +96,8 @@ public:
                                          face->glyph->advance.x);
         }
 
+        lineHeight = face->size->metrics.height / 64.f;
+
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
     }
@@ -112,18 +115,27 @@ public:
     void draw(Window *window) const override
     {
         ShaderProgram::setColor(color);
-        glm::vec2 temp(0.f, 0.f);
+        glm::vec2 offset(0.f, 0.f), temp, scale(getScale(), getScale() * getAspectRatio());
         for (const auto &character : string)
         {
-            wcharToGlyph[character].setPosition(position + temp);
+            if (character == '\n')
+            {
+                offset.x = 0.f;
+                offset.y -= lineHeight * getScale() * getAspectRatio();
+                continue;
+            }
+
+            temp = position + offset + positionOffset * scale;
+            wcharToGlyph[character].setPosition(temp);
             wcharToGlyph[character].setColor(color);
             wcharToGlyph[character].draw(window);
-            temp.x += (wcharToGlyph[character].getOffset());
+            offset.x += wcharToGlyph[character].getGlyphOffset() * getScale();
         }
     }
 
 private:
     std::string string;
+    static inline float lineHeight;
     static inline std::vector<Glyph> wcharToGlyph;
 };
 

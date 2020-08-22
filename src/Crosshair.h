@@ -127,7 +127,7 @@ public:
 
         triangles.setColor({1.f, 1.f, 1.f, 0.02f});
 
-        distance.setPosition({0.5f, 0.f});
+        distance.setPositionOffset({240.f, 0.f});
         distance.setColor({1.f, 1.f, 1.f, 0.5f});
     }
     void update()
@@ -154,7 +154,7 @@ public:
             if (i == 0)
             {
                 glm::vec3 v = player->getRaycastAim();
-                if (std::isnan(v.x) || std::isnan(v.y) || !std::isnan(v.z))
+                if (std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z))
                     distance.setText("inf");
                 else
                     distance.setText(std::to_string(int(glm::distance(player->getPosition(), v) + 0.5f)));
