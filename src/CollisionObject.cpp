@@ -59,9 +59,10 @@ bool CollisionObject::customContactAddedCallback(btManifoldPoint &cp, const btCo
     co1->contactAddedCallback(co2);
     co2->contactAddedCallback(co1);
 
-    for (auto &callback : globalContactCallbacks)
+    for (auto &callback : globalMaterialCombinerCallbacks)
         callback(cp, colObj0Wrap, partId0, index0, colObj1Wrap, partId1, index1);
 
+    // value returned is ignored by bullet
     return true;
 }
 

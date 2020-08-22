@@ -1,20 +1,17 @@
 
-#include "Terrain.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObjectWrapper.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
 #include "BulletCollision/CollisionDispatch/btInternalEdgeUtility.h"
 #include "BulletCollision/CollisionDispatch/btManifoldResult.h"
+
 #include "utils.h"
+#include "Terrain.h"
+#include "CollisionObject.h"
 
-//TODO move this somewhere, there can be only one callback for all types of objects
-// but nothing except terrain needs custom callback atm
-
-bool CustomMaterialCombinerCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
+void Terrain::CustomMaterialCombinerCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
                                     const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1)
 {
-    // btAdjustInternalEdgeContacts(cp, colObj1Wrap, colObj0Wrap, partId1, index1);
-
     if (colObj1Wrap->getCollisionObject()->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
     {
         CollisionObject::CollisionObjectOwner *ownerPtr = static_cast<CollisionObject *>(colObj1Wrap->getCollisionObject()->getUserPointer())->getOwnerPtr();
@@ -28,16 +25,11 @@ bool CustomMaterialCombinerCallback(btManifoldPoint &cp, const btCollisionObject
             }
         }
     }
-
-    // honestly I have no clue what the value returned by this callback is supposed to represent
-    // it is ignored by bullet internally in this one specific case we have here
-    return false;
 }
 
 void Terrain::init()
 {
-    CollisionObject::addGlobalContactCallback(CustomMaterialCombinerCallback);
-    //gContactAddedCallback = CustomMaterialCombinerCallback;
+    CollisionObject::addGlobalMaterialCombinerCallback(CustomMaterialCombinerCallback);
 
     TerrainCube::init();
     TerrainChunk::init();
@@ -214,11 +206,9 @@ void Terrain::TerrainChunk::updateBuffers()
     {
         shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
         shape->setMargin(0.f);
-        // btGenerateInternalEdgeInfo(shape.get(), new btTriangleInfoMap());
 
         rigidBody.reset(new RigidBody(&(terrain->world), shape.get(), 0, glm::vec3(0.f, 0.f, 0.f)));
         rigidBody->setOwnerPtr(this);
-        rigidBody->getRawBtCollisionObjPtr()->setCollisionFlags(rigidBody->getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     }
     vertexArray.loadVerticesNormalsTexCoordsTangentsBitangents(vertices, normals, texCoords, tangents, bitangents);
 }

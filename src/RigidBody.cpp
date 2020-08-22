@@ -15,7 +15,7 @@ RigidBody::RigidBody(World *w, btCollisionShape *shape, float mass, const glm::v
     btRigidBody::btRigidBodyConstructionInfo rbInfo(btmass, motionState, shape, localInertia);
     body = new btRigidBody(rbInfo);
 
-    setBtUserPtr();
+    setupBtCollisionObject();
 
     if (world != nullptr)
         world->dynamicsWorld->addRigidBody(body);
