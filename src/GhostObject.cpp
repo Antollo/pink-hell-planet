@@ -7,7 +7,7 @@ GhostObject::GhostObject(World* w, btCollisionShape* shape, glm::vec3 position)
 {
     ghost = new btGhostObject();
     ghost->setCollisionShape(shape);
-    setBtUserPtr();
+    setupBtCollisionObject();
     setPositionNoRotation(position);
 
     if (world != nullptr)

@@ -49,19 +49,20 @@ public:
     virtual void contactAddedCallback(CollisionObject *other) {}
     const World *getWorld() { return world; }
 
-    static void addGlobalContactCallback(std::function<bool(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int)> c)
+    static void addGlobalMaterialCombinerCallback(std::function<void(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int)> c)
     {
-        globalContactCallbacks.push_back(c);
+        globalMaterialCombinerCallbacks.push_back(c);
     }
-
 protected:
     static std::unique_ptr<btCollisionShape> shapeFromVertices(const std::vector<float> &vertices);
     static std::unique_ptr<btCollisionShape> boundingBoxShape(const std::vector<float> &vertices);
+
     // Should be called by constructors of derived classes
     // when getRawBtCollisionObjPtr() is ready to return the pointer
-    void setBtUserPtr()
+    void setupBtCollisionObject()
     {
         getRawBtCollisionObjPtr()->setUserPointer(this);
+        getRawBtCollisionObjPtr()->setCollisionFlags(getRawBtCollisionObjPtr()->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
     }
 
     World *world;
@@ -71,7 +72,7 @@ protected:
 private:
     static bool customContactAddedCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
                                            const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1);
-    static inline std::vector<std::function<bool(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int)>> globalContactCallbacks;
+    static inline std::vector<std::function<void(btManifoldPoint&, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int)>> globalMaterialCombinerCallbacks;
 };
 
 #endif
