@@ -175,16 +175,12 @@ protected:
             float v = bulletImpulse / Bullet::mass;
             float v2 = v * v;
             float d = glm::distance(glm::vec2(a.x, a.z), glm::vec2(b.x, b.z));
-            float g = World::g;
+            float g = -World::g;
             float y = b.y - a.y;
 
             // https://www.forrestthewoods.com/blog/solving_ballistic_trajectories/
-            // TODO: fix it
 
             float theta = std::atan((v2 - std::sqrt(v2 * v2 - g * (g * d * d + 2.f * v2 * y))) / (g * d));
-
-            //std::cout << "t " << theta << std::endl;
-            //std::cout << "y " << pi / 2 - yaw << std::endl;
 
             dir.z = cos(theta) * cos(pitch);
             dir.x = cos(theta) * sin(pitch);
@@ -209,7 +205,7 @@ private:
     static constexpr float mouseSensitivity = 0.004f;
     static constexpr float zoomTime = 0.3f;
     static constexpr float jumpCooldown = 1.86f;
-    static constexpr float bulletImpulse = 60.f;
+    static constexpr float bulletImpulse = 50.f;
     static constexpr float bulletSpawnDistance = 3.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

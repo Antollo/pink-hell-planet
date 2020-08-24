@@ -65,11 +65,14 @@ void main()
 {
     vec2 texCoords = gTexCoord;
     // Parallax mapping = 30-40 fps on integrated graphics
-    if (graphicSetting != graphicSettingLow && gDistance < 12)
+
+    #ifndef GRAPHIC_SETTINGS_LOW
+    if (gDistance < 12)
     {
         float m = clamp((-gDistance + 12) / 3, 0, 1);
         texCoords = mix(gTexCoord, parallaxMapping(gTexCoord), m);
     }
+    #endif
     
     vec4 v = normalize(vec4(0, 0, 0, 1) - gPositionVM);
     vec4 n = gNormalVM;

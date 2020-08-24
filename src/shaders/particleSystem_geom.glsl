@@ -13,9 +13,12 @@ out float gAlpha;
 
 void main()
 {
+    #ifndef GRAPHIC_SETTINGS_LOW
     float size = 0.5;
-    if (graphicSetting == graphicSettingLow)
-        size = 1;
+    #else
+    float size = 1;
+    #endif
+
     if (vLifetime[0] >= time)
     {
         gAlpha = sqrt(clamp(vLifetime[0] - time, 0, 1));

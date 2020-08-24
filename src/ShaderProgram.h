@@ -25,8 +25,7 @@ private:
     static constexpr size_t colorOffset = lightsOffset + ParticleGroupLight::count * sizeof(ParticleGroupLight);
     static constexpr size_t timeOffset = colorOffset + sizeof(glm::vec4);
     static constexpr size_t alphaOffset = timeOffset + sizeof(float);
-    static constexpr size_t graphicSettingOffset = alphaOffset + sizeof(int);
-    static constexpr size_t dataSize = graphicSettingOffset + sizeof(float);
+    static constexpr size_t dataSize = alphaOffset + sizeof(float);
 
 public:
     static void init(GlobalConfig::GraphicSetting setting)
@@ -39,7 +38,7 @@ public:
 
         glBindBufferRange(GL_UNIFORM_BUFFER, 0, data, 0, dataSize);
 
-        setGraphicSetting(setting);
+        isGraphicSettingLow = (setting == GlobalConfig::GraphicSetting::low);
     }
     ShaderProgram() : loaded(false), validated(false), vertexShader(0), geometryShader(0), fragmentShader(0), shaderProgram(0) {}
     void load(std::string vertexShaderFilename, std::string fragmentShaderFilename)
@@ -150,13 +149,6 @@ public:
         glBufferSubData(GL_UNIFORM_BUFFER, alphaOffset, sizeof(float), &alpha);
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
     }
-    static void setGraphicSetting(GlobalConfig::GraphicSetting setting)
-    {
-        glBindBuffer(GL_UNIFORM_BUFFER, data);
-        int s = setting;
-        glBufferSubData(GL_UNIFORM_BUFFER, graphicSettingOffset, sizeof(int), &s);
-        glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    }
     static float getTime()
     {
         return time;
@@ -179,6 +171,7 @@ public:
 private:
     static inline GLuint data = 0;
     static inline float time = 0.f;
+    static inline bool isGraphicSettingLow = false;
     bool loaded;
     mutable bool validated;
 
@@ -262,8 +255,10 @@ private:
                            std::istreambuf_iterator<char>());
         if (source.empty())
             errorAndExit("File", fileName, "empty");
-        
+
         include(source);
+        if (isGraphicSettingLow)
+            source.insert(source.find('\n', source.find('#')) + 1, "#define GRAPHIC_SETTINGS_LOW\n");
         return source;
     }
 };
