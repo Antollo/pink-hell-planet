@@ -25,6 +25,7 @@
 #include "Text.h"
 #include "Crosshair.h"
 #include "Bot.h"
+#include "Menu.h"
 
 class Game
 {
@@ -39,18 +40,35 @@ public:
             particleSystem.generate(v);
         });
 
-        auto newPlayer = std::make_shared<DummyModel>(world);
-        player = newPlayer.get();
-        drawableObjects.push_back(newPlayer);
-
-        auto newBot = std::make_shared<Bot>(world);
-        newBot->target(newPlayer);
-        drawableObjects.push_back(newBot);
-
         clock.reset();
         clock60Pi.reset();
-        fpsText.setPosition({-0.95f, 0.9f});
+        fpsText.setPosition({-1.f, 1.f});
+        fpsText.setPositionOffset({20.f, -20.f - Text::lineHeight});
         fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        menu.insert(Action(
+            GLFW_KEY_P,
+            "P - Play game",
+            [this]() {
+                auto newPlayer = std::make_shared<DummyModel>(world);
+                player = newPlayer.get();
+                drawableObjects.push_back(newPlayer);
+
+                auto newBot = std::make_shared<Bot>(world);
+                newBot->target(newPlayer);
+                drawableObjects.push_back(newBot);
+            },
+            [this]() { return player == nullptr; }));
+
+        menu.insert(Action(
+            GLFW_KEY_G,
+            "G - Go up",
+            [this]() {
+                glm::vec3 position = player->getPosition();
+                position.y = 20.f;
+                player->setPosition(position);
+            },
+            [this]() { return player != nullptr; }));
 
         running = true;
         mainReady = true;
@@ -84,6 +102,7 @@ public:
 
     void operator()()
     {
+        GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
         time = clock60Pi.getTime();
         ShaderProgram::setTime(time);
         particleSystem.update(time);
@@ -122,16 +141,13 @@ public:
         else
             window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
 
-        camera.update(delta);
-
         for (auto &objectPtr : drawableObjects)
             objectPtr->update(delta);
 
+        camera.update(delta);
         crosshair.update();
-
-        GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
-
         terrain.updateBuffers();
+        menu.update(delta);
 
         mainReady = false;
         cv.notify_one();
@@ -150,6 +166,7 @@ public:
             window.draw(*player);
         window.draw(fpsText);
         window.draw(crosshair);
+        window.draw(menu);
 
         window.swapBuffers();
 
@@ -173,6 +190,8 @@ private:
             player->consumeKey(glfwKeyCode);
         else
             camera.consumeKey(glfwKeyCode);
+
+        menu.consumeKey(glfwKeyCode);
     }
 
     void consumeButton(Window::MouseButtonEvent ev)
@@ -192,6 +211,7 @@ private:
     Skybox skybox;
     Fireflies fireflies;
     ParticleSystem particleSystem;
+    Menu menu;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
     std::vector<std::shared_ptr<DrawableObject>> drawableObjects;

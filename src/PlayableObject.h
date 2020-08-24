@@ -132,6 +132,8 @@ public:
 
     glm::vec3 getFrontDirection() const { return frontDirection; }
 
+    glm::vec3 getRightDirection() const { return glm::vec3(std::cos(pitch), 0.f, -std::sin(pitch)); }
+
     float getYaw() { return yaw; }
     float getPitch() { return pitch; }
     float getZoom() { return zoom; }
@@ -205,7 +207,7 @@ private:
     static constexpr float mouseSensitivity = 0.004f;
     static constexpr float zoomTime = 0.3f;
     static constexpr float jumpCooldown = 1.86f;
-    static constexpr float bulletImpulse = 50.f;
+    static constexpr float bulletImpulse = 60.f;
     static constexpr float bulletSpawnDistance = 3.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

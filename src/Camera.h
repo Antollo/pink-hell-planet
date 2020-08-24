@@ -70,15 +70,16 @@ public:
             frontDirection.x = sin(yaw) * sin(pitch);
             frontDirection.y = cos(yaw);
             frontDirection = glm::normalize(frontDirection);
+
+            rightDirection.x = cos(pitch);
+            rightDirection.y = 0.f;
+            rightDirection.z = -sin(pitch);
         }
         else
         {
             frontDirection = player->getFrontDirection();
+            rightDirection = player->getRightDirection();
         }
-
-        rightDirection.x = cos(pitch);
-        rightDirection.y = 0.f;
-        rightDirection.z = -sin(pitch);
 
         upDirection = glm::cross(frontDirection, rightDirection);
 
@@ -134,7 +135,7 @@ private:
     Window &window;
     PlayableObject *&player;
     glm::mat4 V;
-    glm::vec3 position = glm::vec3(0.f, 0.f, 0.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 position = glm::vec3(20.f, 20.f, 20.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
     float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 6.f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;

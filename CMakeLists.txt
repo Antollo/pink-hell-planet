@@ -10,7 +10,7 @@ if(MSVC)
     # multithreaded build in MSVC
     add_compile_options(/MP)
     if (NOT CMAKE_BUILD_TYPE STREQUAL Debug)
-        add_compile_options(/O2)
+        add_compile_options(/O2 /LTCG /GS-)
     endif()
     add_compile_options(/W3 /MT)
 else()

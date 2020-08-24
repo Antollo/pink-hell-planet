@@ -40,6 +40,13 @@ public:
         body->setCenterOfMassTransform(transform);
     }
 
+    void setPosition(const glm::vec3 &position)
+    {
+        btTransform transform;
+        transform.setOrigin(toBtVec3(position));
+        setTransform(transform);
+    }
+
     void applyCentralImpulse(const glm::vec3 &v)
     {
         body->applyCentralImpulse(toBtVec3(v));

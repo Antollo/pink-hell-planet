@@ -63,7 +63,7 @@ private:
     };
 
 public:
-    static constexpr float fontSize = 32.f;
+    static inline float lineHeight;
     static void init()
     {
         Glyph::init();
@@ -135,7 +135,7 @@ public:
 
 private:
     std::string string;
-    static inline float lineHeight;
+    static constexpr float fontSize = 40.f;
     static inline std::vector<Glyph> wcharToGlyph;
 };
 
