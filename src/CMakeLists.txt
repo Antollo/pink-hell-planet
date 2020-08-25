@@ -15,7 +15,20 @@ add_executable(game
     ParticleSystem.cpp
 )
 
-target_link_libraries(game OpenGL::GL glm::glm glfw glad tinyobjloader lodepng bullet3 BulletDynamics BulletCollision freetype nlohmann_json::nlohmann_json)
+target_link_libraries(game
+    OpenGL::GL
+    glm::glm
+    glfw
+    glad
+    tinyobjloader
+    lodepng
+    bullet3
+    BulletDynamics
+    BulletCollision
+    freetype
+    nlohmann_json::nlohmann_json
+    cppMusic
+)
 
 #if(MSVC)
 #    set_target_properties(opengl-sample PROPERTIES LINK_FLAGS_RELEASE /SUBSYSTEM:WINDOWS)

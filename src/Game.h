@@ -26,11 +26,12 @@
 #include "Crosshair.h"
 #include "Bot.h"
 #include "Menu.h"
+#include "Music.h"
 
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera)
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav")
     {
         Bullet::setExplosionCallback([this](const glm::vec3 &v) {
             btSphereShape shape(5.f);
@@ -67,8 +68,9 @@ public:
                 glm::vec3 position = player->getPosition();
                 position.y = 20.f;
                 player->setPosition(position);
+                player->setLinearVelocity({0.f, 0.f, 0.f});
             },
-            [this]() { return player != nullptr; }));
+            [this]() { return player != nullptr && player->getPosition().y < 0.f; }));
 
         running = true;
         mainReady = true;
@@ -87,6 +89,9 @@ public:
                 cv.notify_one();
             }
         });
+
+        backgroundMusic.setLoop();
+        backgroundMusic.play();
     }
 
     ~Game()
@@ -145,7 +150,7 @@ public:
             objectPtr->update(delta);
 
         camera.update(delta);
-        crosshair.update();
+        crosshair.update(delta);
         terrain.updateBuffers();
         menu.update(delta);
 
@@ -212,6 +217,7 @@ private:
     Fireflies fireflies;
     ParticleSystem particleSystem;
     Menu menu;
+    Music backgroundMusic;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
     std::vector<std::shared_ptr<DrawableObject>> drawableObjects;

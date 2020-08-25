@@ -2,6 +2,7 @@
 #define PLAYABLEOBJECT_H_
 
 #include "PhysicsObject.h"
+#include "Clock.h"
 #include "debug.h"
 
 class PlayableObject : public PhysicsObject
@@ -144,6 +145,11 @@ public:
         return result->hasHit() ? toGlmVec3(result->m_hitPointWorld) : glm::vec3(NAN, NAN, NAN);
     }
 
+    float getReloadState() const
+    {
+        return reloadClock.getTime() / reloadTime;
+    }
+
 protected:
     friend class Crosshair;
     static constexpr float friction = 0.1f;
@@ -165,6 +171,10 @@ protected:
 
     void shoot()
     {
+        if (reloadClock.getTime() < reloadTime)
+            return;
+        reloadClock.reset();
+
         glm::vec3 dir;
 
         glm::vec3 a = getPosition() + getFrontDirection() * bulletSpawnDistance;
@@ -202,6 +212,7 @@ protected:
     }
 
 private:
+    Clock reloadClock;
     static constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
     static constexpr float maxSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;
@@ -209,5 +220,6 @@ private:
     static constexpr float jumpCooldown = 1.86f;
     static constexpr float bulletImpulse = 60.f;
     static constexpr float bulletSpawnDistance = 3.f;
+    static constexpr float reloadTime = 1.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

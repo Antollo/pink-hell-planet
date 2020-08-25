@@ -16,3 +16,6 @@
 [submodule "thirdparty/freetype2/freetype2"]
 	path = thirdparty/freetype2/freetype2
 	url = https://git.savannah.nongnu.org/r/freetype/freetype2.git
+[submodule "thirdparty/cppMusic/cppMusic"]
+	path = thirdparty/cppMusic/cppMusic
+	url = https://github.com/Antollo/cppMusic

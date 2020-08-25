@@ -52,6 +52,11 @@ public:
         body->applyCentralImpulse(toBtVec3(v));
     }
 
+    void setLinearVelocity(const glm::vec3 &v)
+    {
+        body->setLinearVelocity(toBtVec3(v));
+    }
+
 protected:
     btRigidBody *body;
 

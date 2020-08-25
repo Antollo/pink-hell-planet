@@ -5,6 +5,7 @@
 #include "Text.h"
 #include "PlayableObject.h"
 #include "Camera.h"
+#include "ProgressBar.h"
 
 class Crosshair : public Drawable
 {
@@ -15,7 +16,9 @@ public:
           lines2(ShapeArray::Type::lines),
           dots1(ShapeArray::Type::points),
           dots2(ShapeArray::Type::points),
-          triangles(ShapeArray::Type::triangles)
+          triangles(ShapeArray::Type::triangles),
+          healthBar(10, 1.f, "hp: "),
+          reloadBar(3, 1.f)
     {
         lines1.insert(lines1.end(), {
 
@@ -129,8 +132,15 @@ public:
 
         distance.setPositionOffset({240.f, 0.f});
         distance.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        healthBar.setPosition({-0.2f, 1.f});
+        healthBar.setPositionOffset({0.f, -20.f - Text::lineHeight});
+        healthBar.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        reloadBar.setPositionOffset({240.f, - Text::lineHeight});
+        reloadBar.setColor({1.f, 1.f, 1.f, 0.5f});
     }
-    void update()
+    void update(float delta)
     {
         auto player = camera.getPlayer();
         if (player != nullptr)
@@ -148,6 +158,7 @@ public:
             dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - alpha)});
             distance.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+            reloadBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
 
             static int i = 0;
 
@@ -162,6 +173,12 @@ public:
             i++;
             if (i > 10)
                 i = 0;
+
+            healthBar.setValue(0.7f);
+            healthBar.update(delta);
+
+            reloadBar.setValue(player->getReloadState());
+            reloadBar.update(delta);
         }
         else
         {
@@ -184,6 +201,12 @@ protected:
         dots2.draw(window);
         triangles.draw(window);
         distance.draw(window);
+
+        if (camera.getPlayer() != nullptr)
+        {
+            healthBar.draw(window);
+            reloadBar.draw(window);
+        }
     }
 
 private:
@@ -192,6 +215,7 @@ private:
     ShapeArray dots1, dots2;
     ShapeArray triangles;
     Text distance;
+    ProgressBar healthBar, reloadBar;
     glm::vec3 pos;
 };
 

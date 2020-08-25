@@ -45,10 +45,10 @@ public:
 
     void update(float delta) override
     {
-        glm::vec2 temp(0.f, 0.f);
+        glm::vec2 temp(20.f, 0.f);
         for (auto &action : actions)
         {
-            action.setPosition({-0.95f, 0.f});
+            action.setPosition({-1.f, 0.f});
             if (action.isVisible())
             {
                 action.setPositionOffset(temp);
