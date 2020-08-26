@@ -2,6 +2,7 @@
 #define COLLISIONOBJECT_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 #include <functional>
 #include <btBulletDynamicsCommon.h>
@@ -16,8 +17,8 @@ class CollisionObject
 public:
     static void init();
 
-    CollisionObject(World *worldPtr, btCollisionShape *shapePtr) : world(worldPtr), myShape(shapePtr), ownerPtr(nullptr) {}
-    virtual ~CollisionObject() noexcept {};
+    CollisionObject(World *worldPtr, btCollisionShape *shapePtr) : world(worldPtr), myShape(shapePtr), ownerPtr(nullptr), id(nextCollisionObjectID++) {}
+    virtual ~CollisionObject() noexcept {}
 
     virtual btCollisionObject *getRawBtCollisionObjPtr() = 0;
 
@@ -41,7 +42,7 @@ public:
     {
         ownerPtr = ptr;
     }
-    CollisionObjectOwner *getOwnerPtr()
+    CollisionObjectOwner *getOwnerPtr() const
     {
         return ownerPtr;
     }
@@ -53,6 +54,13 @@ public:
     {
         globalMaterialCombinerCallbacks.push_back(c);
     }
+
+    using idType = unsigned int;
+    idType getId() const
+    {
+        return id;
+    }
+
 protected:
     static std::unique_ptr<btCollisionShape> shapeFromVertices(const std::vector<float> &vertices);
     static std::unique_ptr<btCollisionShape> boundingBoxShape(const std::vector<float> &vertices);
@@ -70,6 +78,9 @@ protected:
     CollisionObjectOwner *ownerPtr;
 
 private:
+    idType id;
+
+    static inline int nextCollisionObjectID = 0;
     static bool customContactAddedCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
                                            const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1);
     static inline std::vector<std::function<void(btManifoldPoint&, const btCollisionObjectWrapper*, int, int, const btCollisionObjectWrapper*, int, int)>> globalMaterialCombinerCallbacks;

@@ -16,7 +16,7 @@ class RigidBody : public CollisionObject
 {
 public:
     RigidBody(World *w, btCollisionShape *shape, float mass, const glm::vec3 &position);
-    ~RigidBody();
+    virtual ~RigidBody();
 
     btCollisionObject *getRawBtCollisionObjPtr() override
     {
@@ -56,7 +56,7 @@ public:
         body->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
         body->clearForces();
     }
-
+    
     void applyCentralImpulse(const glm::vec3 &v)
     {
         body->applyCentralImpulse(toBtVec3(v));

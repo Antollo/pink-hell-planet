@@ -31,80 +31,33 @@
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav")
+
+    static Game* get()
     {
-        Bullet::setExplosionCallback([this](const glm::vec3 &v) {
-            btSphereShape shape(5.f);
-            shape.setMargin(0.f);
-            RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, v);
-            terrain.collideWith(bigHole);
-            particleSystem.generate(v);
-        });
-
-        clock.reset();
-        clock60Pi.reset();
-        fpsText.setPosition({-1.f, 1.f});
-        fpsText.setPositionOffset({20.f, -20.f - Text::lineHeight});
-        fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
-
-        menu.insert(Action(
-            GLFW_KEY_P,
-            "P - Play game",
-            [this]() {
-                auto newPlayer = std::make_shared<DummyModel>(world);
-                player = newPlayer.get();
-                drawableObjects.push_back(newPlayer);
-
-                auto newBot = std::make_shared<Bot>(world);
-                newBot->target(newPlayer);
-                drawableObjects.push_back(newBot);
-            },
-            [this]() { return player == nullptr; }));
-
-        menu.insert(Action(
-            GLFW_KEY_G,
-            "G - Go up",
-            [this]() {
-                glm::vec3 position = player->getPosition();
-                position.y = 20.f;
-                player->setPosition(position);
-            },
-            [this]() { return player != nullptr && player->getPosition().y < 0.f; }));
-
-        running = true;
-        mainReady = true;
-
-        physicsThread = std::async(std::launch::async, [this] {
-            while (running)
-            {
-                std::unique_lock<std::mutex> lk(mutex);
-                while (mainReady)
-                    cv.wait(lk);
-
-                for (int i = 0; i < 10; i++)
-                    world.update(delta / 10);
-
-                mainReady = true;
-                cv.notify_one();
-            }
-        });
-
-        backgroundMusic.setLoop();
-        backgroundMusic.play();
+        return ptr.get();
     }
 
-    ~Game()
+    static Terrain* getTerrain()
     {
-        mainReady = false;
-        running = false;
-        cv.notify_one();
-        if (physicsThread.valid())
-            physicsThread.get();
-
-        Bullet::setExplosionCallback([](const glm::vec3 &) {});
+        return &ptr->terrain;
     }
 
-    void operator()()
+    static ParticleSystem* getParticleSystem()
+    {
+        return &ptr->particleSystem;
+    }
+
+    static void init(Window &window)
+    {
+        ptr.reset(new Game(window));
+    }
+
+    static void addDrawable(std::unique_ptr<DrawableObject>&& drawable)
+    {
+        ptr->drawableObjects.emplace_back(std::move(drawable));
+    }
+
+    void tick()
     {
         GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
         time = clock60Pi.getTime();
@@ -145,13 +98,22 @@ public:
         else
             window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
 
-        for (auto &objectPtr : drawableObjects)
-            objectPtr->update(delta);
+        for (auto it = drawableObjects.begin(); it != drawableObjects.end(); it++)
+            (*it)->update(delta);
 
         camera.update(delta);
         crosshair.update(delta);
         terrain.updateBuffers();
         menu.update(delta);
+
+        auto it = drawableObjects.begin();
+        while (it != drawableObjects.end())
+        {
+            if ((*it)->isAlive())
+                it++;
+            else
+                it = drawableObjects.erase(it);
+        }
 
         mainReady = false;
         cv.notify_one();
@@ -179,7 +141,77 @@ public:
             cv.wait(lk);
     }
 
+    ~Game()
+    {
+        mainReady = false;
+        running = false;
+        cv.notify_one();
+        if (physicsThread.valid())
+            physicsThread.get();
+    }
+
 private:
+    static inline std::unique_ptr<Game> ptr;
+
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav")
+    {
+        clock.reset();
+        clock60Pi.reset();
+        fpsText.setPosition({-1.f, 1.f});
+        fpsText.setPositionOffset({20.f, -20.f - Text::lineHeight});
+        fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        menu.insert(Action(
+            GLFW_KEY_P,
+            "P - Play game",
+            [this]() {
+                auto newPlayer = std::make_shared<DummyModel>(world);
+                player = newPlayer.get();
+                drawableObjects.push_back(newPlayer);
+
+                auto newBot = std::make_shared<Bot>(world);
+                newBot->target(newPlayer);
+                drawableObjects.push_back(newBot);
+
+                //TODO temporary while player dying is not handled
+                newPlayer->setHP(42000000);
+            },
+            [this]() { return player == nullptr; }));
+
+        menu.insert(Action(
+            GLFW_KEY_G,
+            "G - Go up",
+            [this]() {
+                glm::vec3 position = player->getPosition();
+                position.y = 20.f;
+                player->setPosition(position);
+            },
+            [this]() { return player != nullptr && player->getPosition().y < 0.f; }));
+
+        running = true;
+        mainReady = true;
+
+        physicsThread = std::async(std::launch::async, [this] {
+            while (running)
+            {
+                std::unique_lock<std::mutex> lk(mutex);
+                while (mainReady)
+                    cv.wait(lk);
+
+                for (int i = 0; i < 10; i++)
+                    world.update(delta / 10);
+
+                mainReady = true;
+                cv.notify_one();
+            }
+        });
+
+        backgroundMusic.setLoop();
+        backgroundMusic.play();
+
+        particleSystem.generate(glm::vec3({10, 10, 10}));
+    }
+
     friend class std::condition_variable;
     void consumeKey(int glfwKeyCode)
     {
@@ -219,7 +251,7 @@ private:
     Music backgroundMusic;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
-    std::vector<std::shared_ptr<DrawableObject>> drawableObjects;
+    std::list<std::shared_ptr<DrawableObject>> drawableObjects;
 
     std::future<void> physicsThread;
     std::atomic<bool> running, mainReady;

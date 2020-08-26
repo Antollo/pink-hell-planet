@@ -13,6 +13,8 @@ add_executable(game
     GhostObject.cpp
     CollisionObject.cpp
     ParticleSystem.cpp
+    Bullet.cpp
+    PlayableObject.cpp
 )
 
 target_link_libraries(game

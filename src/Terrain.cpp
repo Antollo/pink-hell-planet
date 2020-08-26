@@ -205,6 +205,8 @@ void Terrain::TerrainChunk::updateBuffers()
 
     if (!vertices.empty())
     {
+        rigidBody.reset(nullptr);
+
         shape.reset(new btBvhTriangleMeshShape(triangleMesh.get(), true));
         shape->setMargin(0.f);
 

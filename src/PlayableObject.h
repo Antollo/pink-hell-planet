@@ -5,6 +5,8 @@
 #include "Clock.h"
 #include "debug.h"
 
+class Game;
+
 class PlayableObject : public PhysicsObject
 {
 public:
@@ -15,12 +17,14 @@ public:
         body->setFriction(friction); // TODO: find better solution?
         body->setMassProps(0.2f, body->getLocalInertia());
     }
+    virtual ~PlayableObject() {}
 
     void update(float delta) override
     {
         PhysicsObject::update(delta);
         glm::vec4 v;
         body->activate(true);
+
 
         btQuaternion q = body->getWorldTransform().getRotation();
         q.setRotation(btVector3(0, 1.f, 0), pitch - positionPitch);
@@ -68,24 +72,6 @@ public:
             zoom = 0;
         if (zoom > 1)
             zoom = 1;
-
-        auto it = bullets.begin();
-        while (it != bullets.end())
-        {
-            (*it)->update(delta);
-            if (!(*it)->isAlive())
-                it = bullets.erase(it);
-            else
-                it++;
-        }
-    }
-
-    void draw(Window *window) const override
-    {
-        for (auto &bullet : bullets)
-            bullet->draw(window);
-
-        PhysicsObject::draw(window);
     }
 
     void consumeKey(int glfwKeyCode)
@@ -150,6 +136,23 @@ public:
         return reloadClock.getTime() / reloadTime;
     }
 
+    float getHP() const
+    {
+        return hp;
+    }
+    void setHP(float HP)
+    {
+        hp = HP;
+    }
+
+    void damage(float damage)
+    {
+        hp -= damage;
+        std::cerr << this << " hit for " << damage << ", " << hp << "HP left" << std::endl;
+        if (hp <= 0)
+            kill();
+    }
+
 protected:
     friend class Crosshair;
     static constexpr float friction = 0.1f;
@@ -161,7 +164,6 @@ protected:
     float zoom = 0;
     float jumpCooldownRemaining = 0.f;
     glm::vec3 frontDirection;
-    std::vector<std::unique_ptr<Bullet>> bullets;
 
     void goForward(bool x) { forward = x; }
     void goBackward(bool x) { backward = x; }
@@ -169,57 +171,19 @@ protected:
     void goRight(bool x) { right = x; }
     void goUp(bool x) { up = x; }
 
-    void shoot()
-    {
-        if (reloadClock.getTime() < reloadTime)
-            return;
-        reloadClock.reset();
-
-        glm::vec3 dir;
-
-        glm::vec3 a = getPosition() + getFrontDirection() * bulletSpawnDistance;
-        glm::vec3 b = getRaycastAim();
-
-        if (std::isnan(b.x) || std::isnan(b.y) || std::isnan(b.z))
-            dir = getFrontDirection();
-        else
-        {
-            float v = bulletImpulse / Bullet::mass;
-            float v2 = v * v;
-            float d = glm::distance(glm::vec2(a.x, a.z), glm::vec2(b.x, b.z));
-            float g = -World::g;
-            float y = b.y - a.y;
-
-            // https://www.forrestthewoods.com/blog/solving_ballistic_trajectories/
-
-            float theta = std::atan((v2 - std::sqrt(v2 * v2 - g * (g * d * d + 2.f * v2 * y))) / (g * d));
-
-            dir.z = cos(theta) * cos(pitch);
-            dir.x = cos(theta) * sin(pitch);
-            dir.y = sin(theta);
-
-            dir = glm::normalize(dir);
-        }
-
-        btTransform transform;
-
-        transform.setOrigin(toBtVec3(a));
-        transform.setRotation(btQuaternion(pitch, yaw, 0.f));
-
-        bullets.emplace_back(new Bullet(*world));
-        bullets.back()->setTransform(transform);
-        bullets.back()->applyCentralImpulse(dir * bulletImpulse);
-    }
+    void shoot();
 
 private:
     Clock reloadClock;
+    float hp = 100;
+
     static constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
     static constexpr float maxSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;
     static constexpr float zoomTime = 0.3f;
     static constexpr float jumpCooldown = 1.86f;
-    static constexpr float bulletImpulse = 60.f;
-    static constexpr float bulletSpawnDistance = 3.f;
+    static constexpr float bulletImpulse = 30.f;
+    static constexpr float bulletSpawnDistance = -0.2f;
     static constexpr float reloadTime = 1.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

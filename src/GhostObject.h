@@ -17,11 +17,19 @@ class GhostObject : public CollisionObject
 {
 public:
     GhostObject(World* w, btCollisionShape* shape, glm::vec3 position = glm::vec3(0.f, 0.f, 0.f));
-    ~GhostObject();
+    virtual ~GhostObject();
 
     btCollisionObject* getRawBtCollisionObjPtr() override
     {
         return ghost;
+    }
+
+    void doForColliding(std::function<void(CollisionObject*)> f)
+    {
+        for (int i = 0; i < ghost->getNumOverlappingObjects(); i++)
+        {
+            f(reinterpret_cast<CollisionObject*>(ghost->getOverlappingObject(i)->getUserPointer()));
+        }
     }
 
 protected:

@@ -14,8 +14,12 @@ public:
     {
         defaultTexture3d.load("skybox", true);
     }
+
     DrawableObject() : M(1.0f) {}
+    virtual ~DrawableObject() {}
+
     virtual void update(float delta) {}
+
     void draw(Window *window) const override
     {
         getShaderProgram().use();
@@ -66,8 +70,19 @@ public:
         glBindVertexArray(0);
     }
 
+    bool isAlive()
+    {
+        return alive;
+    }
+
+    void kill()
+    {
+        alive = false;
+    }
+
 protected:
     glm::mat4 M;
+    bool alive = true;
 
     virtual const VertexArray &getVertexArray() const { return defaultVertexArray; }
     virtual const ShaderProgram &getShaderProgram() const { return defaultShaderProgram; }

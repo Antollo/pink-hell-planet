@@ -26,10 +26,10 @@ int main()
     Text::init();
     Bullet::init();
 
-    Game game(window);
+    Game::init(window);
     window.show();
     while (window.isOpen())
-        game();
+        Game::get()->tick();
 
     return 0;
 }
