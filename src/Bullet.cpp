@@ -1,6 +1,8 @@
 
 #include "Bullet.h"
 
+#include <algorithm>
+
 #include "PlayableObject.h"
 #include "Game.h"
 
@@ -16,7 +18,7 @@ void Bullet::explode()
         {
             float distance = glm::distance(getPosition(), playable->getPosition());
             static constexpr float falloff = explosionRadius - fullDamageRadius;
-            float damage = damageBase * std::max(0.f, 1 - (distance - fullDamageRadius) / falloff);
+            float damage = damageBase * std::clamp(1 - (distance - fullDamageRadius) / falloff, 0.f, 1.f);
             playable->damage(damage);
         }
     }

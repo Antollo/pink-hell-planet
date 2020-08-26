@@ -140,6 +140,7 @@ public:
         reloadBar.setPositionOffset({240.f, - Text::lineHeight});
         reloadBar.setColor({1.f, 1.f, 1.f, 0.5f});
     }
+
     void update(float delta)
     {
         auto player = camera.getPlayer();
@@ -174,7 +175,7 @@ public:
             if (i > 10)
                 i = 0;
 
-            healthBar.setValue(0.7f);
+            healthBar.setValue(player->getHP() / PlayableObject::maxHP);
             healthBar.update(delta);
 
             reloadBar.setValue(player->getReloadState());

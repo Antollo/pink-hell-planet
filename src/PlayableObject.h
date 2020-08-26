@@ -144,6 +144,7 @@ public:
     {
         hp = HP;
     }
+    static constexpr inline float maxHP = 100;
 
     void damage(float damage)
     {
@@ -175,7 +176,7 @@ protected:
 
 private:
     Clock reloadClock;
-    float hp = 100;
+    float hp = maxHP;
 
     static constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
     static constexpr float maxSpeed = 10.f;
