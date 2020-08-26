@@ -68,7 +68,6 @@ public:
                 glm::vec3 position = player->getPosition();
                 position.y = 20.f;
                 player->setPosition(position);
-                player->setLinearVelocity({0.f, 0.f, 0.f});
             },
             [this]() { return player != nullptr && player->getPosition().y < 0.f; }));
 

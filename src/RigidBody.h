@@ -34,27 +34,32 @@ public:
         glm::vec3 v = glm::mat3_cast(glm::angleAxis(q.getAngle(), toGlmVec3(q.getAxis()))) * glm::vec3(1.f, 0.f, 0.f);
         return glm::orientedAngle(glm::vec2(1.f, 0.f), glm::normalize(glm::vec2(v.x, v.z)));
     }
-    
-    void setTransform(const btTransform &transform)
-    {
-        body->setCenterOfMassTransform(transform);
-    }
 
     void setPosition(const glm::vec3 &position)
     {
-        btTransform transform;
+        btTransform transform = body->getWorldTransform();
         transform.setOrigin(toBtVec3(position));
-        setTransform(transform);
+        body->setWorldTransform(transform);
+        body->getMotionState()->setWorldTransform(transform);
+
+        body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        body->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        body->clearForces();
+    }
+
+    void setTransform(const btTransform &transform)
+    {
+        body->setWorldTransform(transform);
+        body->getMotionState()->setWorldTransform(transform);
+
+        body->setLinearVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        body->setAngularVelocity(btVector3(0.0f, 0.0f, 0.0f));
+        body->clearForces();
     }
 
     void applyCentralImpulse(const glm::vec3 &v)
     {
         body->applyCentralImpulse(toBtVec3(v));
-    }
-
-    void setLinearVelocity(const glm::vec3 &v)
-    {
-        body->setLinearVelocity(toBtVec3(v));
     }
 
 protected:

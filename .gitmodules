@@ -16,6 +16,9 @@
 [submodule "thirdparty/freetype2/freetype2"]
 	path = thirdparty/freetype2/freetype2
 	url = https://git.savannah.nongnu.org/r/freetype/freetype2.git
-[submodule "thirdparty/cppMusic/cppMusic"]
-	path = thirdparty/cppMusic/cppMusic
-	url = https://github.com/Antollo/cppMusic
+[submodule "thirdparty/libsndfile/libsndfile"]
+	path = thirdparty/libsndfile/libsndfile
+	url = https://github.com/erikd/libsndfile
+[submodule "thirdparty/portaudio/portaudio"]
+	path = thirdparty/portaudio/portaudio
+	url = https://git.assembla.com/portaudio.git

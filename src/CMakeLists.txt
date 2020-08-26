@@ -27,7 +27,8 @@ target_link_libraries(game
     BulletCollision
     freetype
     nlohmann_json::nlohmann_json
-    cppMusic
+    sndfile
+    portaudio_static
 )
 
 #if(MSVC)

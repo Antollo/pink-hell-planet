@@ -36,6 +36,8 @@
 
    - Linux
 
+   You might need to install `libasound2-dev`.
+
    ```
    cmake -B build
    cmake --build build --config Release
