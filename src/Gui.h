@@ -10,11 +10,14 @@ public:
     {
         guiShaderProgram.load("shaders/gui_vert.glsl", "shaders/gui_frag.glsl");
     }
+
     GuiObject()
         : color(1.f, 1.f, 1.f, 1.f), position(0.f, 0.f), positionOffset(0.f, 0.f)
     {
         setPosition();
     }
+    virtual ~GuiObject() {}
+
     void setPosition(const glm::vec2 &newPosition = glm::vec2(0.f, 0.f))
     {
         position = newPosition;

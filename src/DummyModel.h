@@ -19,6 +19,7 @@ public:
         tvShaderProgram.load("shaders/tv_vert.glsl", "shaders/tv_frag.glsl");
     }
     DummyModel(World &world) : PlayableObject(world, shape.get()) {}
+    virtual ~DummyModel() {}
 
 protected:
     const VertexArray &getVertexArray() const override { return vertexArray; }

@@ -29,60 +29,32 @@
 class Game
 {
 public:
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera)
+    static Game* get()
     {
-        Bullet::setExplosionCallback([this](const glm::vec3 &v) {
-            btSphereShape shape(5.f);
-            shape.setMargin(0.f);
-            RigidBody bigHole(nullptr, static_cast<btCollisionShape *>(&shape), 0.f, v);
-            terrain.collideWith(bigHole);
-            particleSystem.generate(v);
-        });
-
-        auto newPlayer = std::make_shared<DummyModel>(world);
-        player = newPlayer.get();
-        drawableObjects.push_back(newPlayer);
-
-        auto newBot = std::make_shared<Bot>(world);
-        newBot->target(newPlayer);
-        drawableObjects.push_back(newBot);
-
-        clock.reset();
-        clock60Pi.reset();
-        fpsText.setPosition({-0.95f, 0.9f});
-        fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
-
-        running = true;
-        mainReady = true;
-
-        physicsThread = std::async(std::launch::async, [this] {
-            while (running)
-            {
-                std::unique_lock<std::mutex> lk(mutex);
-                while (mainReady)
-                    cv.wait(lk);
-
-                for (int i = 0; i < 10; i++)
-                    world.update(delta / 10);
-
-                mainReady = true;
-                cv.notify_one();
-            }
-        });
+        return ptr.get();
     }
 
-    ~Game()
+    static Terrain* getTerrain()
     {
-        mainReady = false;
-        running = false;
-        cv.notify_one();
-        if (physicsThread.valid())
-            physicsThread.get();
-
-        Bullet::setExplosionCallback([](const glm::vec3 &) {});
+        return &ptr->terrain;
     }
 
-    void operator()()
+    static ParticleSystem* getParticleSystem()
+    {
+        return &ptr->particleSystem;
+    }
+
+    static void init(Window &window)
+    {
+        ptr.reset(new Game(window));
+    }
+
+    static void addDrawable(std::unique_ptr<DrawableObject>&& drawable)
+    {
+        ptr->drawableObjects.emplace_back(std::move(drawable));
+    }
+
+    void tick()
     {
         time = clock60Pi.getTime();
         ShaderProgram::setTime(time);
@@ -124,14 +96,23 @@ public:
 
         camera.update(delta);
 
-        for (auto &objectPtr : drawableObjects)
-            objectPtr->update(delta);
+        for (auto it = drawableObjects.begin(); it != drawableObjects.end(); it++)
+            (*it)->update(delta);
 
         crosshair.update();
 
         GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
 
         terrain.updateBuffers();
+
+        auto it = drawableObjects.begin();
+        while (it != drawableObjects.end())
+        {
+            if ((*it)->isAlive())
+                it++;
+            else
+                it = drawableObjects.erase(it);
+        }
 
         mainReady = false;
         cv.notify_one();
@@ -158,7 +139,57 @@ public:
             cv.wait(lk);
     }
 
+    ~Game()
+    {
+        mainReady = false;
+        running = false;
+        cv.notify_one();
+        if (physicsThread.valid())
+            physicsThread.get();
+    }
+
 private:
+    static inline std::unique_ptr<Game> ptr;
+
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera)
+    {
+        auto newPlayer = std::make_shared<DummyModel>(world);
+        player = newPlayer.get();
+        drawableObjects.push_back(newPlayer);
+
+        auto newBot = std::make_shared<Bot>(world);
+        newBot->target(newPlayer);
+        drawableObjects.push_back(newBot);
+
+        //TODO temporary while player dying is not handled
+        newPlayer->setHP(111222333);
+
+        clock.reset();
+        clock60Pi.reset();
+        fpsText.setPosition({-0.95f, 0.9f});
+        fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        running = true;
+        mainReady = true;
+
+        physicsThread = std::async(std::launch::async, [this] {
+            while (running)
+            {
+                std::unique_lock<std::mutex> lk(mutex);
+                while (mainReady)
+                    cv.wait(lk);
+
+                for (int i = 0; i < 10; i++)
+                    world.update(delta / 10);
+
+                mainReady = true;
+                cv.notify_one();
+            }
+        });
+
+        particleSystem.generate(glm::vec3({10, 10, 10}));
+    }
+
     friend class std::condition_variable;
     void consumeKey(int glfwKeyCode)
     {
@@ -194,7 +225,7 @@ private:
     ParticleSystem particleSystem;
     float time, delta, maxDelta = 42.f, fps;
     int frames = 0;
-    std::vector<std::shared_ptr<DrawableObject>> drawableObjects;
+    std::list<std::shared_ptr<DrawableObject>> drawableObjects;
 
     std::future<void> physicsThread;
     std::atomic<bool> running, mainReady;

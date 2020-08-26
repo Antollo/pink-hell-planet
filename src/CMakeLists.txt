@@ -13,6 +13,8 @@ add_executable(game
     GhostObject.cpp
     CollisionObject.cpp
     ParticleSystem.cpp
+    Bullet.cpp
+    PlayableObject.cpp
 )
 
 target_link_libraries(game OpenGL::GL glm::glm glfw glad tinyobjloader lodepng bullet3 BulletDynamics BulletCollision freetype nlohmann_json::nlohmann_json)

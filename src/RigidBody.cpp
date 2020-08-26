@@ -24,7 +24,7 @@ RigidBody::RigidBody(World *w, btCollisionShape *shape, float mass, const glm::v
 RigidBody::~RigidBody()
 {
     if (world != nullptr)
-        world->dynamicsWorld->removeCollisionObject(body);
+        world->dynamicsWorld->removeRigidBody(body);
     delete motionState;
     delete body;
 }
