@@ -25,7 +25,11 @@
 
    * Copy `src/config/config.default.json` to `bin/config.json`. You can manually change `graphics` to `low`, will be possible from gui in future
 
-3. Compile with:
+3. Install dependencies
+
+   On linux install development files for `ALSA` library (package `libasound2-dev` on debian)
+
+4. Compile with:
 
    - Windows
 
@@ -35,8 +39,6 @@
    ```
 
    - Linux
-
-   You might need to install `libasound2-dev`.
 
    ```
    cmake -B build

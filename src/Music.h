@@ -21,7 +21,7 @@ public:
 
         auto device = Pa_GetDefaultOutputDevice();
         if (device == paNoDevice)
-            error("no default input device");
+            error("no default output device");
 
         paError = Pa_OpenDefaultStream(&stream, 0, data.info.channels, paFloat32, data.info.samplerate, 512, callback, &data);
         if (paError != paNoError)
@@ -99,7 +99,7 @@ private:
 
         sf_count_t readCount = sf_read_float(data.file, out, frameCount * data.info.channels);
 
-        if (readCount < frameCount)
+        if (readCount < (long) frameCount)
         {
             if (data.loop)
             {

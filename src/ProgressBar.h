@@ -19,8 +19,8 @@ public:
 
     void update(float delta) override
     {
-        int i = 0;
-        int count = std::min(size_t(bar.size() * value / maxValue + 0.5f), bar.size());
+        unsigned int i = 0;
+        unsigned int count = std::min(size_t(bar.size() * value / maxValue + 0.5f), bar.size());
 
         for (; i < count; i++)
             bar[i] = '#';
