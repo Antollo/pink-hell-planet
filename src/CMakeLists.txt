@@ -1,6 +1,6 @@
-SET (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
-SET (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
-SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin )
 
 add_compile_definitions(GLFW_INCLUDE_NONE)
 
@@ -29,8 +29,9 @@ target_link_libraries(game
     nlohmann_json::nlohmann_json
     sndfile
     portaudio_static
+    OpenMP::OpenMP_CXX
 )
 
 #if(MSVC)
-#    set_target_properties(opengl-sample PROPERTIES LINK_FLAGS_RELEASE /SUBSYSTEM:WINDOWS)
+#    set_target_properties(game PROPERTIES LINK_FLAGS_RELEASE /SUBSYSTEM:WINDOWS)
 #endif()

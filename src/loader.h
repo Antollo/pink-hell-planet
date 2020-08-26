@@ -40,8 +40,8 @@ inline void loadObjFile(const std::string &modelFilename, std::vector<float> &ve
                 normals.insert(normals.end(), attrib.normals.begin() + 3 * idx.normal_index, attrib.normals.begin() + 3 * idx.normal_index + 3);
                 if (3 * idx.vertex_index + 3 < int(attrib.colors.size()))
                     colors.insert(colors.end(), attrib.colors.begin() + 3 * idx.vertex_index, attrib.colors.begin() + 3 * idx.vertex_index + 3);
-                else
-                    colors.insert(colors.end(), ones.begin(), ones.end());
+                //else
+                //    colors.insert(colors.end(), ones.begin(), ones.end());
                 texCoords.insert(texCoords.end(), attrib.texcoords.begin() + 2 * idx.texcoord_index, attrib.texcoords.begin() + 2 * idx.texcoord_index + 2);
                 //std::cout << attrib.texcoords[2 * idx.texcoord_index] << std::endl;
             }

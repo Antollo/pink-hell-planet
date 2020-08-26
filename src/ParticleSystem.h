@@ -69,6 +69,7 @@ private:
             std::vector<float> position(verticesCount * 3);
             std::vector<float> velocity(verticesCount * 3);
             std::vector<float> other(verticesCount * 3); // <acceleration, lifetime, for future use>
+            #pragma omp parallel for
             for (int i = 0; i < verticesCount; i++)
             {
                 glm::vec3 currentPosition = center + glm::ballRand(0.01f);
