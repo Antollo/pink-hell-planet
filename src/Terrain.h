@@ -15,6 +15,7 @@
 #include <iostream>
 #include <cmath>
 #include <glm/gtx/closest_point.hpp>
+#include <thread>
 
 class Terrain : public Drawable
 {
@@ -24,7 +25,12 @@ public:
     static void init();
 
     void draw(Window *window) const override;
-    void updateBuffers();
+
+    void update()
+    {
+        updateBuffers();
+        loadBuffers();
+    }
 
     void marchingPointsAdd(VecInt3 v, int d)
     {
@@ -40,24 +46,28 @@ public:
             toRegen.insert(getChunkFromPoint(v - i));
     }
 
-    void collideWith(CollisionObject &collObj)
+    void collideWith(std::unique_ptr<CollisionObject> collObj)
     {
-        auto v = privateWorld.getColliding(collObj);
-        for (auto i : v)
-        {
-            TerrainChunk *tc = static_cast<TerrainChunk *>(i->getOwnerPtr());
-            tc->collideWith(&collObj);
-        }
+        std::thread thread([this, collObj{std::move(collObj)}] {
+            std::lock_guard<std::mutex> lock(mutex);
+            auto v = privateWorld.getColliding(*collObj);
+            for (auto i : v)
+            {
+                Chunk *tc = static_cast<Chunk *>(i->getOwnerPtr());
+                tc->collideWith(collObj.get());
+            }
+        });
+        thread.detach();
     }
 
 private:
     inline static const int chunkSize = 8; // must be power of 2
 
-    class TerrainChunk;
-    class TerrainCube
+    class Chunk;
+    class OctreeNode
     {
     public:
-        TerrainCube(int size, VecInt3 pos, Terrain::TerrainChunk *chunkPtr, CollisionObject *collsion = nullptr)
+        OctreeNode(int size, VecInt3 pos, Terrain::Chunk *chunkPtr, CollisionObject *collsion = nullptr)
             : size(size), intPos(pos), glmPos(VecInt3ToVec3(pos)), center(glmPos + glm::vec3(float(size - 1) / 2, float(size - 1) / 2, float(size - 1) / 2)),
               chunk(chunkPtr)
         {
@@ -69,7 +79,7 @@ private:
             }
         }
 
-        ~TerrainCube()
+        ~OctreeNode()
         {
             if (whole)
                 addPoints(-1);
@@ -90,7 +100,7 @@ private:
                 int halfSize = size / 2;
                 for (int i = 0; i < 8; i++)
                 {
-                    childs[i] = std::make_unique<TerrainCube>(halfSize, intPos + cubeVer[i] * halfSize, chunk, collObj);
+                    childs[i] = std::make_unique<OctreeNode>(halfSize, intPos + cubeVer[i] * halfSize, chunk, collObj);
                     if (childs[i]->empty())
                         childs[i].reset(nullptr);
                 }
@@ -149,31 +159,33 @@ private:
 
         bool whole = true;
         bool toDelete = false;
-        std::array<std::unique_ptr<TerrainCube>, 8> childs;
+        std::array<std::unique_ptr<OctreeNode>, 8> childs;
         int childCount = 8;
         int size;
         VecInt3 intPos;
         glm::vec3 glmPos;
         glm::vec3 center;
-        TerrainChunk *chunk;
-        TerrainCube *parent;
+        Chunk *chunk;
+        OctreeNode *parent;
     };
 
-    class TerrainChunk : public DrawableObject, public CollisionObject::CollisionObjectOwner
+    class Chunk : public DrawableObject, public CollisionObject::CollisionObjectOwner
     {
     public:
-        TerrainChunk(VecInt3 intPos, Terrain *terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
+        Chunk(VecInt3 intPos, Terrain *terrainPtr, bool fill = false) : terrain(terrainPtr), intPos(intPos)
         {
             if (fill)
             {
-                rootTerrainCube = std::make_unique<TerrainCube>(chunkSize, intPos, this);
+                rootTerrainCube = std::make_unique<OctreeNode>(chunkSize, intPos, this);
                 static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
                 ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
                 ghostObject->setOwnerPtr(this);
             }
         }
 
-        void updateBuffers();
+        void prepareBuffers();
+
+        void loadBuffers();
 
         void drawAtPos(int size, VecInt3 pos)
         {
@@ -204,8 +216,11 @@ private:
     private:
         Terrain *terrain;
 
+        std::unique_ptr<btTriangleMesh> newTriangleMesh;
         std::unique_ptr<btTriangleMesh> triangleMesh;
         std::unique_ptr<btBvhTriangleMeshShape> shape;
+        std::unique_ptr<btBvhTriangleMeshShape> newShape;
+
         std::unique_ptr<RigidBody> rigidBody;
         std::unique_ptr<GhostObject> ghostObject;
         inline static btBoxShape boxShape = btBoxShape(btVector3((float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2));
@@ -235,7 +250,7 @@ private:
 
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             for (size_t i = 0; i < verts.size(); i += 3)
-                triangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i + 1] + glmPos), toBtVec3(verts[i + 2] + glmPos));
+                newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i + 1] + glmPos), toBtVec3(verts[i + 2] + glmPos));
         }
 
         bool inChunk(VecInt3 pos)
@@ -247,7 +262,7 @@ private:
             return true;
         }
 
-        std::unique_ptr<TerrainCube> rootTerrainCube;
+        std::unique_ptr<OctreeNode> rootTerrainCube;
 
         std::vector<float> vertices;
         std::vector<float> normals;
@@ -258,7 +273,7 @@ private:
         const VertexArray &getVertexArray() const override { return vertexArray; }
 
         VertexArray vertexArray;
-        friend class TerrainCube;
+        friend class OctreeNode;
         friend class Terrain;
 
         static void init()
@@ -269,17 +284,8 @@ private:
             texture1.load("Slime_SPEC", true);
             texture2.load("Slime_NRM");
             texture3.load("Slime_HGT");
-
-            /*texture0.load("bricks3b_diffuse", true);
-            texture1.load("bricks3b_specular", true);
-            texture2.load("bricks3b_normal");
-            texture3.load("bricks3b_height");*/
-
-            /*texture0.load("bricks2_diffuse", true);
-            texture1.load("bricks2_diffuse", true);
-            texture2.load("bricks2_normal");
-            texture3.load("bricks2_height");*/
         }
+
         static inline Texture2d texture0, texture1, texture2, texture3;
         static inline ShaderProgram slimeShader;
 
@@ -297,13 +303,19 @@ private:
         }
     };
 
+    void updateBuffers();
+    void loadBuffers();
+
     World &world;
     World privateWorld;
 
+    std::mutex mutex;
+
     std::set<VecInt3> toRegen;
+    std::set<VecInt3> toReload;
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
-    std::map<VecInt3, std::unique_ptr<TerrainChunk>> chunks;
+    std::map<VecInt3, std::unique_ptr<Chunk>> chunks;
 
     static void CustomMaterialCombinerCallback(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int);
 };

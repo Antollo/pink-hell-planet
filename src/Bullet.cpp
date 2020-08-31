@@ -8,9 +8,8 @@
 
 void Bullet::explode()
 {
-    ghostObject.setPositionNoRotation(getPosition());
-
-    auto colliding = world.getColliding(ghostObject);
+    GhostObject *ghostObject = new GhostObject(nullptr, explosionShape, getPosition());
+    auto colliding = world.getColliding(*ghostObject);
     for (auto ptr : colliding)
     {
         PlayableObject* playable = dynamic_cast<PlayableObject*>(ptr);
@@ -23,6 +22,6 @@ void Bullet::explode()
         }
     }
 
-    Game::getTerrain()->collideWith(ghostObject);
+    Game::getTerrain()->collideWith(std::unique_ptr<CollisionObject>(ghostObject));
     Game::getParticleSystem()->generate(getPosition());
 }

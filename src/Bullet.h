@@ -66,8 +66,7 @@ private:
     static inline constexpr float explosionRadius = 5.f;
     static inline constexpr float fullDamageRadius = 2.f;
     static inline constexpr float damageBase = 50.f;
-    inline static btSphereShape explosionShape = btSphereShape(explosionRadius);
-    inline static GhostObject ghostObject = GhostObject(nullptr, &explosionShape);
+    inline static btSphereShape *explosionShape = new btSphereShape(explosionRadius);
 };
 
 #endif

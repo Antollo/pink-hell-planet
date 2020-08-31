@@ -27,7 +27,13 @@
 
 3. Install dependencies
 
-   On linux install development files for `ALSA` library (package `libasound2-dev` on debian)
+   On ubuntu install packeges
+
+   ```
+   sudo apt install libglx-dev libopengl-dev libbz2-dev libpng-dev libasound2 libasound2-dev libjack-dev libxcursor-dev libxrandr-dev libxi-dev
+   ```
+
+   [//]: # (todo: arch)
 
 4. Compile with:
 

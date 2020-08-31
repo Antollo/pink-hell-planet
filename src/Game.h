@@ -98,12 +98,14 @@ public:
         else
             window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
 
-        for (auto it = drawableObjects.begin(); it != drawableObjects.end(); it++)
-            (*it)->update(delta);
+        terrain.update();
+
+        for (auto& i : drawableObjects)
+            i->update(delta);
 
         camera.update(delta);
         crosshair.update(delta);
-        terrain.updateBuffers();
+
         menu.update(delta);
 
         auto it = drawableObjects.begin();
@@ -112,11 +114,18 @@ public:
             if ((*it)->isAlive())
                 it++;
             else
+            {
+                if ((*it).get() == player)
+                    player = nullptr;
                 it = drawableObjects.erase(it);
+            }
         }
 
         mainReady = false;
         cv.notify_one();
+
+        for(auto& i : drawableObjects)
+            i->update(delta);
 
         window.clear();
 
@@ -172,9 +181,6 @@ private:
                 auto newBot = std::make_shared<Bot>(world);
                 newBot->target(newPlayer);
                 drawableObjects.push_back(newBot);
-
-                //TODO temporary while player dying is not handled
-                newPlayer->setHP(42000000);
             },
             [this]() { return player == nullptr; }));
 
@@ -198,8 +204,8 @@ private:
                 while (mainReady)
                     cv.wait(lk);
 
-                for (int i = 0; i < 10; i++)
-                    world.update(delta / 10);
+                for (int i = 0; i < physicsFramesPerGraphic; i++)
+                    world.update(delta / physicsFramesPerGraphic);
 
                 mainReady = true;
                 cv.notify_one();
@@ -213,6 +219,7 @@ private:
     }
 
     friend class std::condition_variable;
+
     void consumeKey(int glfwKeyCode)
     {
         switch (glfwKeyCode)
@@ -257,6 +264,8 @@ private:
     std::atomic<bool> running, mainReady;
     std::condition_variable cv;
     std::mutex mutex;
+
+    static inline constexpr int physicsFramesPerGraphic = 10;
 };
 
 #endif /* !GAME_H_ */
