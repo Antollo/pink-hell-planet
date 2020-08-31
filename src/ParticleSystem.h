@@ -29,8 +29,9 @@ public:
             if (particleGroup.getTime() > 6.f)
                 continue;
             ShaderProgram::setTime(particleGroup.getTime());
-            glBindVertexArray(particleGroup.getVertexArray().getVertexArrayId());
-            glDrawArrays(GL_POINTS, 0, particleGroup.getVertexArray().getLength());
+            getShaderProgram().setUniformMatrix4fv("M", particleGroup.getM());
+            glBindVertexArray(vertexArray.getVertexArrayId());
+            glDrawArrays(GL_POINTS, 0, vertexArray.getLength());
         }
         ShaderProgram::setTime(temp);
         glBindVertexArray(0);
@@ -52,7 +53,6 @@ public:
     }
 
 protected:
-    const VertexArray &getVertexArray() const override { return defaultVertexArray; }
     const ShaderProgram &getShaderProgram() const override { return particleSystemDrawShaderProgram; }
     const Texture2d &getTexture0() const override { return texture; }
 
@@ -64,53 +64,34 @@ private:
         {
             clock.reset();
 
-            axes.setMatrixM(glm::translate(center));
-
-            std::vector<float> position(verticesCount * 3);
-            std::vector<float> velocity(verticesCount * 3);
-            std::vector<float> other(verticesCount * 3); // <acceleration, lifetime, for future use>
-            #pragma omp parallel for
-            for (int i = 0; i < verticesCount; i++)
-            {
-                glm::vec3 currentPosition = center + glm::ballRand(0.01f);
-                glm::vec3 currentVelocity = glm::ballRand(10.f);
-
-                position[i * 3] = currentPosition.x;
-                position[i * 3 + 1] = currentPosition.y;
-                position[i * 3 + 2] = currentPosition.z;
-
-                velocity[i * 3] = currentVelocity.x;
-                velocity[i * 3 + 1] = currentVelocity.y;
-                velocity[i * 3 + 2] = currentVelocity.z;
-
-                other[i * 3] = glm::gaussRand(0.2f, 0.1f);   // acceleration
-                other[i * 3 + 1] = glm::gaussRand(3.f, 1.f); // lifetime
-                other[i * 3 + 2] = 1.f;
-            }
-
-            vertexArray.loadVerticesColorsNormals(position, velocity, other);
+            M = glm::translate(center);
+            axes.setMatrixM(M);
 
             static int i = 0;
             ShaderProgram::setParticleGroupLight(ParticleGroupLight(center, globalTime), i);
             i++;
             i %= ParticleGroupLight::count;
         }
-        const VertexArray &getVertexArray() const { return vertexArray; }
+
         float getTime() const { return clock.getTime(); }
+        glm::mat4 getM() const { return M; }
+
         void drawAxes(Window *window) const { axes.draw(window); }
 
-        static void setVerticesCount(int count) { verticesCount = count; }
-
     private:
-        static inline int verticesCount = 20000;
-        VertexArray vertexArray;
+        glm::mat4 M;
+        
         Clock clock;
         Axes axes;
-    };
+    }; 
+
+    static inline int verticesCount = 20000;
+    static inline VertexArray vertexArray;
     static inline float globalTime;
     static inline ShaderProgram particleSystemDrawShaderProgram;
     static inline Texture2d texture;
     static constexpr int particleGroupCount = ParticleGroupLight::count;
+
     std::array<ParticleGroup, particleGroupCount> particleGroups;
 };
 

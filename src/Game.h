@@ -93,10 +93,7 @@ public:
         if (player != nullptr)
             player->consumeCursorDiff(xDiff, yDiff);
 
-        if (time < 1.f)
-            window.setClearColor(0.5f * time, time, 1.f - time);
-        else
-            window.setClearColor(0.5f - 0.5f * time, 2.f - time, time - 1.f);
+        window.setClearColor(0.1, 0.4, 0.1);
 
         terrain.update();
 
