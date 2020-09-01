@@ -225,8 +225,13 @@ void Terrain::Chunk::prepareBuffers()
         bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
     }
 
-    newShape.reset(new btBvhTriangleMeshShape(newTriangleMesh.get(), true));
-    newShape->setMargin(0.f);
+    if (newTriangleMesh->getNumTriangles() != 0)
+    {
+        newShape.reset(new btBvhTriangleMeshShape(newTriangleMesh.get(), true));
+        newShape->setMargin(0.f);
+    }
+    else
+        newShape.reset(nullptr);
 }
 
 
@@ -236,7 +241,7 @@ void Terrain::Chunk::loadBuffers()
 
         rigidBody.reset(nullptr);
 
-        if (!vertices.empty())
+        if (newShape)
         {
             triangleMesh = std::move(newTriangleMesh);
             shape = std::move(newShape);
