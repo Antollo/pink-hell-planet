@@ -4,70 +4,111 @@
 #include <iostream>
 #include <atomic>
 #include <cstring>
+#include <utility>
+#include <cmath>
+#include <glm/glm.hpp>
 #include "sndfile.h"
 #include "portaudio.h"
 
 class Music
 {
 public:
+    Music() : loaded(false) {}
+
     Music(const std::string &filename)
+        : loaded(false)
     {
-        data.loop = false;
-        data.seekBegin = false;
+        load(filename);
+    }
 
-        data.file = sf_open(filename.c_str(), SFM_READ, &data.info);
-        if (sf_error(data.file) != SF_ERR_NO_ERROR)
-            error("failed to open", filename, sf_strerror(data.file));
+    void load(const std::string &filename)
+    {
+        if (!loaded)
+        {
+            loaded = true;
+            data.loop = false;
+            data.seekBegin = false;
+            data.volume = 1.f;
 
-        auto device = Pa_GetDefaultOutputDevice();
-        if (device == paNoDevice)
-            error("no default output device");
+            data.file = sf_open(filename.c_str(), SFM_READ, &data.info);
+            if (sf_error(data.file) != SF_ERR_NO_ERROR)
+                error("failed to open", filename, sf_strerror(data.file));
 
-        paError = Pa_OpenDefaultStream(&stream, 0, data.info.channels, paFloat32, data.info.samplerate, 512, callback, &data);
-        if (paError != paNoError)
-            error("failed to open the stream", Pa_GetErrorText(paError));
+            auto device = Pa_GetDefaultOutputDevice();
+            if (device == paNoDevice)
+                error("no default output device");
+
+            paError = Pa_OpenDefaultStream(&stream, 0, data.info.channels, paFloat32, data.info.samplerate, 512, callback, &data);
+            if (paError != paNoError)
+                error("failed to open the stream", Pa_GetErrorText(paError));
+        }
+        else
+            error("music already loadedd");
     }
 
     void play()
     {
-        if (Pa_IsStreamActive(stream))
+        if (loaded)
+        {
+            if (!Pa_IsStreamStopped(stream))
+            {
+                paError = Pa_AbortStream(stream);
+                if (paError != paNoError)
+                    error("failed to abort the stream", Pa_GetErrorText(paError));
+            }
+
+            data.seekBegin = true;
+
+            paError = Pa_StartStream(stream);
+            if (paError != paNoError)
+                error("failed to start the stream", Pa_GetErrorText(paError));
+        }
+        else
+            error("music not loadedd");
+    }
+
+    bool isPlaying()
+    {
+        return loaded && Pa_IsStreamActive(stream);
+    }
+
+    void abort()
+    {
+        if (loaded)
         {
             paError = Pa_AbortStream(stream);
             if (paError != paNoError)
                 error("failed to abort the stream", Pa_GetErrorText(paError));
         }
-
-        data.seekBegin = true;
-
-        paError = Pa_StartStream(stream);
-        if (paError != paNoError)
-            error("failed to start the stream", Pa_GetErrorText(paError));
     }
 
-    bool isPlaying()
-    {
-        return Pa_IsStreamActive(stream);
-    }
-
-    void abort()
-    {
-        paError = Pa_AbortStream(stream);
-        if (paError != paNoError)
-            error("failed to abort the stream", Pa_GetErrorText(paError));
-    }
-
-    void setLoop(bool loop = true)
+    Music &setLoop(bool loop = true)
     {
         data.loop = loop;
+        return *this;
+    }
+
+    Music &setVolumeMultiplier(float volume)
+    {
+        data.volume = volume;
+        return *this;
     }
 
     ~Music()
     {
-        paError = Pa_CloseStream(stream);
-        if (paError != paNoError)
-            error("failed to close the stream", Pa_GetErrorText(paError));
+        if (loaded)
+        {
+            paError = Pa_CloseStream(stream);
+            if (paError != paNoError)
+                error("failed to close the stream", Pa_GetErrorText(paError));
 
-        sf_close(data.file);
+            sf_close(data.file);
+        }
+    }
+
+    static float volumeMultiplier(float r, const glm::vec3 &v)
+    {
+        return r * r / glm::dot(v, v);
     }
 
 private:
@@ -75,14 +116,15 @@ private:
     {
         SNDFILE *file;
         SF_INFO info;
+        float volume;
         std::atomic<bool> loop;
         std::atomic<bool> seekBegin;
     };
 
-    SNDFILE *file;
     PaStream *stream;
     PaError paError;
     CallbackData data;
+    bool loaded;
 
     static int callback(const void *, void *output, unsigned long frameCount, const PaStreamCallbackTimeInfo *, PaStreamCallbackFlags, void *userData)
     {
@@ -99,7 +141,16 @@ private:
 
         sf_count_t readCount = sf_read_float(data.file, out, frameCount * data.info.channels);
 
-        if (readCount < (long) frameCount)
+        //const float volumeMultiplier = std::pow(10.f, (data.volume / 10.f));
+
+        if (data.volume != 1.f)
+        {   
+            #pragma omp parallel for
+            for (int i = 0; i < readCount; i++)
+                out[i] *= data.volume;
+        }
+
+        if (readCount < (long)frameCount)
         {
             if (data.loop)
             {
@@ -138,4 +189,37 @@ private:
     static inline Init init;
 };
 
+class MusicManager
+{
+public:
+    static Music &get(const std::string &name)
+    {
+        static std::map<std::string, MusicStorage> musicMap;
+        if (!musicMap.count(name))
+            musicMap.emplace(name, name);
+        return musicMap[name];
+    }
+
+private:
+    class MusicStorage
+    {
+    public:
+        MusicStorage() : i(0) {}
+        MusicStorage(const std::string &name)
+            : i(0)
+        {
+            for (auto &music : data)
+                music.load(name);
+        }
+        operator Music &()
+        {
+            return data[i = (i == size - 1) ? 0 : i + 1];
+        }
+
+    private:
+        static constexpr size_t size = 4;
+        std::array<Music, size> data;
+        size_t i;
+    };
+};
 #endif /* MUSIC_H_ */

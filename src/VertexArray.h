@@ -126,7 +126,7 @@ private:
     void computeTangentAndBitangentVectors(fVecR vertices, fVecR normals, fVecR texCoords, std::vector<float> &tangents, std::vector<float> &bitangents) const
     {
         #pragma omp parallel for
-        for (size_t i = 0; i < texCoords.size() / 6; i++)
+        for (int i = 0; i < texCoords.size() / 6; i++)
         {
             glm::vec3 e1(glm::vec3(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]) - glm::vec3(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]));
             glm::vec3 e2(glm::vec3(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]) - glm::vec3(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]));

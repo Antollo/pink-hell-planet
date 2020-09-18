@@ -14,6 +14,14 @@ class ParticleSystem : public DrawableObject
 public:
     static void init(GlobalConfig::GraphicSetting setting);
 
+    ParticleSystem()
+    {
+        constexpr float max = std::numeric_limits<float>::max();
+
+        for(auto& particleGroup : particleGroups)
+            particleGroup.generate({max, max, max}, -max);
+    }
+
     void draw(Window *window) const override
     {
         getShaderProgram().use();

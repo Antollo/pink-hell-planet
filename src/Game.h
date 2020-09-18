@@ -31,20 +31,24 @@
 class Game
 {
 public:
-
-    static Game* get()
+    static Game *get()
     {
         return ptr.get();
     }
 
-    static Terrain* getTerrain()
+    static Terrain *getTerrain()
     {
         return &ptr->terrain;
     }
 
-    static ParticleSystem* getParticleSystem()
+    static ParticleSystem *getParticleSystem()
     {
         return &ptr->particleSystem;
+    }
+
+    static const glm::vec3 &getCameraPosition()
+    {
+        return ptr->camera.getPosition();
     }
 
     static void init(Window &window)
@@ -52,7 +56,7 @@ public:
         ptr.reset(new Game(window));
     }
 
-    static void addDrawable(std::unique_ptr<DrawableObject>&& drawable)
+    static void addDrawable(std::unique_ptr<DrawableObject> &&drawable)
     {
         ptr->drawableObjects.emplace_back(std::move(drawable));
     }
@@ -97,7 +101,7 @@ public:
 
         terrain.update();
 
-        for (auto& i : drawableObjects)
+        for (auto &i : drawableObjects)
             i->update(delta);
 
         camera.update(delta);
@@ -114,15 +118,27 @@ public:
             {
                 if ((*it).get() == player)
                     player = nullptr;
+                if (dynamic_cast<Bullet *>((*it).get()) != nullptr)
+                    MusicManager::get("explosion.wav")
+                        .setVolumeMultiplier(Music::volumeMultiplier(15.f, getCameraPosition() - dynamic_cast<Bullet *>((*it).get())->getPosition()))
+                        .play();
+                else if (dynamic_cast<Bot *>((*it).get()) != nullptr)
+                    MusicManager::get("success.wav")
+                    .setVolumeMultiplier(10.f)
+                        .play();
+                else if (dynamic_cast<DummyModel *>((*it).get()) != nullptr)
+                    MusicManager::get("failure.wav")
+                    .setVolumeMultiplier(10.f)
+                        .play();
                 it = drawableObjects.erase(it);
             }
         }
 
+        for (auto &i : drawableObjects)
+            i->update(delta);
+
         mainReady = false;
         cv.notify_one();
-
-        for(auto& i : drawableObjects)
-            i->update(delta);
 
         window.clear();
 
@@ -159,7 +175,7 @@ public:
 private:
     static inline std::unique_ptr<Game> ptr;
 
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav")
+    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav"), fps(0.f)
     {
         clock.reset();
         clock60Pi.reset();
@@ -209,10 +225,7 @@ private:
             }
         });
 
-        backgroundMusic.setLoop();
-        backgroundMusic.play();
-
-        particleSystem.generate(glm::vec3({10, 10, 10}));
+        backgroundMusic.setLoop().play();
     }
 
     friend class std::condition_variable;

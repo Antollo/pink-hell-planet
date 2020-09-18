@@ -40,4 +40,7 @@ void PlayableObject::shoot()
     transform.setRotation(btQuaternion(pitch, yaw, 0.f));
 
     Game::addDrawable(std::make_unique<Bullet>(*world, *this, transform, dir * bulletImpulse));
+    MusicManager::get("launch.wav")
+        .setVolumeMultiplier(Music::volumeMultiplier(5.f, Game::getCameraPosition() - getPosition()))
+        .play();
 }

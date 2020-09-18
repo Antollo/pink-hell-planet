@@ -25,7 +25,6 @@ public:
         glm::vec4 v;
         body->activate(true);
 
-
         btQuaternion q = body->getWorldTransform().getRotation();
         q.setRotation(btVector3(0, 1.f, 0), pitch - positionPitch);
         body->getWorldTransform().setRotation(q);

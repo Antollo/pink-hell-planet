@@ -104,6 +104,7 @@ public:
     }
 
     const PlayableObject *getPlayer() const { return player; }
+    const glm::vec3 &getPosition() const { return position; }
     glm::vec3 getFrontDirection() const { return frontDirection; }
 
 private:
