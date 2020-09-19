@@ -21,6 +21,10 @@ class Terrain : public Drawable
 {
 public:
     Terrain(World &world);
+    ~Terrain()
+    {
+        waitForThreads();
+    }
 
     static void init();
 
@@ -48,7 +52,7 @@ public:
 
     void collideWith(std::unique_ptr<CollisionObject> collObj)
     {
-        std::thread thread([this, collObj{std::move(collObj)}] {
+        threads.emplace_back([this, collObj{std::move(collObj)}] {
             std::lock_guard<std::mutex> lock(mutex);
             auto v = privateWorld.getColliding(*collObj);
             for (auto i : v)
@@ -57,7 +61,13 @@ public:
                 tc->collideWith(collObj.get());
             }
         });
-        thread.detach();
+    }
+
+    void waitForThreads()
+    {
+        for (auto& i : threads)
+            i.join();
+        threads.clear();
     }
 
 private:
@@ -91,8 +101,6 @@ private:
 
         void makeChilds(CollisionObject *collObj)
         {
-            addPoints(-1);
-            whole = false;
             if (size == 1)
                 toDelete = true;
             else
@@ -107,45 +115,7 @@ private:
             }
         }
 
-        void collideWith(CollisionObject *collObj)
-        {
-            float fhalf = float(size) / 2;
-
-            if (whole)
-            {
-                std::unique_ptr<btBoxShape> boxShape(new btBoxShape(btVector3(fhalf, fhalf, fhalf)));
-                {
-                    GhostObject fromscratch(nullptr, boxShape.get(), center);
-                    if (chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
-                    {
-                        toDelete = true;
-                        for (size_t i = 0; i < 8; i++)
-                            if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + float(size - 1) * VecInt3ToVec3(cubeVer[i])))
-                            // removing '!' from the line above has funny result
-                            {
-                                toDelete = false;
-                                break;
-                            }
-                        if (!toDelete)
-                            makeChilds(collObj);
-                    }
-                }
-            }
-            else
-                for (auto &i : childs)
-                    if (i)
-                    {
-                        if (i->toDelete)
-                        {
-                            childCount--;
-                            if (childCount == 0)
-                                toDelete = true;
-                            i.reset(nullptr);
-                        }
-                        else
-                            i->collideWith(collObj);
-                    }
-        }
+        void collideWith(CollisionObject *collObj);
 
         bool empty()
         {
@@ -154,6 +124,7 @@ private:
 
     private:
         void addPoints(int d);
+        bool areCornersIn(CollisionObject *collObj);
 
         inline static std::vector<GhostObject> cubeObjects;
 
@@ -316,6 +287,8 @@ private:
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<Chunk>> chunks;
+
+    std::vector<std::thread> threads;
 
     static void CustomMaterialCombinerCallback(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int);
 };
