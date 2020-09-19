@@ -2,6 +2,8 @@
 #include "shaders/uniforms.glsl"
 #include "shaders/fireflies.glsl"
 
+#define size 1
+
 layout(points) in;
 layout(triangle_strip) out;
 layout(max_vertices = firefliesVerticesCount) out;
@@ -15,16 +17,16 @@ void emitFirefly(vec4 posV)
 {
     gAlpha = sin(time + posV.x + posV.y + posV.z) * 0.3 + 0.7;
 
-    gl_Position = P * (posV + vec4(-0.5, -0.5, 0, 0));
+    gl_Position = P * (posV + vec4(-size, -size, 0, 0));
     gTexCoord = vec2(0, 0);
     EmitVertex();
-    gl_Position = P * (posV + vec4(0.5, -0.5, 0, 0));
+    gl_Position = P * (posV + vec4(size, -size, 0, 0));
     gTexCoord = vec2(1, 0);
     EmitVertex();
-    gl_Position = P * (posV + vec4(-0.5, 0.5, 0, 0));
+    gl_Position = P * (posV + vec4(-size, size, 0, 0));
     gTexCoord = vec2(0, 1);
     EmitVertex();
-    gl_Position = P * (posV + vec4(0.5, 0.5, 0, 0));
+    gl_Position = P * (posV + vec4(size, size, 0, 0));
     gTexCoord = vec2(1, 1);
     EmitVertex();
     EndPrimitive();

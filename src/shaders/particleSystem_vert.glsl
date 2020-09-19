@@ -11,6 +11,6 @@ out float vLifetime;
 
 void main()
 {
-    vPositionVM = V * M * vec4(position + time * velocity  + time * time * (acceleration - velocity * 0.05), 1);
+    vPositionVM = V * M * vec4(position + time * velocity  + time * time * (acceleration - velocity * 0.1), 1);
     vLifetime = lifetime;
 }

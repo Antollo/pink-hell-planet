@@ -136,7 +136,7 @@ private:
     Window &window;
     PlayableObject *&player;
     glm::mat4 V;
-    glm::vec3 position = glm::vec3(20.f, 20.f, 20.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 position = glm::vec3(10.f, 27.f, 10.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
     float xCursorDiff, yCursorDiff, yaw = glm::pi<float>() / 2.f, pitch = glm::pi<float>() / 4.f, viewDistance = 6.f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;
