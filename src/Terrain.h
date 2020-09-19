@@ -21,6 +21,10 @@ class Terrain : public Drawable
 {
 public:
     Terrain(World &world);
+    ~Terrain()
+    {
+        waitForThreads();
+    }
 
     static void init();
 
@@ -48,7 +52,7 @@ public:
 
     void collideWith(std::unique_ptr<CollisionObject> collObj)
     {
-        std::thread thread([this, collObj{std::move(collObj)}] {
+        threads.emplace_back([this, collObj{std::move(collObj)}] {
             std::lock_guard<std::mutex> lock(mutex);
             auto v = privateWorld.getColliding(*collObj);
             for (auto i : v)
@@ -57,18 +61,26 @@ public:
                 tc->collideWith(collObj.get());
             }
         });
-        thread.detach();
+    }
+
+    void waitForThreads()
+    {
+        for (auto& i : threads)
+            i.join();
+        threads.clear();
     }
 
 private:
-    inline static const int chunkSize = 8; // must be power of 2
+    inline static const int chunkSize = 16; // must be power of 2
+    inline static const float scale = 0.3;
 
     class Chunk;
     class OctreeNode
     {
     public:
         OctreeNode(int size, VecInt3 pos, Terrain::Chunk *chunkPtr, CollisionObject *collsion = nullptr)
-            : size(size), intPos(pos), glmPos(VecInt3ToVec3(pos)), center(glmPos + glm::vec3(float(size - 1) / 2, float(size - 1) / 2, float(size - 1) / 2)),
+            : size(size), intPos(pos), glmPos(Terrain::scale * VecInt3ToVec3(pos)), 
+              center(glmPos + glm::vec3(float(size - 1) * Terrain::scale / 2, float(size - 1) * Terrain::scale / 2, float(size - 1) * Terrain::scale/ 2)),
               chunk(chunkPtr)
         {
             if (collsion != nullptr)
@@ -91,8 +103,6 @@ private:
 
         void makeChilds(CollisionObject *collObj)
         {
-            addPoints(-1);
-            whole = false;
             if (size == 1)
                 toDelete = true;
             else
@@ -107,45 +117,7 @@ private:
             }
         }
 
-        void collideWith(CollisionObject *collObj)
-        {
-            float fhalf = float(size) / 2;
-
-            if (whole)
-            {
-                std::unique_ptr<btBoxShape> boxShape(new btBoxShape(btVector3(fhalf, fhalf, fhalf)));
-                {
-                    GhostObject fromscratch(nullptr, boxShape.get(), center);
-                    if (chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
-                    {
-                        toDelete = true;
-                        for (size_t i = 0; i < 8; i++)
-                            if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + float(size - 1) * VecInt3ToVec3(cubeVer[i])))
-                            // removing '!' from the line above has funny result
-                            {
-                                toDelete = false;
-                                break;
-                            }
-                        if (!toDelete)
-                            makeChilds(collObj);
-                    }
-                }
-            }
-            else
-                for (auto &i : childs)
-                    if (i)
-                    {
-                        if (i->toDelete)
-                        {
-                            childCount--;
-                            if (childCount == 0)
-                                toDelete = true;
-                            i.reset(nullptr);
-                        }
-                        else
-                            i->collideWith(collObj);
-                    }
-        }
+        void collideWith(CollisionObject *collObj);
 
         bool empty()
         {
@@ -154,6 +126,7 @@ private:
 
     private:
         void addPoints(int d);
+        bool areCornersIn(CollisionObject *collObj);
 
         inline static std::vector<GhostObject> cubeObjects;
 
@@ -177,8 +150,8 @@ private:
             if (fill)
             {
                 rootTerrainCube = std::make_unique<OctreeNode>(chunkSize, intPos, this);
-                static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
-                ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
+                static const glm::vec3 halfVector = Terrain::scale * glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
+                ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, Terrain::scale * VecInt3ToVec3(intPos) + halfVector);
                 ghostObject->setOwnerPtr(this);
             }
         }
@@ -223,7 +196,7 @@ private:
 
         std::unique_ptr<RigidBody> rigidBody;
         std::unique_ptr<GhostObject> ghostObject;
-        inline static btBoxShape boxShape = btBoxShape(btVector3((float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2));
+        inline static btBoxShape boxShape = btBoxShape(Terrain::scale * btVector3((float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2));
 
         VecInt3 intPos = {0, 0, 0};
 
@@ -239,7 +212,7 @@ private:
             glm::vec3 glmPos = VecInt3ToVec3(pos);
             for (auto i : marchingCubesVertices[mask])
             {
-                glm::vec3 x = i + glmPos;
+                glm::vec3 x = (i + glmPos) * Terrain::scale;
                 vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
             }
 
@@ -250,7 +223,7 @@ private:
 
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             for (size_t i = 0; i < verts.size(); i += 3)
-                newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i + 1] + glmPos), toBtVec3(verts[i + 2] + glmPos));
+                newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos) * Terrain::scale, toBtVec3(verts[i + 1] + glmPos) * Terrain::scale, toBtVec3(verts[i + 2] + glmPos) * Terrain::scale);
         }
 
         bool inChunk(VecInt3 pos)
@@ -316,6 +289,8 @@ private:
     std::set<VecInt3> marchingPoints;
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<Chunk>> chunks;
+
+    std::vector<std::thread> threads;
 
     static void CustomMaterialCombinerCallback(btManifoldPoint &, const btCollisionObjectWrapper *, int, int, const btCollisionObjectWrapper *, int, int);
 };

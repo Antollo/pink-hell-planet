@@ -41,7 +41,7 @@ void Terrain::OctreeNode::init()
     cubeObjects.reserve(chunkSize);
     for (int i = 1; i < chunkSize; i++)
     {
-        float half = static_cast<float>(i) / 2;
+        float half = Terrain::scale * static_cast<float>(i) / 2;
         cubeObjects.emplace_back(nullptr, new btBoxShape(btVector3(half, half, half)), glm::vec3(0.f, 0.f, 0.f));
     }
 }
@@ -49,10 +49,15 @@ void Terrain::OctreeNode::init()
 Terrain::Terrain(World &world) : world(world)
 {
     //TODO reading from vector
-    for (int x = 0; x < 10 * chunkSize; x += chunkSize)
-        for (int z = 0; z < 10 * chunkSize; z += chunkSize)
-            chunks.emplace(getVecInt3(x, 0, z), new Chunk({x, 0, z}, this, true));
-    chunks.emplace(getVecInt3(0, chunkSize, 0), new Chunk({0, chunkSize, 0}, this, true));
+    for (int y = 0; y < 5 * chunkSize; y += chunkSize)
+        for (int x = 0; x < 10 * chunkSize; x += chunkSize)
+            for (int z = 0; z < 10 * chunkSize; z += chunkSize)
+                chunks.emplace(getVecInt3(x, y, z), new Chunk({x, y, z}, this, true));
+    chunks.emplace(getVecInt3(0, 5 * chunkSize, 0), new Chunk({0, 5 * chunkSize, 0}, this, true));
+
+    updateBuffers();
+    waitForThreads();
+    loadBuffers();
 }
 
 VecInt3 Terrain::getChunkFromPoint(VecInt3 pos)
@@ -77,7 +82,7 @@ void Terrain::updateBuffers()
 {
     if (!toRegen.empty())
     {
-        std::thread thread([&]() {
+        threads.emplace_back([&]() {
             std::lock_guard<std::mutex> lock(mutex);
             for (auto& i : toRegen)
             {
@@ -89,7 +94,6 @@ void Terrain::updateBuffers()
             }
             toRegen = std::set<VecInt3>();
         });
-        thread.detach();
     }
 }
 
@@ -138,21 +142,69 @@ void Terrain::OctreeNode::addPoints(int d)
         }
     }
 }
+void Terrain::OctreeNode::collideWith(CollisionObject *collObj)
+{
+    if (areCornersIn(collObj))
+    {
+        toDelete = true;
+        return;
+    }
+
+    float fHalf = float(size) / 2;
+
+    std::unique_ptr<btBoxShape> boxShape(new btBoxShape(Terrain::scale * btVector3(fHalf, fHalf, fHalf)));
+    GhostObject fromscratch(nullptr, boxShape.get(), center);
+    if (chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
+    {
+        if (whole)
+        {
+            whole = false;
+            addPoints(-1);
+            makeChilds(collObj);
+        }
+        else
+        {
+            for (auto &i : childs)
+                if (i)
+                {
+                    i->collideWith(collObj);
+                    if (i->toDelete)
+                    {
+                        childCount--;
+                        if (childCount == 0)
+                            toDelete = true;
+                        i.reset(nullptr);
+                    }
+                }
+        }
+    }
+}
+
+bool Terrain::OctreeNode::areCornersIn(CollisionObject *collObj)
+{
+    for (size_t i = 0; i < 8; i++)
+        if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + Terrain::scale * float(size - 1) * VecInt3ToVec3(cubeVer[i])))
+            return false;
+    return true;
+}
 
 void Terrain::OctreeNode::genBuffers()
 {
-    if (whole)
-        chunk->drawAtPos(size, intPos);
-    else
+    if (!toDelete)
     {
-        for (auto &i : childs)
+        if (whole)
+            chunk->drawAtPos(size, intPos);
+        else
         {
-            if (i)
+            for (auto &i : childs)
             {
-                if (i->childCount == 0)
-                    i.reset();
-                else
-                    i->genBuffers();
+                if (i)
+                {
+                    if (i->childCount == 0)
+                        i.reset();
+                    else
+                        i->genBuffers();
+                }
             }
         }
     }
@@ -175,17 +227,25 @@ void Terrain::Chunk::prepareBuffers()
 {
     vertices.clear();
     normals.clear();
+
     newTriangleMesh.reset(new btTriangleMesh());
+
     drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+
     if (rootTerrainCube)
+    {
         rootTerrainCube->genBuffers();
+        if (rootTerrainCube->empty())
+            rootTerrainCube.reset(nullptr);
+    }
+
     texCoords.resize(vertices.size() / 3 * 2);
     tangents.resize(vertices.size());
     bitangents.resize(vertices.size());
-    constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
+    static constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
 
     #pragma omp parallel for
-    for (int i = 0; i < texCoords.size() / 6; i++)
+    for (int i = 0; i < (int) texCoords.size() / 6; i++)
     {
         glm::vec3 a(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]);
         glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
@@ -216,8 +276,7 @@ void Terrain::Chunk::prepareBuffers()
         texCoord = tbn * c;
         texCoords[6 * i + 4] = texCoord.x;
         texCoords[6 * i + 5] = texCoord.z;
-        //if (i < 10)
-        //    std::cout << tbn * center << std::endl;
+
         tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
         tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
         tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
