@@ -71,14 +71,16 @@ public:
     }
 
 private:
-    inline static const int chunkSize = 8; // must be power of 2
+    inline static const int chunkSize = 16; // must be power of 2
+    inline static const float scale = 0.3;
 
     class Chunk;
     class OctreeNode
     {
     public:
         OctreeNode(int size, VecInt3 pos, Terrain::Chunk *chunkPtr, CollisionObject *collsion = nullptr)
-            : size(size), intPos(pos), glmPos(VecInt3ToVec3(pos)), center(glmPos + glm::vec3(float(size - 1) / 2, float(size - 1) / 2, float(size - 1) / 2)),
+            : size(size), intPos(pos), glmPos(Terrain::scale * VecInt3ToVec3(pos)), 
+              center(glmPos + glm::vec3(float(size - 1) * Terrain::scale / 2, float(size - 1) * Terrain::scale / 2, float(size - 1) * Terrain::scale/ 2)),
               chunk(chunkPtr)
         {
             if (collsion != nullptr)
@@ -148,8 +150,8 @@ private:
             if (fill)
             {
                 rootTerrainCube = std::make_unique<OctreeNode>(chunkSize, intPos, this);
-                static const glm::vec3 halfVector = glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
-                ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, VecInt3ToVec3(intPos) + halfVector);
+                static const glm::vec3 halfVector = Terrain::scale * glm::vec3(float(chunkSize) / 2, float(chunkSize) / 2, float(chunkSize) / 2);
+                ghostObject = std::make_unique<GhostObject>(&(terrain->privateWorld), &boxShape, Terrain::scale * VecInt3ToVec3(intPos) + halfVector);
                 ghostObject->setOwnerPtr(this);
             }
         }
@@ -194,7 +196,7 @@ private:
 
         std::unique_ptr<RigidBody> rigidBody;
         std::unique_ptr<GhostObject> ghostObject;
-        inline static btBoxShape boxShape = btBoxShape(btVector3((float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2));
+        inline static btBoxShape boxShape = btBoxShape(Terrain::scale * btVector3((float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2, (float)chunkSize - 1 / 2));
 
         VecInt3 intPos = {0, 0, 0};
 
@@ -210,7 +212,7 @@ private:
             glm::vec3 glmPos = VecInt3ToVec3(pos);
             for (auto i : marchingCubesVertices[mask])
             {
-                glm::vec3 x = i + glmPos;
+                glm::vec3 x = (i + glmPos) * Terrain::scale;
                 vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
             }
 
@@ -221,7 +223,7 @@ private:
 
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             for (size_t i = 0; i < verts.size(); i += 3)
-                newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos), toBtVec3(verts[i + 1] + glmPos), toBtVec3(verts[i + 2] + glmPos));
+                newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos) * Terrain::scale, toBtVec3(verts[i + 1] + glmPos) * Terrain::scale, toBtVec3(verts[i + 2] + glmPos) * Terrain::scale);
         }
 
         bool inChunk(VecInt3 pos)

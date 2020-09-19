@@ -41,7 +41,7 @@ void Terrain::OctreeNode::init()
     cubeObjects.reserve(chunkSize);
     for (int i = 1; i < chunkSize; i++)
     {
-        float half = static_cast<float>(i) / 2;
+        float half = Terrain::scale * static_cast<float>(i) / 2;
         cubeObjects.emplace_back(nullptr, new btBoxShape(btVector3(half, half, half)), glm::vec3(0.f, 0.f, 0.f));
     }
 }
@@ -49,10 +49,11 @@ void Terrain::OctreeNode::init()
 Terrain::Terrain(World &world) : world(world)
 {
     //TODO reading from vector
-    for (int x = 0; x < 10 * chunkSize; x += chunkSize)
-        for (int z = 0; z < 10 * chunkSize; z += chunkSize)
-            chunks.emplace(getVecInt3(x, 0, z), new Chunk({x, 0, z}, this, true));
-    chunks.emplace(getVecInt3(0, chunkSize, 0), new Chunk({0, chunkSize, 0}, this, true));
+    for (int y = 0; y < 5 * chunkSize; y += chunkSize)
+        for (int x = 0; x < 10 * chunkSize; x += chunkSize)
+            for (int z = 0; z < 10 * chunkSize; z += chunkSize)
+                chunks.emplace(getVecInt3(x, y, z), new Chunk({x, y, z}, this, true));
+    chunks.emplace(getVecInt3(0, 5 * chunkSize, 0), new Chunk({0, 5 * chunkSize, 0}, this, true));
 
     updateBuffers();
     waitForThreads();
@@ -151,7 +152,7 @@ void Terrain::OctreeNode::collideWith(CollisionObject *collObj)
 
     float fHalf = float(size) / 2;
 
-    std::unique_ptr<btBoxShape> boxShape(new btBoxShape(btVector3(fHalf, fHalf, fHalf)));
+    std::unique_ptr<btBoxShape> boxShape(new btBoxShape(Terrain::scale * btVector3(fHalf, fHalf, fHalf)));
     GhostObject fromscratch(nullptr, boxShape.get(), center);
     if (chunk->terrain->privateWorld.areColliding(fromscratch, *collObj))
     {
@@ -182,7 +183,7 @@ void Terrain::OctreeNode::collideWith(CollisionObject *collObj)
 bool Terrain::OctreeNode::areCornersIn(CollisionObject *collObj)
 {
     for (size_t i = 0; i < 8; i++)
-        if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + float(size - 1) * VecInt3ToVec3(cubeVer[i])))
+        if (!chunk->terrain->privateWorld.pointInShape(*collObj, glmPos + Terrain::scale * float(size - 1) * VecInt3ToVec3(cubeVer[i])))
             return false;
     return true;
 }
@@ -275,8 +276,7 @@ void Terrain::Chunk::prepareBuffers()
         texCoord = tbn * c;
         texCoords[6 * i + 4] = texCoord.x;
         texCoords[6 * i + 5] = texCoord.z;
-        //if (i < 10)
-        //    std::cout << tbn * center << std::endl;
+
         tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
         tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
         tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
