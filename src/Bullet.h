@@ -39,6 +39,7 @@ public:
     }
 
     static constexpr float mass = 1.f;
+    static constexpr float explosionRadius = 5.f;
 
 protected:
     void contactAddedCallback(CollisionObject *other) override
@@ -63,7 +64,6 @@ private:
     static inline std::unique_ptr<btCollisionShape> shape;
     static inline std::function<void(const glm::vec3 &)> explosion;
 
-    static inline constexpr float explosionRadius = 5.f;
     static inline constexpr float fullDamageRadius = 2.f;
     static inline constexpr float damageBase = 50.f;
     inline static btSphereShape *explosionShape = new btSphereShape(explosionRadius);

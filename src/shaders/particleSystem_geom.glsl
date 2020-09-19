@@ -19,7 +19,7 @@ void main()
     float size = 1;
     #endif
 
-    if (vLifetime[0] >= time)
+    if (vLifetime[0] >= time && length(vPositionVM[0]) > 4)
     {
         gAlpha = sqrt(clamp(vLifetime[0] - time, 0, 1));
 

@@ -18,7 +18,7 @@ public:
           dots2(ShapeArray::Type::points),
           triangles(ShapeArray::Type::triangles),
           healthBar(10, 1.f, "hp: "),
-          reloadBar(3, 1.f)
+          reloadBar(4, 1.f)
     {
         lines1.insert(lines1.end(), {
 
@@ -137,7 +137,7 @@ public:
         healthBar.setPositionOffset({0.f, -20.f - Text::lineHeight});
         healthBar.setColor({1.f, 1.f, 1.f, 0.5f});
 
-        reloadBar.setPositionOffset({240.f, - Text::lineHeight});
+        reloadBar.setPositionOffset({240.f, -Text::lineHeight});
         reloadBar.setColor({1.f, 1.f, 1.f, 0.5f});
     }
 
@@ -165,7 +165,7 @@ public:
 
             if (i == 0)
             {
-                glm::vec3 v = player->getRaycastAim();
+                glm::vec3 v = player->getRaycastFront();
                 if (std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z))
                     distance.setText("inf");
                 else
@@ -181,30 +181,21 @@ public:
             reloadBar.setValue(player->getReloadState());
             reloadBar.update(delta);
         }
-        else
-        {
-            lines1.setColor({1.f, 1.f, 1.f, 0.f});
-            dots1.setColor({1.f, 1.f, 1.f, 0.f});
-
-            lines2.setColor({1.f, 1.f, 1.f, 0.f});
-            dots2.setColor({1.f, 1.f, 1.f, 0.f});
-            triangles.setColor({1.f, 1.f, 1.f, 0.f});
-        }
     }
 
 protected:
     void draw(Window *window) const override
     {
-        lines1.draw(window);
-        dots1.draw(window);
-
-        lines2.draw(window);
-        dots2.draw(window);
-        triangles.draw(window);
-        distance.draw(window);
-
         if (camera.getPlayer() != nullptr)
         {
+            lines1.draw(window);
+            dots1.draw(window);
+
+            lines2.draw(window);
+            dots2.draw(window);
+            triangles.draw(window);
+            distance.draw(window);
+
             healthBar.draw(window);
             reloadBar.draw(window);
         }

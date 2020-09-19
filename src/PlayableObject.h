@@ -17,6 +17,7 @@ public:
         body->setFriction(friction); // TODO: find better solution?
         body->setMassProps(0.2f, body->getLocalInertia());
     }
+
     virtual ~PlayableObject() {}
 
     void update(float delta) override
@@ -26,7 +27,7 @@ public:
         body->activate(true);
 
         btQuaternion q = body->getWorldTransform().getRotation();
-        q.setRotation(btVector3(0, 1.f, 0), pitch - positionPitch);
+        q.setRotation(btVector3(0, 1.f, 0), pitch);
         body->getWorldTransform().setRotation(q);
 
         if (forward)
@@ -102,7 +103,8 @@ public:
         if (ev.button == Window::MouseButton::right)
             isZooming = ev.down;
         else if (ev.button == Window::MouseButton::left && ev.down)
-            shoot();
+            if (isReloaded())
+                shoot(getAimAngles());
     }
     void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
     {
@@ -124,9 +126,11 @@ public:
     float getPitch() { return pitch; }
     float getZoom() { return zoom; }
 
-    glm::vec3 getRaycastAim() const
+    glm::vec3 getRaycastFront() const { return getRaycast(getFrontDirection()); }
+    glm::vec3 getRaycast(const glm::vec3 &direction) const { return getRaycast(getPosition(), direction); }
+    glm::vec3 getRaycast(const glm::vec3 &position, const glm::vec3 &direction) const
     {
-        auto result = world->getRaycastResult(getPosition() + getFrontDirection(), getFrontDirection() * 1000.f);
+        auto result = world->getRaycastResult(position + direction, direction * 1000.f);
         return result->hasHit() ? toGlmVec3(result->m_hitPointWorld) : glm::vec3(NAN, NAN, NAN);
     }
 
@@ -159,8 +163,7 @@ protected:
     float getAlpha() const override { return std::pow(1 - zoom, 2); }
 
     bool forward = false, backward = false, left = false, right = false, up = false, isZooming = false;
-    float yaw = 0, pitch = 0;
-    float positionPitch = 0;
+    float yaw = glm::pi<float>() / 2.f, pitch = 0;
     float zoom = 0;
     float jumpCooldownRemaining = 0.f;
     glm::vec3 frontDirection;
@@ -171,7 +174,18 @@ protected:
     void goRight(bool x) { right = x; }
     void goUp(bool x) { up = x; }
 
-    void shoot();
+    bool isReloaded() const { return reloadClock.getTime() >= reloadTime; }
+    glm::vec3 getInitialBulletPosition() const { return getPosition() + getFrontDirection() * bulletSpawnDistance; }
+    glm::vec3 getAimAngles() const { return getAimAngles(getRaycastFront()); }
+    glm::vec3 getAimAngles(const glm::vec3 &target) const;
+    glm::vec3 getAimDirection(const glm::vec3 &angles) const
+    {
+        return glm::normalize(glm::vec3(
+            cos(angles.x) * sin(angles.y),
+            sin(angles.x),
+            cos(angles.x) * cos(angles.y)));
+    }
+    void shoot(const glm::vec3 &angles);
 
 private:
     Clock reloadClock;
@@ -183,7 +197,7 @@ private:
     static constexpr float zoomTime = 0.3f;
     static constexpr float jumpCooldown = 1.86f;
     static constexpr float bulletImpulse = 30.f;
-    static constexpr float bulletSpawnDistance = -0.2f;
-    static constexpr float reloadTime = 1.f;
+    static constexpr float bulletSpawnDistance = 0.5f;
+    static constexpr float reloadTime = 2.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

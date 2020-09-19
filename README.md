@@ -55,6 +55,7 @@
 
 - [www.fesliyanstudios.com/royalty-free-music/download/retro-platforming/454](https://www.fesliyanstudios.com/royalty-free-music/download/retro-platforming/454)
 - [freesound.org/people/HenryRichard/sounds/448274/](https://freesound.org/people/HenryRichard/sounds/448274/)
-- [freesound.org/people/ProjectsU012/sounds/333785/](https://freesound.org/people/ProjectsU012/sounds/333785/)
+- [freesound.org/people/EVRetro/sounds/533034/](https://freesound.org/people/EVRetro/sounds/533034/)
 - [freesound.org/people/Robinhood76/sounds/273332/](https://freesound.org/people/Robinhood76/sounds/273332/)
 - [freesound.org/people/cydon/sounds/268557/](https://freesound.org/people/cydon/sounds/268557/)
+- [freesound.org/people/FilmmakersManual/sounds/522464/](https://freesound.org/people/FilmmakersManual/sounds/522464/)

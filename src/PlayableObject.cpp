@@ -2,45 +2,48 @@
 
 #include "Game.h"
 
-void PlayableObject::shoot()
+glm::vec3 PlayableObject::getAimAngles(const glm::vec3 &b) const
 {
-    if (reloadClock.getTime() < reloadTime)
-        return;
-    reloadClock.reset();
-
-    glm::vec3 dir;
-
-    glm::vec3 a = getPosition() + getFrontDirection() * bulletSpawnDistance;
-    glm::vec3 b = getRaycastAim();
-
     if (std::isnan(b.x) || std::isnan(b.y) || std::isnan(b.z))
-        dir = getFrontDirection();
+        return {-yaw + glm::pi<float>() / 2.f, pitch, yaw};
     else
     {
-        float v = bulletImpulse / Bullet::mass;
-        float v2 = v * v;
-        float d = glm::distance(glm::vec2(a.x, a.z), glm::vec2(b.x, b.z));
-        float g = -World::g;
-        float y = b.y - a.y;
+        const glm::vec3 a = getInitialBulletPosition();
+
+        const float d = glm::distance(glm::vec2(a.x, a.z), glm::vec2(b.x, b.z));
+        const float aimPitch = glm::orientedAngle(glm::normalize(glm::vec2(a.x - b.x, a.z - b.z)), glm::vec2(0.f, -1.f));
+        const float aimYaw = glm::orientedAngle(glm::vec2(0.f, -1.f), glm::normalize(glm::vec2(d, a.y - b.y)));
+
+        const float v = bulletImpulse / Bullet::mass;
+        const float v2 = v * v;
+        const float g = -World::g;
+        const float y = b.y - a.y;
 
         // https://www.forrestthewoods.com/blog/solving_ballistic_trajectories/
 
-        float theta = std::atan((v2 - std::sqrt(v2 * v2 - g * (g * d * d + 2.f * v2 * y))) / (g * d));
+        const float theta = std::atan((v2 - std::sqrt(v2 * v2 - g * (g * d * d + 2.f * v2 * y))) / (g * d));
 
-        dir.z = cos(theta) * cos(pitch);
-        dir.x = cos(theta) * sin(pitch);
-        dir.y = sin(theta);
-
-        dir = glm::normalize(dir);
+        return {theta, aimPitch, aimYaw};
     }
+}
+
+void PlayableObject::shoot(const glm::vec3 &angles)
+{
+    if (!isReloaded())
+        return;
+    reloadClock.reset();
+
 
     btTransform transform;
 
-    transform.setOrigin(toBtVec3(a));
-    transform.setRotation(btQuaternion(pitch, yaw, 0.f));
+    transform.setOrigin(toBtVec3(getInitialBulletPosition()));
+    transform.setRotation(btQuaternion(angles.y, angles.z, 0.f));
 
-    Game::addDrawable(std::make_unique<Bullet>(*world, *this, transform, dir * bulletImpulse));
+    Game::addDrawable(std::make_unique<Bullet>(*world, *this, transform, getAimDirection(angles) * bulletImpulse));
     MusicManager::get("launch.wav")
         .setVolumeMultiplier(Music::volumeMultiplier(5.f, Game::getCameraPosition() - getPosition()))
         .play();
+    MusicManager::get("reload.wav")
+        .setVolumeMultiplier(4.f * Music::volumeMultiplier(5.f, Game::getCameraPosition() - getPosition()))
+        .playDelayed(reloadTime - 1.f);
 }

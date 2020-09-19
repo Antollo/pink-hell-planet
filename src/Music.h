@@ -6,6 +6,10 @@
 #include <cstring>
 #include <utility>
 #include <cmath>
+#include <thread>
+#include <functional>
+#include <future>
+#include <chrono>
 #include <glm/glm.hpp>
 #include "sndfile.h"
 #include "portaudio.h"
@@ -29,6 +33,7 @@ public:
             data.loop = false;
             data.seekBegin = false;
             data.volume = 1.f;
+            data.elevate = false;
 
             data.file = sf_open(filename.c_str(), SFM_READ, &data.info);
             if (sf_error(data.file) != SF_ERR_NO_ERROR)
@@ -50,18 +55,22 @@ public:
     {
         if (loaded)
         {
-            if (!Pa_IsStreamStopped(stream))
-            {
-                paError = Pa_AbortStream(stream);
-                if (paError != paNoError)
-                    error("failed to abort the stream", Pa_GetErrorText(paError));
-            }
+            abort();
 
             data.seekBegin = true;
-
+            if (data.elevate)
+            {
+                data.volume *= elevationConstant;
+                globalVolume = 1.f / elevationConstant;
+            }
             paError = Pa_StartStream(stream);
             if (paError != paNoError)
+            {
+                data.volume /= elevationConstant;
+                globalVolume = 1.f;
+                data.elevate = false;
                 error("failed to start the stream", Pa_GetErrorText(paError));
+            }
         }
         else
             error("music not loadedd");
@@ -74,11 +83,17 @@ public:
 
     void abort()
     {
-        if (loaded)
+        if (loaded && !Pa_IsStreamStopped(stream))
         {
             paError = Pa_AbortStream(stream);
             if (paError != paNoError)
                 error("failed to abort the stream", Pa_GetErrorText(paError));
+            if (data.elevate)
+            {
+                data.volume /= elevationConstant;
+                globalVolume = 1.f;
+                data.elevate = false;
+            }
         }
     }
 
@@ -92,6 +107,21 @@ public:
     {
         data.volume = volume;
         return *this;
+    }
+
+    Music &elevate(bool condition = true)
+    {
+        data.elevate = true;
+        return *this;
+    }
+
+    void playDelayed(float seconds)
+    {
+        std::thread thread([this, seconds]() {
+            std::this_thread::sleep_for(std::chrono::duration<float>(seconds));
+            play();
+        });
+        thread.detach();
     }
 
     ~Music()
@@ -117,6 +147,7 @@ private:
         SNDFILE *file;
         SF_INFO info;
         float volume;
+        bool elevate;
         std::atomic<bool> loop;
         std::atomic<bool> seekBegin;
     };
@@ -143,11 +174,11 @@ private:
 
         //const float volumeMultiplier = std::pow(10.f, (data.volume / 10.f));
 
-        if (data.volume != 1.f)
-        {   
-            #pragma omp parallel for
+        if (data.volume * globalVolume != 1.f)
+        {
+            #pragma omp parallel for num_threads(2)
             for (int i = 0; i < readCount; i++)
-                out[i] *= data.volume;
+                out[i] *= data.volume * globalVolume;
         }
 
         if (readCount < (long)frameCount)
@@ -157,6 +188,12 @@ private:
                 sf_seek(data.file, 0, SEEK_SET);
                 data.seekBegin = false;
                 return paContinue;
+            }
+            if (data.elevate)
+            {
+                data.volume /= elevationConstant;
+                globalVolume = 1.f;
+                data.elevate = false;
             }
             return paComplete;
         }
@@ -187,6 +224,8 @@ private:
     };
 
     static inline Init init;
+    static inline float globalVolume = 1.f;
+    static constexpr float elevationConstant = 4.f;
 };
 
 class MusicManager

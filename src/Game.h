@@ -116,20 +116,27 @@ public:
                 it++;
             else
             {
-                if ((*it).get() == player)
-                    player = nullptr;
-                if (dynamic_cast<Bullet *>((*it).get()) != nullptr)
-                    MusicManager::get("explosion.wav")
-                        .setVolumeMultiplier(Music::volumeMultiplier(15.f, getCameraPosition() - dynamic_cast<Bullet *>((*it).get())->getPosition()))
-                        .play();
-                else if (dynamic_cast<Bot *>((*it).get()) != nullptr)
-                    MusicManager::get("success.wav")
-                    .setVolumeMultiplier(10.f)
-                        .play();
-                else if (dynamic_cast<DummyModel *>((*it).get()) != nullptr)
+                static RigidBody *ptr;
+                ptr = dynamic_cast<RigidBody *>((*it).get());
+
+                if (ptr == player)
+                {
                     MusicManager::get("failure.wav")
-                    .setVolumeMultiplier(10.f)
+                        .setVolumeMultiplier(4.f)
+                        .elevate()
+                        .playDelayed(1.f);
+                    player = nullptr;
+                }
+                if (dynamic_cast<Bullet *>(ptr) != nullptr)
+                    MusicManager::get("explosion.wav")
+                        .setVolumeMultiplier(Music::volumeMultiplier(15.f, getCameraPosition() - ptr->getPosition()))
                         .play();
+                else if (dynamic_cast<Bot *>(ptr) != nullptr)
+                    MusicManager::get("success.wav")
+                        .setVolumeMultiplier(4.f)
+                        .elevate()
+                        .playDelayed(1.f);
+
                 it = drawableObjects.erase(it);
             }
         }
@@ -206,6 +213,13 @@ private:
                 player->setPosition(position);
             },
             [this]() { return player != nullptr && player->getPosition().y < 0.f; }));
+        menu.insert(Action(
+            GLFW_KEY_F,
+            "F - Toggle fullscreen",
+            [this]() {
+                window.toggleFullscreen();
+            },
+            [this]() { return player == nullptr; }));
 
         running = true;
         mainReady = true;

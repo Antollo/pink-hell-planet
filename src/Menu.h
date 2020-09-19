@@ -52,7 +52,7 @@ public:
             if (action.isVisible())
             {
                 action.setPositionOffset(temp);
-                temp.y += Text::lineHeight;
+                temp.y += Text::lineHeight * 1.5f;
             }
             action.update(delta);
         }

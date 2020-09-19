@@ -137,7 +137,7 @@ private:
     PlayableObject *&player;
     glm::mat4 V;
     glm::vec3 position = glm::vec3(20.f, 20.f, 20.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
-    float xCursorDiff, yCursorDiff, yaw = 0, pitch = 0, viewDistance = 6.f;
+    float xCursorDiff, yCursorDiff, yaw = glm::pi<float>() / 2.f, pitch = glm::pi<float>() / 4.f, viewDistance = 6.f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;

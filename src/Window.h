@@ -144,6 +144,7 @@ public:
     {
         return popOrZero(keys);
     }
+
     MouseButtonEvent pollMouseButton()
     {
         return popOrZero(mouseButtons);
@@ -192,11 +193,31 @@ public:
         glfwShowWindow(window);
     }
 
+    void toggleFullscreen()
+    {
+        if (glfwGetWindowMonitor(window) == nullptr)
+        {
+            auto monitor = glfwGetPrimaryMonitor();
+            if (monitor)
+            {
+                glfwGetWindowPos(window, &oldPosition.x, &oldPosition.y);
+                glfwGetWindowSize(window, &oldSize.x, &oldSize.y);
+                auto mode = glfwGetVideoMode(monitor);
+                glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+            }
+        }
+        else
+        {
+            glfwSetWindowMonitor(window, nullptr, oldPosition.x, oldPosition.y, oldSize.x, oldSize.y, 0);
+        }
+    }
+
 private:
     friend class Drawable;
 
     GLFWwindow *window;
     float _width, _height;
+    glm::ivec2 oldSize, oldPosition;
     std::queue<int> keys;
     std::queue<MouseButtonEvent> mouseButtons;
     double xPosOld, yPosOld;
@@ -212,7 +233,7 @@ private:
         Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
         obj._width = width;
         obj._height = height;
-        obj.perspectiveP = glm::perspective(glm::radians(50.f), obj.getAspectRatio(), 0.01f, 1000.0f);
+        obj.perspectiveP = glm::perspective(glm::radians(50.f), obj.getAspectRatio(), 0.1f, 1000.0f);
         if (obj.projectionMode == ProjectionMode::perspective)
             ShaderProgram::setMatrixP(obj.perspectiveP);
     }
