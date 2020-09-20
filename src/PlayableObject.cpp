@@ -15,7 +15,7 @@ glm::vec3 PlayableObject::getAimAngles() const
         const float aimPitch = glm::orientedAngle(glm::normalize(glm::vec2(a.x - b.x, a.z - b.z)), glm::vec2(0.f, -1.f));
         const float aimYaw = glm::orientedAngle(glm::vec2(0.f, -1.f), glm::normalize(glm::vec2(d, a.y - b.y)));
 
-        const float v = bulletImpulse / Bullet::mass;
+        const float v = getBulletImpulse() / Bullet::mass;
         const float v2 = v * v;
         const float g = -World::g;
         const float y = b.y - a.y;
@@ -39,7 +39,7 @@ void PlayableObject::shoot(const glm::vec3 &angles)
     transform.setOrigin(toBtVec3(getInitialBulletPosition()));
     transform.setRotation(btQuaternion(angles.y, angles.z, 0.f));
 
-    Game::addDrawable(std::make_unique<Bullet>(*world, *this, transform, getAimDirection(angles) * bulletImpulse));
+    Game::addDrawable(std::make_unique<Bullet>(*world, *this, transform, getAimDirection(angles) * getBulletImpulse()));
     MusicManager::get("launch.wav")
         .setVolumeMultiplier(Music::volumeMultiplier(5.f, Game::getCameraPosition() - getPosition()))
         .play();

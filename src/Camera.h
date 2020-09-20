@@ -15,7 +15,7 @@ public:
         update(0);
     }
 
-    void consumeKey(int glfwKeyCode)
+    void consumeKeyEvent(int glfwKeyCode)
     {
         switch (glfwKeyCode)
         {
@@ -55,6 +55,12 @@ public:
             break;
         }
     }
+
+    void consumeMouseScrollEvent(Window::MouseScrollEvent ev)
+    {
+        viewDistance += ev.y * 0.5f;
+    }
+
     void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
     {
         yaw += yCursorDiff * mouseSensitivity;

@@ -81,7 +81,7 @@ public:
             zoom = 1;
 
         setAlpha(std::pow(1 - zoom, 2));
-        
+
         aimAngles = getAimAngles();
 
         weapon->setAlpha(std::pow(1 - zoom, 2));
@@ -89,7 +89,7 @@ public:
         weapon->update(delta);
     }
 
-    void consumeKey(int glfwKeyCode)
+    void consumeKeyEvent(int glfwKeyCode)
     {
         bool pressed = glfwKeyCode > 0;
         switch (abs(glfwKeyCode))
@@ -113,13 +113,18 @@ public:
             break;
         }
     }
-    void consumeButton(Window::MouseButtonEvent ev)
+    void consumeMouseButtonEvent(Window::MouseButtonEvent ev)
     {
         if (ev.button == Window::MouseButton::right)
             isZooming = ev.down;
-        else if (ev.button == Window::MouseButton::left && ev.down)
-            if (isReloaded())
+        else if (ev.button == Window::MouseButton::left)
+        {
+            if (ev.down)
+                fullPowerClock.reset();
+            else if (isReloaded())
                 shoot(aimAngles);
+            mouseButtonDown = ev.down;
+        }
     }
     void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
     {
@@ -143,19 +148,11 @@ public:
 
     glm::vec3 getRaycastFront() const { return getRaycast(getFrontDirection()); }
 
-    float getReloadState() const
-    {
-        return reloadClock.getTime() / reloadTime;
-    }
+    float getReloadState() const { return reloadClock.getTime() / reloadTime; }
+    float getFullPowerState() const { return mouseButtonDown ? fullPowerClock.getTime() / fullPowerTime : 0.f; }
 
-    float getHP() const
-    {
-        return hp;
-    }
-    void setHP(float HP)
-    {
-        hp = HP;
-    }
+    float getHP() const { return hp; }
+    void setHP(float HP) { hp = HP; }
     static constexpr inline float maxHP = 100;
 
     void damage(float damage)
@@ -198,7 +195,11 @@ protected:
     void shoot(const glm::vec3 &angles);
 
 private:
+    float getBulletImpulse() const { return (1.f + getFullPowerState()) * initialBulletImpulse; }
+
     Clock reloadClock;
+    Clock fullPowerClock;
+    bool mouseButtonDown = false;
     float hp = maxHP;
 
     static constexpr float speed = 3.f, sideSpeed = 1.f, jumpSpeed = 15.f;
@@ -206,8 +207,9 @@ private:
     static constexpr float mouseSensitivity = 0.004f;
     static constexpr float zoomTime = 0.3f;
     static constexpr float jumpCooldown = 1.86f;
-    static constexpr float bulletImpulse = 30.f;
+    static constexpr float initialBulletImpulse = 30.f;
     static constexpr float bulletSpawnDistance = 0.5f;
     static constexpr float reloadTime = 2.f;
+    static constexpr float fullPowerTime = 1.f;
 };
 #endif /* !PLAYABLEOBJECT_H_ */

@@ -86,10 +86,12 @@ public:
         }
         maxDelta = std::max(maxDelta, delta);
 
-        while (int key = window.pollKey())
-            consumeKey(key);
-        while (auto ev = window.pollMouseButton())
-            consumeButton(ev);
+        while (int key = window.pollKeyEvent())
+            consumeKeyEvent(key);
+        while (auto ev = window.pollMouseButtonEvent())
+            consumeMouseButtonEvent(ev);
+        while (auto ev = window.pollMouseScrollEvent())
+            consumeMouseScrollEvent(ev);
 
         float xDiff, yDiff;
         window.getCursorDiff(xDiff, yDiff);
@@ -187,7 +189,7 @@ private:
         clock.reset();
         clock60Pi.reset();
         fpsText.setPosition({-1.f, 1.f});
-        fpsText.setPositionOffset({20.f, -20.f - Text::lineHeight});
+        fpsText.setPositionOffset({20.f, -20.f - Text::glyphHeight});
         fpsText.setColor({1.f, 1.f, 1.f, 0.5f});
 
         menu.insert(Action(
@@ -244,22 +246,27 @@ private:
 
     friend class std::condition_variable;
 
-    void consumeKey(int glfwKeyCode)
+    void consumeKeyEvent(int glfwKeyCode)
     {
         if (glfwKeyCode == GLFW_KEY_ESCAPE)
             window.close();
 
         if (player != nullptr)
-            player->consumeKey(glfwKeyCode);
+            player->consumeKeyEvent(glfwKeyCode);
         
-        camera.consumeKey(glfwKeyCode);
-        menu.consumeKey(glfwKeyCode);
+        camera.consumeKeyEvent(glfwKeyCode);
+        menu.consumeKeyEvent(glfwKeyCode);
     }
 
-    void consumeButton(Window::MouseButtonEvent ev)
+    void consumeMouseButtonEvent(Window::MouseButtonEvent ev)
     {
         if (player != nullptr)
-            player->consumeButton(ev);
+            player->consumeMouseButtonEvent(ev);
+    }
+
+    void consumeMouseScrollEvent(Window::MouseScrollEvent ev)
+    {
+        camera.consumeMouseScrollEvent(ev);
     }
 
     Window &window;

@@ -18,7 +18,8 @@ public:
           dots2(ShapeArray::Type::points),
           triangles(ShapeArray::Type::triangles),
           healthBar(10, 1.f, "hp: "),
-          reloadBar(4, 1.f)
+          reloadBar(4, 1.f),
+          powerBar(4, 1.f)
     {
         lines1.insert(lines1.end(), {
 
@@ -134,11 +135,14 @@ public:
         distance.setColor({1.f, 1.f, 1.f, 0.5f});
 
         healthBar.setPosition({-0.2f, 1.f});
-        healthBar.setPositionOffset({0.f, -20.f - Text::lineHeight});
+        healthBar.setPositionOffset({0.f, -20.f - Text::glyphHeight});
         healthBar.setColor({1.f, 1.f, 1.f, 0.5f});
 
-        reloadBar.setPositionOffset({240.f, -Text::lineHeight});
+        reloadBar.setPositionOffset({240.f, -Text::glyphHeight});
         reloadBar.setColor({1.f, 1.f, 1.f, 0.5f});
+
+        powerBar.setPositionOffset({-240.f - powerBar.size() * Text::glyphWidth, -Text::glyphHeight});
+        powerBar.setColor({1.f, 1.f, 1.f, 0.5f});
     }
 
     void update(float delta)
@@ -160,6 +164,7 @@ public:
             triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - alpha)});
             distance.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             reloadBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+            powerBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
 
             if (i == 0)
             {
@@ -177,7 +182,10 @@ public:
             healthBar.update(delta);
 
             reloadBar.setValue(player->getReloadState());
+            powerBar.setValue(player->getFullPowerState());
+
             reloadBar.update(delta);
+            powerBar.update(delta);
         }
     }
 
@@ -196,6 +204,7 @@ protected:
 
             healthBar.draw(window);
             reloadBar.draw(window);
+            powerBar.draw(window);
         }
     }
 
@@ -206,7 +215,7 @@ private:
     ShapeArray dots1, dots2;
     ShapeArray triangles;
     Text distance;
-    ProgressBar healthBar, reloadBar;
+    ProgressBar healthBar, reloadBar, powerBar;
     glm::vec3 pos;
 };
 

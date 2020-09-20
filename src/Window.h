@@ -38,6 +38,15 @@ public:
         bool down;
     };
 
+    struct MouseScrollEvent
+    {
+        MouseScrollEvent() : x(0.f), y(0.f) {}
+        MouseScrollEvent(float xOffset, float yOffset) : x(xOffset), y(yOffset) {}
+        MouseScrollEvent(double xOffset, double yOffset) : x(xOffset), y(yOffset) {}
+        operator bool() const { return x != 0.f || y != 0.f; }
+        float x, y;
+    };
+
     Window(int width, int height, const char *title, bool visible = false)
         : _width(width), _height(height),
           xPosOld(0.0), yPosOld(0.0),
@@ -74,6 +83,7 @@ public:
         glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
         glfwSetKeyCallback(window, keyCallback);
         glfwSetMouseButtonCallback(window, mouseButtonCallback);
+        glfwSetScrollCallback(window, mouseScrollCallback);
         glfwSetCursorPosCallback(window, cursorPosCallback);
 
         glfwMakeContextCurrent(window);
@@ -140,15 +150,11 @@ public:
         glfwPollEvents();
     }
 
-    int pollKey()
-    {
-        return popOrZero(keys);
-    }
+    int pollKeyEvent() { return popOrZero(keyQueue); }
 
-    MouseButtonEvent pollMouseButton()
-    {
-        return popOrZero(mouseButtons);
-    }
+    MouseButtonEvent pollMouseButtonEvent() { return popOrZero(mouseButtonEventQueue); }
+
+    MouseScrollEvent pollMouseScrollEvent() { return popOrZero(mouseScrollEventQueue); }
 
     void draw(const Drawable &drawable)
     {
@@ -218,8 +224,9 @@ private:
     GLFWwindow *window;
     float _width, _height;
     glm::ivec2 oldSize, oldPosition;
-    std::queue<int> keys;
-    std::queue<MouseButtonEvent> mouseButtons;
+    std::queue<int> keyQueue;
+    std::queue<MouseButtonEvent> mouseButtonEventQueue;
+    std::queue<MouseScrollEvent> mouseScrollEventQueue;
     double xPosOld, yPosOld;
     float xDiff, yDiff;
     bool firstUpdate;
@@ -243,11 +250,11 @@ private:
         switch (action)
         {
         case GLFW_PRESS:
-            obj.keys.push(key);
+            obj.keyQueue.push(key);
             break;
 
         case GLFW_RELEASE:
-            obj.keys.push(-key);
+            obj.keyQueue.push(-key);
             break;
         }
     }
@@ -257,13 +264,18 @@ private:
         switch (action)
         {
         case GLFW_PRESS:
-            obj.mouseButtons.push({static_cast<MouseButton>(button + 1), true});
+            obj.mouseButtonEventQueue.push({static_cast<MouseButton>(button + 1), true});
             break;
 
         case GLFW_RELEASE:
-            obj.mouseButtons.push({static_cast<MouseButton>(button + 1), false});
+            obj.mouseButtonEventQueue.push({static_cast<MouseButton>(button + 1), false});
             break;
         }
+    }
+    static void mouseScrollCallback(GLFWwindow *window, double xOffset, double yOffset)
+    {
+        Window &obj = *reinterpret_cast<Window *>(glfwGetWindowUserPointer(window));
+        obj.mouseScrollEventQueue.push({xOffset, yOffset});
     }
     static void cursorPosCallback(GLFWwindow *window, double xPos, double yPos)
     {

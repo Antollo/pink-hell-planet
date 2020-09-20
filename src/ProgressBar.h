@@ -12,6 +12,8 @@ public:
     {
     }
 
+    size_t size() const { return bar.size(); }
+
     void setValue(float newValue)
     {
         value = newValue;

@@ -17,7 +17,7 @@ public:
         if (isVisible())
             Text::draw(window);
     }
-    void consumeKey(int key)
+    void consumeKeyEvent(int key)
     {
         if (key == trigger && isVisible())
             callback();
@@ -52,16 +52,16 @@ public:
             if (action.isVisible())
             {
                 action.setPositionOffset(temp);
-                temp.y += Text::lineHeight * 1.5f;
+                temp.y += Text::glyphHeight * 1.5f;
             }
             action.update(delta);
         }
     }
 
-    void consumeKey(int key)
+    void consumeKeyEvent(int key)
     {
         for (auto &action : actions)
-            action.consumeKey(key);
+            action.consumeKeyEvent(key);
     }
 
     std::vector<Action>::iterator insert(const Action &action)

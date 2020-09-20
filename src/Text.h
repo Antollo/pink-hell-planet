@@ -63,7 +63,8 @@ private:
     };
 
 public:
-    static inline float lineHeight;
+    static inline float glyphHeight = 0.f;
+    static inline float glyphWidth = 0.f;
     static void init()
     {
         Glyph::init();
@@ -94,9 +95,10 @@ public:
                                          face->glyph->bitmap.width, face->glyph->bitmap.rows,
                                          face->glyph->bitmap_left, face->glyph->bitmap_top,
                                          face->glyph->advance.x);
+            glyphWidth = std::max(glyphWidth, face->glyph->advance.x / 64.f);
         }
 
-        lineHeight = face->size->metrics.height / 64.f;
+        glyphHeight = face->size->metrics.height / 64.f;
 
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
@@ -121,7 +123,7 @@ public:
             if (character == '\n')
             {
                 offset.x = 0.f;
-                offset.y -= lineHeight * getScale() * getAspectRatio();
+                offset.y -= glyphHeight * getScale() * getAspectRatio();
                 continue;
             }
 
