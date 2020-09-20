@@ -161,8 +161,6 @@ public:
             distance.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             reloadBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
 
-            static int i = 0;
-
             if (i == 0)
             {
                 glm::vec3 v = player->getRaycastFront();
@@ -202,6 +200,7 @@ protected:
     }
 
 private:
+    int i = 0;
     Camera &camera;
     ShapeArray lines1, lines2;
     ShapeArray dots1, dots2;

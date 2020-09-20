@@ -54,7 +54,6 @@ public:
     }
     void generate(const glm::vec3 &center)
     {
-        static int i = 0;
         particleGroups[i].generate(center, globalTime);
         i++;
         i %= particleGroupCount;
@@ -65,6 +64,7 @@ protected:
     const Texture2d &getTexture0() const override { return texture; }
 
 private:
+    int i = 0;
     class ParticleGroup
     {
     public:
@@ -75,7 +75,6 @@ private:
             M = glm::translate(center);
             axes.setMatrixM(M);
 
-            static int i = 0;
             ShaderProgram::setParticleGroupLight(ParticleGroupLight(center, globalTime), i);
             i++;
             i %= ParticleGroupLight::count;
@@ -87,6 +86,7 @@ private:
         void drawAxes(Window *window) const { axes.draw(window); }
 
     private:
+        int i = 0;
         glm::mat4 M;
         
         Clock clock;

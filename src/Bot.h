@@ -16,7 +16,7 @@ public:
         : DummyModel(world) { yaw = 0.f; }
     void update(float delta) override
     {
-        glm::vec3 aimCoords(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        aimCoords = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
 
         float distance = std::numeric_limits<float>::max(), newDistance;
 
@@ -71,18 +71,16 @@ public:
                     goForward(false);
                     body->setFriction(1.5f);
 
-                    static int i = 0;
-
                     if (i == 0 && isReloaded())
                     {
-                        glm::vec3 angles = getAimAngles(aimCoords), aimDirection = getAimDirection(angles);
+                        glm::vec3 aimDirection = getAimDirection(aimAngles);
                         glm::vec3 v1 = getRaycast(getInitialBulletPosition() + glm::vec3(0.f, 1.f, 0.f), aimDirection);
                         glm::vec3 v2 = getRaycast(getInitialBulletPosition() - glm::vec3(0.f, 1.f, 0.f), aimDirection);
 
                         //std::cout << glm::distance(v1, getPosition()) << " " << glm::distance(v2, getPosition()) << std::endl;
                         if ((std::isnan(v1.x) || glm::distance(v1, getPosition()) > Bullet::explosionRadius * 2.f) &&
                             (std::isnan(v2.x) || glm::distance(v2, getPosition()) > Bullet::explosionRadius * 2.f))
-                            shoot(angles);
+                            shoot(aimAngles);
                         else
                             goUp(true);
                     }
@@ -104,9 +102,13 @@ public:
     {
         targets.push_back(target);
     }
+protected:
+    glm::vec3 getAimCoords() const override { return aimCoords; }
 
 private:
-    static constexpr float fireDistance = 80.f;
+    int i = 0;
+    glm::vec3 aimCoords = {0.f, 0.f, 0.f};
+    static constexpr float fireDistance = 40.f;
     std::vector<std::weak_ptr<PlayableObject>> targets;
 };
 

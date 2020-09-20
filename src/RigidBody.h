@@ -62,6 +62,13 @@ public:
         body->applyCentralImpulse(toBtVec3(v));
     }
 
+    glm::vec3 getRaycast(const glm::vec3 &direction) const { return getRaycast(getPosition(), direction); }
+    glm::vec3 getRaycast(const glm::vec3 &position, const glm::vec3 &direction) const
+    {
+        auto result = world->getRaycastResult(position + direction, direction * 1000.f);
+        return result->hasHit() ? toGlmVec3(result->m_hitPointWorld) : glm::vec3(NAN, NAN, NAN);
+    }
+
 protected:
     btRigidBody *body;
 

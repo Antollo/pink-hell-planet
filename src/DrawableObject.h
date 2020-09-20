@@ -80,6 +80,9 @@ public:
         alive = false;
     }
 
+    float getAlpha() const { return alpha; }
+    const glm::mat4 &getM() const { return M; }
+
 protected:
     glm::mat4 M;
     bool alive = true;
@@ -91,16 +94,28 @@ protected:
     virtual const Texture2d &getTexture2() const { return defaultTexture; }
     virtual const Texture2d &getTexture3() const { return defaultTexture; }
     virtual const Texture3d &getTexture3d() const { return defaultTexture3d; }
-    virtual float getAlpha() const { return 1; }
-    virtual bool getBlend() const { return false; };
-    virtual bool getDepthMask() const { return true; };
-    virtual GLenum getMode() const { return GL_TRIANGLES; };
-    virtual Window::ProjectionMode getProjectionMode() const { return Window::ProjectionMode::perspective; };
+    virtual bool getBlend() const { return false; }
+    virtual bool getDepthMask() const { return true; }
+    virtual GLenum getMode() const { return GL_TRIANGLES; }
+    virtual Window::ProjectionMode getProjectionMode() const { return Window::ProjectionMode::perspective; }
+
+    void setAlpha(float x) { alpha = x; }
+    void setM(const glm::mat4 & x) { M = x; }
 
     static inline Texture2d defaultTexture;
     static inline Texture3d defaultTexture3d;
     static inline VertexArray defaultVertexArray;
     static inline ShaderProgram defaultShaderProgram;
+
+private:
+    float alpha = 1.f;
+};
+
+class ManagedDrawableObject : public DrawableObject
+{
+public:
+    using DrawableObject::setM;
+    using DrawableObject::setAlpha;
 };
 
 #endif /* !DRAWABLEOBJECT_H_ */

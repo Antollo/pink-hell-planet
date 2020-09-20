@@ -25,6 +25,7 @@ int main()
     GuiObject::init();
     Text::init();
     Bullet::init();
+    Bazooka::init();
 
     Game::init(window);
     window.show();

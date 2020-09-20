@@ -60,4 +60,6 @@ void main()
     vec3 r = mat3(invV) * reflect(-v.xyz, n.xyz);
     color += sqrt(1 - pow(dot(v.xyz, n.xyz), 2)) * 0.8 * vec4(pow(texture(tex3, texCoords).rgb, vec3(2, 2, 2)) * texture(cube, r).rgb, 1);
     color.a = alpha;
+    if (alpha == 0)
+        discard;
 }

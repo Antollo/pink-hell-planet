@@ -15,6 +15,7 @@ public:
         : color(1.f, 1.f, 1.f, 1.f), position(0.f, 0.f), positionOffset(0.f, 0.f)
     {
         setPosition();
+        setAlpha(color.a);
     }
     virtual ~GuiObject() {}
 
@@ -31,6 +32,7 @@ public:
     virtual void setColor(const glm::vec4 &newColor)
     {
         color = newColor;
+        setAlpha(color.a);
     }
     void draw(Window *window) const override
     {
@@ -43,11 +45,13 @@ public:
         scale = newScale;
     }
 
-protected:
-    float getAlpha() const override
+    void update(float delta) override
     {
-        return color.a;
+        DrawableObject::update(delta);
+        setAlpha(color.a);
     }
+
+protected:
     Window::ProjectionMode getProjectionMode() const override
     {
         return Window::ProjectionMode::ortho;

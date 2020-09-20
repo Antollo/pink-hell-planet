@@ -31,10 +31,10 @@ public:
             glDeleteVertexArrays(1, &vertexArray);
         }
     }
-    std::vector<float> load(const char *modelFilename, const float &scale = 1.f)
+    std::vector<float> load(const char *modelFilename, const float &scale = 1.f, const std::vector<int> &selectedShapes = {})
     {
         std::vector<float> vertices, colors, normals, texCoords;
-        loadObjFile(modelFilename, vertices, colors, normals, texCoords, scale);
+        loadObjFile(modelFilename, vertices, colors, normals, texCoords, scale, selectedShapes);
 
         std::vector<float> tangents(vertices.size()), bitangents(vertices.size());
         computeTangentAndBitangentVectors(vertices, normals, texCoords, tangents, bitangents);

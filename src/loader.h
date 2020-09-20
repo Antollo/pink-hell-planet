@@ -4,7 +4,7 @@
 #include <tiny_obj_loader.h>
 #include "error.h"
 
-inline void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals, std::vector<float> &texCoords, const float& scale = 1.f)
+inline void loadObjFile(const std::string &modelFilename, std::vector<float> &vertices, std::vector<float> &colors, std::vector<float> &normals, std::vector<float> &texCoords, const float& scale, std::vector<int> selectedShapes)
 {
     const std::vector<float> ones(3, 1);
     tinyobj::attrib_t attrib;
@@ -21,9 +21,14 @@ inline void loadObjFile(const std::string &modelFilename, std::vector<float> &ve
         error("Error: ", err);
     if (!ret)
         errorAndExit("Model not loaded");
-    std::cout << "Shapes: " << shapes.size() << std::endl;
-    for (size_t s = 0; s < shapes.size(); s++)
+    if (selectedShapes.empty())
     {
+        selectedShapes.resize(shapes.size());
+        std::iota(selectedShapes.begin(), selectedShapes.end(), 0);
+    }
+    for(const auto & s: selectedShapes)
+    {
+        std::cout << "Shape: " << s << std::endl;
         size_t index_offset = 0;
         std::cout << "    Faces: " << shapes[s].mesh.num_face_vertices.size() << std::endl;
         for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++)

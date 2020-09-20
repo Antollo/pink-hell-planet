@@ -10,8 +10,9 @@ class Game;
 class PlayableObject : public PhysicsObject
 {
 public:
-    PlayableObject(World &w, btCollisionShape *shape) : PhysicsObject(w, shape, /*mass*/ 4, /*position*/ {3, 30, 3}),
-                                                        forward(false), backward(false), left(false), right(false), up(false)
+    PlayableObject(World &w, btCollisionShape *shape, std::unique_ptr<ManagedDrawableObject> newWeapon)
+        : PhysicsObject(w, shape, /*mass*/ 4, /*position*/ {3, 30, 3}), weapon(std::move(newWeapon)),
+          forward(false), backward(false), left(false), right(false), up(false)
     {
         body->setAngularFactor(btVector3(0, 0, 0));
         body->setFriction(friction); // TODO: find better solution?
@@ -19,6 +20,12 @@ public:
     }
 
     virtual ~PlayableObject() {}
+
+    void draw(Window *window) const override
+    {
+        PhysicsObject::draw(window);
+        weapon->draw(window);
+    }
 
     void update(float delta) override
     {
@@ -72,6 +79,14 @@ public:
             zoom = 0;
         if (zoom > 1)
             zoom = 1;
+
+        setAlpha(std::pow(1 - zoom, 2));
+        
+        aimAngles = getAimAngles();
+
+        weapon->setAlpha(std::pow(1 - zoom, 2));
+        weapon->setM(glm::scale(glm::translate(glm::rotate(M, -aimAngles.x - 0.1f, {1.f, 0.f, 0.f}), {0.1f, 0.3f, 1.5f}), {1.f, 1.f, 0.5f}));
+        weapon->update(delta);
     }
 
     void consumeKey(int glfwKeyCode)
@@ -104,7 +119,7 @@ public:
             isZooming = ev.down;
         else if (ev.button == Window::MouseButton::left && ev.down)
             if (isReloaded())
-                shoot(getAimAngles());
+                shoot(aimAngles);
     }
     void consumeCursorDiff(float xCursorDiff, float yCursorDiff)
     {
@@ -127,12 +142,6 @@ public:
     float getZoom() { return zoom; }
 
     glm::vec3 getRaycastFront() const { return getRaycast(getFrontDirection()); }
-    glm::vec3 getRaycast(const glm::vec3 &direction) const { return getRaycast(getPosition(), direction); }
-    glm::vec3 getRaycast(const glm::vec3 &position, const glm::vec3 &direction) const
-    {
-        auto result = world->getRaycastResult(position + direction, direction * 1000.f);
-        return result->hasHit() ? toGlmVec3(result->m_hitPointWorld) : glm::vec3(NAN, NAN, NAN);
-    }
 
     float getReloadState() const
     {
@@ -160,10 +169,11 @@ public:
 protected:
     friend class Crosshair;
     static constexpr float friction = 0.1f;
-    float getAlpha() const override { return std::pow(1 - zoom, 2); }
+    std::unique_ptr<ManagedDrawableObject> weapon;
+    virtual glm::vec3 getAimCoords() const { return getRaycastFront(); }
 
     bool forward = false, backward = false, left = false, right = false, up = false, isZooming = false;
-    float yaw = glm::pi<float>() / 2.f, pitch = 0;
+    float yaw = glm::pi<float>() / 2.f, pitch = 0.f, theta = 0.f;
     float zoom = 0;
     float jumpCooldownRemaining = 0.f;
     glm::vec3 frontDirection;
@@ -176,8 +186,8 @@ protected:
 
     bool isReloaded() const { return reloadClock.getTime() >= reloadTime; }
     glm::vec3 getInitialBulletPosition() const { return getPosition() + getFrontDirection() * bulletSpawnDistance; }
-    glm::vec3 getAimAngles() const { return getAimAngles(getRaycastFront()); }
-    glm::vec3 getAimAngles(const glm::vec3 &target) const;
+    glm::vec3 getAimAngles() const;
+    glm::vec3 aimAngles = {0.f, 0.f, 0.f};
     glm::vec3 getAimDirection(const glm::vec3 &angles) const
     {
         return glm::normalize(glm::vec3(

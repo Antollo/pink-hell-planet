@@ -246,18 +246,13 @@ private:
 
     void consumeKey(int glfwKeyCode)
     {
-        switch (glfwKeyCode)
-        {
-        case GLFW_KEY_ESCAPE:
+        if (glfwKeyCode == GLFW_KEY_ESCAPE)
             window.close();
-            break;
-        }
 
         if (player != nullptr)
             player->consumeKey(glfwKeyCode);
-        else
-            camera.consumeKey(glfwKeyCode);
-
+        
+        camera.consumeKey(glfwKeyCode);
         menu.consumeKey(glfwKeyCode);
     }
 

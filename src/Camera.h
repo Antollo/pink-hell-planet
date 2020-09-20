@@ -48,10 +48,10 @@ public:
             break;
 
         case GLFW_KEY_KP_ADD:
-            viewDistance += 0.1f;
+            viewDistance += 0.5f;
             break;
         case GLFW_KEY_KP_SUBTRACT:
-            viewDistance -= 0.1f;
+            viewDistance -= 0.5f;
             break;
         }
     }
@@ -86,7 +86,26 @@ public:
         if (player != nullptr)
         {
             float newPosWeight = std::min(newPositionFactor * delta, 1.f);
-            position = (player->getPosition() - frontDirection * viewDistance + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1 - newPosWeight);
+
+            auto testPosition = (player->getPosition() - frontDirection * viewDistance * vdMultiplier + glm::vec3(0.f, 0.5f, 0.f));
+            auto raycastResult = player->getWorld()->getRaycastResult(testPosition, 100.f * (player->getPosition() - testPosition));
+            if (raycastResult->hasHit() && player->getId() != static_cast<CollisionObject *>(raycastResult->m_collisionObject->getUserPointer())->getId())
+                vdMultiplier = std::max(vdMultiplier - delta * vdmFactor, 0.f);
+            else
+                if (vdMultiplier < 1.f)
+                {
+                    testPosition = (player->getPosition() - frontDirection * viewDistance * (vdMultiplier + 2.f * delta * vdmFactor) + glm::vec3(0.f, 0.5f, 0.f));
+                    raycastResult = player->getWorld()->getRaycastResult(testPosition, 100.f * (player->getPosition() - testPosition));
+                    if (!raycastResult->hasHit() || player->getId() == static_cast<CollisionObject *>(raycastResult->m_collisionObject->getUserPointer())->getId())
+                        vdMultiplier = std::min(vdMultiplier + delta * vdmFactor, 1.f);
+                }
+
+            position = (player->getPosition() - frontDirection * viewDistance * vdMultiplier + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1 - newPosWeight);
+
+            //std::cout << y << std::endl;
+
+            //std::cout << glm::distance(x, position) << '\t' << glm::distance(position, player->getPosition()) << std::endl;
+
             oldPosition = position;
             averagePosition = player->getPosition() * player->getZoom() + position * (1 - player->getZoom());
         }
@@ -137,7 +156,8 @@ private:
     PlayableObject *&player;
     glm::mat4 V;
     glm::vec3 position = glm::vec3(10.f, 27.f, 10.f), frontDirection, upDirection, rightDirection, averagePosition, oldPosition = glm::vec3(0.f, 0.f, 0.f);
-    float xCursorDiff, yCursorDiff, yaw = glm::pi<float>() / 2.f, pitch = glm::pi<float>() / 4.f, viewDistance = 6.f;
+    float xCursorDiff, yCursorDiff, yaw = glm::pi<float>() / 2.f, pitch = glm::pi<float>() / 4.f;
+    float viewDistance = 6.f, vdMultiplier = 1.f, vdmFactor = 10.f;
     bool forward = false, backward = false, left = false, right = false;
     static constexpr float freecamSpeed = 10.f;
     static constexpr float mouseSensitivity = 0.004f;

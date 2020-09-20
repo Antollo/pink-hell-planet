@@ -2,8 +2,9 @@
 
 #include "Game.h"
 
-glm::vec3 PlayableObject::getAimAngles(const glm::vec3 &b) const
+glm::vec3 PlayableObject::getAimAngles() const
 {
+    const glm::vec3 b = getAimCoords();
     if (std::isnan(b.x) || std::isnan(b.y) || std::isnan(b.z))
         return {-yaw + glm::pi<float>() / 2.f, pitch, yaw};
     else
@@ -32,7 +33,6 @@ void PlayableObject::shoot(const glm::vec3 &angles)
     if (!isReloaded())
         return;
     reloadClock.reset();
-
 
     btTransform transform;
 

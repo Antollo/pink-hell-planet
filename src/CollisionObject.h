@@ -61,6 +61,8 @@ public:
         return id;
     }
 
+    const World *getWorld() const { return world; }
+
 protected:
     static std::unique_ptr<btCollisionShape> shapeFromVertices(const std::vector<float> &vertices);
     static std::unique_ptr<btCollisionShape> boundingBoxShape(const std::vector<float> &vertices);
