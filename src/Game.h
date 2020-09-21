@@ -198,9 +198,11 @@ private:
                 player = newPlayer.get();
                 drawableObjects.push_back(newPlayer);
 
+                /*
                 auto newBot = std::make_shared<Bot>(world);
                 newBot->target(newPlayer);
                 drawableObjects.push_back(newBot);
+                */
             },
             [this]() { return player == nullptr; }));
 

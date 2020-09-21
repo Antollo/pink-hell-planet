@@ -193,7 +193,7 @@ void Terrain::OctreeNode::genBuffers()
     if (!toDelete)
     {
         if (whole)
-            chunk->drawAtPos(size, intPos);
+            chunk->verticesAtPos(size, intPos);
         else
         {
             for (auto &i : childs)
@@ -207,6 +207,19 @@ void Terrain::OctreeNode::genBuffers()
                 }
             }
         }
+    }
+}
+
+void Terrain::OctreeNode::genNormalBuffer()
+{
+    if (!toDelete)
+    {
+        if (whole)
+            chunk->normalsAtPos(size, intPos);
+        else
+            for (auto &i : childs)
+                if (i)
+                    i->genNormalBuffer();
     }
 }
 
@@ -230,14 +243,24 @@ void Terrain::Chunk::prepareBuffers()
 
     newTriangleMesh.reset(new btTriangleMesh());
 
-    drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+    for (auto& i : normalsToDelete)
+        terrain->pointNormals[i.first] -= i.second;
+
+    // verticesAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
 
     if (rootTerrainCube)
     {
         rootTerrainCube->genBuffers();
         if (rootTerrainCube->empty())
             rootTerrainCube.reset(nullptr);
+        else
+            rootTerrainCube->genNormalBuffer();
     }
+
+    // normalsAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+
+    assert(vertices.size() == normals.size());
+    assert(newTriangleMesh->getNumTriangles() == (int) vertices.size() / 9);
 
     texCoords.resize(vertices.size() / 3 * 2);
     tangents.resize(vertices.size());
