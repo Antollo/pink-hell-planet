@@ -33,7 +33,3 @@ target_link_libraries(game
     portaudio_static
     OpenMP::OpenMP_CXX
 )
-
-#if(MSVC)
-#    set_target_properties(game PROPERTIES LINK_FLAGS_RELEASE /SUBSYSTEM:WINDOWS)
-#endif()

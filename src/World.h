@@ -20,7 +20,6 @@ public:
         delete overlappingPairCache;
         delete dispatcher;
         delete collisionConfiguration;
-        //delete groundShape;
     }
 
     void update(float delta)

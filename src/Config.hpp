@@ -31,7 +31,6 @@ public:
         output.close();
     }
 
-    //TODO error handling
     bool getBool(std::string paramName) const
     {
         return json[paramName];
