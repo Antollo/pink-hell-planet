@@ -11,7 +11,7 @@
 #include "CollisionObject.h"
 
 void Terrain::CustomMaterialCombinerCallback(btManifoldPoint &cp, const btCollisionObjectWrapper *colObj0Wrap, int partId0, int index0,
-                                    const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1)
+                                             const btCollisionObjectWrapper *colObj1Wrap, int partId1, int index1)
 {
     if (colObj1Wrap->getCollisionObject()->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
     {
@@ -255,6 +255,60 @@ void Terrain::Chunk::prepareVertexBuffer()
         rootTerrainCube->genBuffers();
 }
 
+namespace helper {
+struct vec3Ref
+{
+    vec3Ref(float &xRef, float &yRef, float &zRef)
+        : x(xRef), y(yRef), z(zRef)
+    {
+        assert(&xRef + sizeof(float) == &yRef);
+        assert(&yRef + sizeof(float) == &zRef);
+    }
+    float &x;
+    float &y;
+    float &z;
+    operator glm::vec3 &() const
+    {
+        return *reinterpret_cast<glm::vec3 *>(&x);
+    }
+    vec3Ref &operator =(const glm::vec3 &v)
+    {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+        return *this;
+    }
+    vec3Ref &operator =(glm::vec3 &&v)
+    {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+        return *this;
+    }
+};
+
+template <class A, class N, class T, class B>
+void computeTangentAndBitangent(const A &a, const N &normal, T &tangent, B &bitangent)
+{
+    if (normal.y == 0.f)
+    {
+        tangent.x = normal.z;
+        tangent.y = -normal.x;
+        tangent.z = 0.f;
+    }
+    else
+    {
+        // tangent = {10000, 0, 0} - a
+        tangent.x = 10000.f - a.x;
+        tangent.z = -a.z;
+        tangent.y = (-normal.z * (tangent.z - a.z) - normal.x * (tangent.x - a.x)) / normal.y + a.y;
+        tangent = glm::normalize(static_cast<glm::vec3 &>(tangent));
+    }
+
+    bitangent = VertexArray::computeBitangent(tangent, normal);
+}
+};
+
 void Terrain::Chunk::prepareBuffers()
 {
     std::thread thread([this]() {
@@ -279,42 +333,53 @@ void Terrain::Chunk::prepareBuffers()
 
     tangents.resize(vertices.size());
     bitangents.resize(vertices.size());
-
-    static constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
+    texCoords.resize(vertices.size() / 3 * 2);
 
     #pragma omp parallel for
-    for (int i = 0; i < (int) texCoords.size() / 6; i++)
+    for (int i = 0; i < (int)texCoords.size() / 6; i++)
     {
-        glm::vec3 a(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]);
-        glm::vec3 b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
-        glm::vec3 c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
-        glm::vec3 normal(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
-        glm::vec3 tangent;
-        if (normal.y == 0.f)
-        {
-            tangent = glm::vec3(normal.z, -normal.x, 0.f);
-        }
-        else
-        {
-            glm::vec3 center((a.x + b.x + c.x) / 3.f, (a.y + b.y + c.y) / 3.f, (a.z + b.z + c.z) / 3.f);
-            tangent = farPoint - center;
-            tangent.y = (-normal.z * (tangent.z - center.z) - normal.x * (tangent.x - center.x)) / normal.y + center.y;
-            tangent = glm::normalize(tangent);
-        }
-        glm::vec3 bitangent = VertexArray::computeBitangent(tangent, normal);
-        glm::mat3 tbn(glm::transpose(glm::mat3(tangent, normal, bitangent)));
+        using namespace helper;
+        vec3Ref a(vertices[9 * i], vertices[9 * i + 1], vertices[9 * i + 2]);
+        vec3Ref b(vertices[9 * i + 3], vertices[9 * i + 4], vertices[9 * i + 5]);
+        vec3Ref c(vertices[9 * i + 6], vertices[9 * i + 7], vertices[9 * i + 8]);
 
-        tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
-        tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
-        tangents[9 * i + 6] = tangent.x, tangents[9 * i + 7] = tangent.y, tangents[9 * i + 8] = tangent.z;
-        bitangents[9 * i] = bitangent.x, bitangents[9 * i + 1] = bitangent.y, bitangents[9 * i + 2] = bitangent.z;
-        bitangents[9 * i + 3] = bitangent.x, bitangents[9 * i + 4] = bitangent.y, bitangents[9 * i + 5] = bitangent.z;
-        bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
+        vec3Ref blockyNormal(blockyNormals[9 * i], blockyNormals[9 * i + 1], blockyNormals[9 * i + 2]);
+        glm::vec3 blockyTangent, blockyBitangent;
+
+        computeTangentAndBitangent(a, blockyNormal, blockyTangent, blockyBitangent);
+
+        glm::mat3 tbn(glm::transpose(glm::mat3(blockyTangent, blockyNormal, blockyBitangent)));
+
+        glm::vec3 texCoord;
+        texCoord = tbn * a;
+        texCoords[6 * i] = texCoord.x;
+        texCoords[6 * i + 1] = texCoord.z;
+        texCoord = tbn * b;
+        texCoords[6 * i + 2] = texCoord.x;
+        texCoords[6 * i + 3] = texCoord.z;
+        texCoord = tbn * c;
+        texCoords[6 * i + 4] = texCoord.x;
+        texCoords[6 * i + 5] = texCoord.z;
+
+        vec3Ref normalA(normals[9 * i], normals[9 * i + 1], normals[9 * i + 2]);
+        vec3Ref normalB(normals[9 * i + 3], normals[9 * i + 4], normals[9 * i + 5]);
+        vec3Ref normalC(normals[9 * i + 6], normals[9 * i + 7], normals[9 * i + 8]);
+
+        vec3Ref tangentA(tangents[9 * i], tangents[9 * i + 1], tangents[9 * i + 2]);
+        vec3Ref tangentB(tangents[9 * i + 3], tangents[9 * i + 4], tangents[9 * i + 5]);
+        vec3Ref tangentC(tangents[9 * i + 6], tangents[9 * i + 7], tangents[9 * i + 8]);
+
+        vec3Ref bitangentA(bitangents[9 * i], bitangents[9 * i + 1], bitangents[9 * i + 2]);
+        vec3Ref bitangentB(bitangents[9 * i + 3], bitangents[9 * i + 4], bitangents[9 * i + 5]);
+        vec3Ref bitangentC(bitangents[9 * i + 6], bitangents[9 * i + 7], bitangents[9 * i + 8]);
+
+        computeTangentAndBitangent(a, normalA, tangentA, bitangentA);
+        computeTangentAndBitangent(b, normalB, tangentB, bitangentB);
+        computeTangentAndBitangent(c, normalC, tangentC, bitangentC);
     }
 
     thread.join();
 }
-
 
 void Terrain::Chunk::loadBuffers()
 {

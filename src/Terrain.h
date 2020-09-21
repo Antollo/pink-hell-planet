@@ -219,7 +219,7 @@ private:
 
         void getOneCube(VecInt3 pos)
         {
-            if (!inChunk(pos) or !pointsTouched.insert(pos).second)
+            if (!inChunk(pos) || !pointsTouched.insert(pos).second)
                 return;
             
             int mask = getCubeMask(pos);
@@ -235,9 +235,6 @@ private:
                 normalsToDelete.emplace_back(x, marchingCubesNormals[mask][i]);
             }
 
-            for (auto i : marchingCubesTexCoords[mask])
-                texCoords.push_back(i);
-
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             assert(verts.size() % 3 == 0);
             for (size_t i = 0; i < verts.size(); i += 3)
@@ -248,7 +245,7 @@ private:
 
         void getOneCubeNormals(VecInt3 pos)
         {
-            if (!inChunk(pos) or !pointsTouched.insert(pos).second)
+            if (!inChunk(pos) || !pointsTouched.insert(pos).second)
                 return;
 
             int mask = getCubeMask(pos);
