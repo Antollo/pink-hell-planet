@@ -77,7 +77,6 @@ public:
                         glm::vec3 v1 = getRaycast(getInitialBulletPosition() + glm::vec3(0.f, 1.f, 0.f), aimDirection);
                         glm::vec3 v2 = getRaycast(getInitialBulletPosition() - glm::vec3(0.f, 1.f, 0.f), aimDirection);
 
-                        //std::cout << glm::distance(v1, getPosition()) << " " << glm::distance(v2, getPosition()) << std::endl;
                         if ((std::isnan(v1.x) || glm::distance(v1, getPosition()) > Bullet::explosionRadius * 2.f) &&
                             (std::isnan(v2.x) || glm::distance(v2, getPosition()) > Bullet::explosionRadius * 2.f))
                             shoot(aimAngles);

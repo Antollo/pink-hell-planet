@@ -172,8 +172,6 @@ private:
 
         sf_count_t readCount = sf_read_float(data.file, out, frameCount * data.info.channels);
 
-        //const float volumeMultiplier = std::pow(10.f, (data.volume / 10.f));
-
         if (data.volume * globalVolume != 1.f)
         {
             #pragma omp parallel for num_threads(2)

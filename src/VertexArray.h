@@ -155,11 +155,6 @@ private:
     void createVertexArray(fVecR vertices, fVecR colors, fVecR normals, fVecR texCoords, fVecR tangents, fVecR bitangents)
     {
         assert(loaded == false);
-        /*assert(vertices.size() == colors.size());
-        assert(vertices.size() == normals.size());
-        assert(vertices.size() * 2 == texCoords.size() * 3);
-        assert(vertices.size() == tangents.size());
-        assert(vertices.size() == bitangents.size());*/
         glGenVertexArrays(1, &vertexArray);
         glBindVertexArray(vertexArray);
         loadBuffer(vertices.data(), vertices.size(), bufferIndex::POSITION, vertexBuffer);
@@ -175,11 +170,6 @@ private:
     void updateVertexArray(fVecR vertices, fVecR colors, fVecR normals, fVecR texCoords, fVecR tangents, fVecR bitangents)
     {
         assert(loaded == true);
-        /*assert(vertices.size() == colors.size());
-        assert(vertices.size() == normals.size());
-        assert(vertices.size() * 2 == texCoords.size() * 3);
-        assert(vertices.size() == tangents.size());
-        assert(vertices.size() == bitangents.size());*/
         glBindVertexArray(vertexArray);
         updateBuffer(vertices.data(), vertices.size(), bufferIndex::POSITION, vertexBuffer);
         updateBuffer(colors.data(), colors.size(), bufferIndex::COLOR, colorBuffer);

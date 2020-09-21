@@ -15,12 +15,6 @@ World::World()
     solver = new btSequentialImpulseConstraintSolver;
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0.f, g, 0.f));
-
-    /*
-    [*] ehhhhhhhhhhhhh hhhhhh h h hh  h hh hh  h h hh
-    groundShape = new btTriangleShape(btVector3(-200, 0, -100), btVector3(200, 0, -100), btVector3(100, 0, 100));
-    ground = new RigidBody(this, groundShape, 0, {0, -6, 0});
-    */
 }
 
 std::vector<CollisionObject*> World::getColliding(CollisionObject& body) const

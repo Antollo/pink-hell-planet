@@ -108,10 +108,6 @@ public:
 
             position = (player->getPosition() - frontDirection * viewDistance * vdMultiplier + glm::vec3(0.f, 0.5f, 0.f)) * newPosWeight + oldPosition * (1 - newPosWeight);
 
-            //std::cout << y << std::endl;
-
-            //std::cout << glm::distance(x, position) << '\t' << glm::distance(position, player->getPosition()) << std::endl;
-
             oldPosition = position;
             averagePosition = player->getPosition() * player->getZoom() + position * (1 - player->getZoom());
         }

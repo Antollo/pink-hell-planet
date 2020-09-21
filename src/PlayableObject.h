@@ -15,7 +15,7 @@ public:
           forward(false), backward(false), left(false), right(false), up(false)
     {
         body->setAngularFactor(btVector3(0, 0, 0));
-        body->setFriction(friction); // TODO: find better solution?
+        body->setFriction(friction);
         body->setMassProps(0.2f, body->getLocalInertia());
     }
 
