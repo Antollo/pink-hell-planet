@@ -86,7 +86,7 @@ private:
         void drawAxes(Window *window) const { axes.draw(window); }
 
     private:
-        int i = 0;
+        static inline int i = 0;
         glm::mat4 M;
         
         Clock clock;
