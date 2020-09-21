@@ -3,8 +3,10 @@
 
 #include <cassert>
 #include <glad/glad.h>
-#include "loader.h"
+#include <glm/glm.hpp>
+
 #include "error.h"
+#include "loader.h"
 
 class VertexArray
 {

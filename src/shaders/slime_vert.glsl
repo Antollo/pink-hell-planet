@@ -14,8 +14,7 @@ out vec3 gViewerTBN;
 
 vec4 slimeyFloat(vec4 v, float d)
 {
-    float m = clamp(d - 2, 0, 1) * clamp((30 - d) / 20, 0, 1) * 0.05;
-    return vec4(m * (sin(time + v.x + 0.5 * v.y + 0.5 * v.z) - 0.5), m * (sin(time + v.y + 0.5 * v.x + 0.5 * v.z) - 0.5), m * (sin(time + v.z + 0.5 * v.x  + 0.5 * v.y) - 0.5), 0);
+    return vec4(0.05 * (sin(time + v.x + 0.5 * v.y + 0.5 * v.z) - 0.5), 0.05 * (sin(time + v.y + 0.5 * v.x + 0.5 * v.z) - 0.5), 0.05 * (sin(time + v.z + 0.5 * v.x  + 0.5 * v.y) - 0.5), 0);
 }
 
 void main()

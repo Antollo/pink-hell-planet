@@ -232,6 +232,10 @@ private:
                 terrain->pointNormals[x] += marchingCubesNormals[mask][i];
                 normalsToDelete.emplace_back(x, marchingCubesNormals[mask][i]);
             }
+
+            for (auto i : marchingCubesTexCoords[mask])
+                texCoords.push_back(i);
+
             /*
             for (auto i : marchingCubesVertices[mask])
             {

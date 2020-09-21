@@ -238,6 +238,7 @@ void Terrain::Chunk::prepareVertexBuffer()
 {
     vertices.clear();
     normals.clear();
+    texCoords.clear();
 
     newTriangleMesh.reset(new btTriangleMesh());
 
@@ -275,9 +276,9 @@ void Terrain::Chunk::prepareBuffers()
     assert(vertices.size() == normals.size());
     assert(newTriangleMesh->getNumTriangles() == (int) vertices.size() / 9);
 
-    texCoords.resize(vertices.size() / 3 * 2);
     tangents.resize(vertices.size());
     bitangents.resize(vertices.size());
+
     static constexpr glm::vec3 farPoint(10000.f, 0.f, 0.f);
 
     #pragma omp parallel for
@@ -301,17 +302,6 @@ void Terrain::Chunk::prepareBuffers()
         }
         glm::vec3 bitangent = VertexArray::computeBitangent(tangent, normal);
         glm::mat3 tbn(glm::transpose(glm::mat3(tangent, normal, bitangent)));
-        glm::vec3 texCoord;
-        texCoord = tbn * a;
-        texCoords[6 * i] = texCoord.x;
-        texCoords[6 * i + 1] = texCoord.z;
-
-        texCoord = tbn * b;
-        texCoords[6 * i + 2] = texCoord.x;
-        texCoords[6 * i + 3] = texCoord.z;
-        texCoord = tbn * c;
-        texCoords[6 * i + 4] = texCoord.x;
-        texCoords[6 * i + 5] = texCoord.z;
 
         tangents[9 * i] = tangent.x, tangents[9 * i + 1] = tangent.y, tangents[9 * i + 2] = tangent.z;
         tangents[9 * i + 3] = tangent.x, tangents[9 * i + 4] = tangent.y, tangents[9 * i + 5] = tangent.z;
