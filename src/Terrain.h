@@ -36,6 +36,14 @@ public:
         loadBuffers();
     }
 
+    void forceFullUpdate()
+    {
+        waitForThreads();
+        updateBuffers();
+        waitForThreads();
+        loadBuffers();
+    }
+
     void marchingPointsAdd(VecInt3 v, int d)
     {
         if (d == 1)

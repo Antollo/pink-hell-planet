@@ -28,6 +28,7 @@
 #include "Menu.h"
 #include "Music.h"
 #include "DamageOverlay.h"
+#include "ExplosionList.h"
 
 class Game
 {
@@ -190,6 +191,14 @@ private:
         : window(w), globalConfig(config), player(nullptr), camera(w, player), damageOverlay(player),
           terrain(world), crosshair(camera), backgroundMusic("music.wav"), fps(0.f)
     {
+        btSphereShape *explosionShape = new btSphereShape(5);
+        for (auto& i : explosionList::dummy)
+        {
+            GhostObject *ghostObject = new GhostObject(nullptr, explosionShape, i);
+            terrain.collideWith(std::unique_ptr<CollisionObject>(ghostObject));
+        }
+        terrain.forceFullUpdate();
+
         clock.reset();
         clock60Pi.reset();
         fpsText.setPosition({-1.f, 1.f});

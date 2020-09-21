@@ -39,14 +39,12 @@ public:
             ShaderProgram::setTime(particleGroup.getTime());
             getShaderProgram().setUniformMatrix4fv("M", particleGroup.getM());
             glBindVertexArray(vertexArray.getVertexArrayId());
-            glDrawArrays(GL_POINTS, 0, vertexArray.getLength());
+            glDrawArrays(GL_POINTS, 0, particleGroup.getParticleCount());
         }
         ShaderProgram::setTime(temp);
         glBindVertexArray(0);
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
-        for (auto &particleGroup : particleGroups)
-            particleGroup.drawAxes(window);
     }
     void update(float time60Pi)
     {
@@ -78,6 +76,11 @@ private:
             ShaderProgram::setParticleGroupLight(ParticleGroupLight(center, globalTime), i);
             i++;
             i %= ParticleGroupLight::count;
+        }
+
+        int getParticleCount() const
+        {
+            return std::min(GLsizei(clock.getTime() * 9000), vertexArray.getLength());
         }
 
         float getTime() const { return clock.getTime(); }

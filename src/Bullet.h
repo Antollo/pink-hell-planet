@@ -64,7 +64,7 @@ private:
     static inline std::unique_ptr<btCollisionShape> shape;
     static inline std::function<void(const glm::vec3 &)> explosion;
 
-    static inline constexpr float fullDamageRadius = 2.f;
+    static inline constexpr float fullDamageRadius = 3.2;
     static inline constexpr float damageBase = 50.f;
     inline static btSphereShape *explosionShape = new btSphereShape(explosionRadius);
 };

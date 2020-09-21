@@ -50,8 +50,8 @@ Terrain::Terrain(World &world) : world(world)
 {
     //TODO reading from vector
     for (int y = 0; y < 5 * chunkSize; y += chunkSize)
-        for (int x = 0; x < 10 * chunkSize; x += chunkSize)
-            for (int z = 0; z < 10 * chunkSize; z += chunkSize)
+        for (int x = 0; x < 12 * chunkSize; x += chunkSize)
+            for (int z = 0; z < 12 * chunkSize; z += chunkSize)
                 chunks.emplace(getVecInt3(x, y, z), new Chunk({x, y, z}, this, true));
     chunks.emplace(getVecInt3(0, 5 * chunkSize, 0), new Chunk({0, 5 * chunkSize, 0}, this, true));
 
@@ -261,8 +261,8 @@ struct vec3Ref
     vec3Ref(float &xRef, float &yRef, float &zRef)
         : x(xRef), y(yRef), z(zRef)
     {
-        assert(&xRef + sizeof(float) == &yRef);
-        assert(&yRef + sizeof(float) == &zRef);
+        assert(&xRef + 1 == &yRef);
+        assert(&yRef + 1 == &zRef);
     }
     float &x;
     float &y;
