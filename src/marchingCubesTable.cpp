@@ -34,6 +34,8 @@ const glm::vec3 edgeFromIndex[12] = {
     average(cubeVert[3], cubeVert[7])
 };
 
+// based on table from article:
+// http://paulbourke.net/geometry/polygonise/
 const int marchingCubesTriangles[256][16] = {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
     {0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},

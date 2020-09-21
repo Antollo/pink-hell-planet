@@ -233,12 +233,7 @@ private:
             [this]() {
                 globalConfig.setGraphicSetting(GlobalConfig::GraphicSetting::low);
                 globalConfig.flush();
-                #ifdef _WIN32
-                std::system("start /b game");
-                #else
-                std::system("./game &");
-                #endif
-                window.close();
+                restartGame();
             },
             [this]() { return player == nullptr && globalConfig.getGraphicSetting() != GlobalConfig::GraphicSetting::low; }));
         menu.insert(Action(
@@ -247,12 +242,7 @@ private:
             [this]() {
                 globalConfig.setGraphicSetting(GlobalConfig::GraphicSetting::normal);
                 globalConfig.flush();
-                #ifdef _WIN32
-                std::system("start /b game");
-                #else
-                std::system("./game &");
-                #endif
-                window.close();
+                restartGame();
             },
             [this]() { return player == nullptr && globalConfig.getGraphicSetting() != GlobalConfig::GraphicSetting::normal; }));
 
@@ -305,6 +295,19 @@ private:
     void consumeMouseScrollEvent(Window::MouseScrollEvent ev)
     {
         camera.consumeMouseScrollEvent(ev);
+    }
+
+    void restartGame()
+    {
+        #ifdef _WIN32
+        std::system("start /b game");
+        #else
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wunused-result"
+        std::system("./game &");
+        #pragma GCC diagnostic pop
+        #endif
+        window.close();
     }
 
     Window &window;
