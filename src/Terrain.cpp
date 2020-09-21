@@ -89,9 +89,11 @@ void Terrain::updateBuffers()
                 auto it = chunks.find(i);
                 if (it == chunks.end())
                     it = chunks.emplace(i, new Chunk(i, (Terrain *)this, false)).first;
-                it->second->prepareBuffers();
+                it->second->prepareVertexBuffer();
                 toReload.insert(i);
             }
+            for (auto& i : toRegen)
+                chunks[i]->prepareBuffers();
             toRegen = std::set<VecInt3>();
         });
     }
@@ -142,6 +144,7 @@ void Terrain::OctreeNode::addPoints(int d)
         }
     }
 }
+
 void Terrain::OctreeNode::collideWith(CollisionObject *collObj)
 {
     if (areCornersIn(collObj))
@@ -193,19 +196,27 @@ void Terrain::OctreeNode::genBuffers()
     if (!toDelete)
     {
         if (whole)
-            chunk->drawAtPos(size, intPos);
+            chunk->verticesAtPos(size, intPos);
         else
         {
             for (auto &i : childs)
-            {
                 if (i)
-                {
-                    if (i->childCount == 0)
-                        i.reset();
-                    else
-                        i->genBuffers();
-                }
-            }
+                    i->genBuffers();
+        }
+    }
+}
+
+void Terrain::OctreeNode::genNormalBuffer()
+{
+    if (!toDelete)
+    {
+        if (whole)
+            chunk->normalsAtPos(size, intPos);
+        else
+        {
+            for (auto &i : childs)
+                if (i)
+                    i->genNormalBuffer();
         }
     }
 }
@@ -223,21 +234,46 @@ void Terrain::Chunk::collideWith(CollisionObject *collObj)
     }
 }
 
-void Terrain::Chunk::prepareBuffers()
+void Terrain::Chunk::prepareVertexBuffer()
 {
     vertices.clear();
     normals.clear();
 
     newTriangleMesh.reset(new btTriangleMesh());
 
-    drawAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+    for (auto& i : normalsToDelete)
+        terrain->pointNormals[i.first] -= i.second;
+    normalsToDelete.clear();
+
+    pointsTouched.clear();
+
+    verticesAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
 
     if (rootTerrainCube)
-    {
         rootTerrainCube->genBuffers();
-        if (rootTerrainCube->empty())
-            rootTerrainCube.reset(nullptr);
-    }
+}
+
+void Terrain::Chunk::prepareBuffers()
+{
+    std::thread thread([this]() {
+        if (newTriangleMesh->getNumTriangles() != 0)
+        {
+            newShape.reset(new btBvhTriangleMeshShape(newTriangleMesh.get(), true));
+            newShape->setMargin(0.f);
+        }
+        else
+            newShape.reset(nullptr);
+    });
+
+    pointsTouched.clear();
+
+    normalsAtPos(chunkSize - 1, intPos + getVecInt3(1, 1, 1));
+
+    if (rootTerrainCube)
+        rootTerrainCube->genNormalBuffer();
+
+    assert(vertices.size() == normals.size());
+    assert(newTriangleMesh->getNumTriangles() == (int) vertices.size() / 9);
 
     texCoords.resize(vertices.size() / 3 * 2);
     tangents.resize(vertices.size());
@@ -285,13 +321,7 @@ void Terrain::Chunk::prepareBuffers()
         bitangents[9 * i + 6] = bitangent.x, bitangents[9 * i + 7] = bitangent.y, bitangents[9 * i + 8] = bitangent.z;
     }
 
-    if (newTriangleMesh->getNumTriangles() != 0)
-    {
-        newShape.reset(new btBvhTriangleMeshShape(newTriangleMesh.get(), true));
-        newShape->setMargin(0.f);
-    }
-    else
-        newShape.reset(nullptr);
+    thread.join();
 }
 
 

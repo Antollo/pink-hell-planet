@@ -29,4 +29,15 @@ inline constexpr glm::vec3 remove4th(const glm::vec4& vec)
     return glm::vec3(vec.x, vec.y, vec.z);
 }
 
+template<typename T>
+inline constexpr bool isZeroOrNormal(T v)
+{
+    return v == 0 or std::isnormal(v);
+}
+
+inline constexpr bool isVec3Ok(glm::vec3 v)
+{
+    return isZeroOrNormal(v.x) and isZeroOrNormal(v.y) and isZeroOrNormal(v.z);
+}
+
 #endif

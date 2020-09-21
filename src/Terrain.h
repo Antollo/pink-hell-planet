@@ -74,6 +74,7 @@ private:
     inline static const int chunkSize = 16; // must be power of 2
     inline static const float scale = 0.3;
 
+
     class Chunk;
     class OctreeNode
     {
@@ -100,6 +101,7 @@ private:
         static void init();
 
         void genBuffers();
+        void genNormalBuffer();
 
         void makeChilds(CollisionObject *collObj)
         {
@@ -156,25 +158,40 @@ private:
             }
         }
 
+        void prepareVertexBuffer();
         void prepareBuffers();
 
         void loadBuffers();
 
-        void drawAtPos(int size, VecInt3 pos)
+        void normalsAtPos(int size, VecInt3 pos)
+        {
+            drawAtPos(size, pos, [this](VecInt3 a) {
+                getOneCubeNormals(a);
+            });
+        }
+
+        void verticesAtPos(int size, VecInt3 pos)
+        {
+            drawAtPos(size, pos, [this](VecInt3 a) {
+                getOneCube(a);
+            });
+        }
+
+        void drawAtPos(int size, VecInt3 pos, std::function<void(VecInt3)> f)
         {
             for (int x = -1; x < size; x++)
                 for (int y = -1; y < size; y++)
                 {
-                    getOneCube(pos + getVecInt3(x, y, -1));
-                    getOneCube(pos + getVecInt3(x, y, size - 1));
+                    f(pos + getVecInt3(x, y, -1));
+                    f(pos + getVecInt3(x, y, size - 1));
                 }
             for (int z = 0; z < size - 1; z++)
                 for (int other = -1; other < size - 1; other++)
                 {
-                    getOneCube(pos + getVecInt3(other + 1, -1, z));
-                    getOneCube(pos + getVecInt3(other, size - 1, z));
-                    getOneCube(pos + getVecInt3(-1, other, z));
-                    getOneCube(pos + getVecInt3(size - 1, other + 1, z));
+                    f(pos + getVecInt3(other + 1, -1, z));
+                    f(pos + getVecInt3(other, size - 1, z));
+                    f(pos + getVecInt3(-1, other, z));
+                    f(pos + getVecInt3(size - 1, other + 1, z));
                 }
         }
 
@@ -202,14 +219,20 @@ private:
 
         void getOneCube(VecInt3 pos)
         {
-            if (!inChunk(pos))
+            if (!inChunk(pos) or !pointsTouched.insert(pos).second)
                 return;
-            int mask = 0;
-            for (int b = 0; b < 8; b++)
-                if (terrain->marchingPoints.count(pos + cubeVer[b]))
-                    mask |= 1 << b;
+            
+            int mask = getCubeMask(pos);
 
             glm::vec3 glmPos = VecInt3ToVec3(pos);
+            for (size_t i = 0; i < marchingCubesVertices[mask].size(); i++)
+            {
+                glm::vec3 x = (marchingCubesVertices[mask][i] + glmPos) * Terrain::scale;
+                vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
+                terrain->pointNormals[x] += marchingCubesNormals[mask][i];
+                normalsToDelete.emplace_back(x, marchingCubesNormals[mask][i]);
+            }
+            /*
             for (auto i : marchingCubesVertices[mask])
             {
                 glm::vec3 x = (i + glmPos) * Terrain::scale;
@@ -220,10 +243,44 @@ private:
             {
                 normals.insert(normals.end(), glm::value_ptr(i), glm::value_ptr(i) + 3);
             }
+            */
+
 
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
+            assert(verts.size() % 3 == 0);
             for (size_t i = 0; i < verts.size(); i += 3)
+            {
+                // std::cout << toBtVec3(verts[i] + glmPos) * Terrain::scale << std::endl;
                 newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos) * Terrain::scale, toBtVec3(verts[i + 1] + glmPos) * Terrain::scale, toBtVec3(verts[i + 2] + glmPos) * Terrain::scale);
+            }
+        }
+
+        void getOneCubeNormals(VecInt3 pos)
+        {
+            if (!inChunk(pos) or !pointsTouched.insert(pos).second)
+                return;
+
+            int mask = getCubeMask(pos);
+
+            glm::vec3 glmPos = VecInt3ToVec3(pos);
+            for (size_t i = 0; i < marchingCubesVertices[mask].size(); i++)
+            {
+                glm::vec3 x = (marchingCubesVertices[mask][i] + glmPos) * Terrain::scale;
+                assert(terrain->pointNormals.find(x) != terrain->pointNormals.end());
+                glm::vec3 n = glm::normalize(terrain->pointNormals[x]);
+                assert(isVec3Ok(n));
+                assert(abs(glm::length(n) - 1) < 1e-6);
+                normals.insert(normals.end(), glm::value_ptr(n), glm::value_ptr(n) + 3);
+            }
+        }
+
+        int getCubeMask(VecInt3 pos)
+        {
+            int mask = 0;
+            for (int b = 0; b < 8; b++)
+                if (terrain->marchingPoints.count(pos + cubeVer[b]))
+                    mask |= 1 << b;
+            return mask;
         }
 
         bool inChunk(VecInt3 pos)
@@ -236,6 +293,9 @@ private:
         }
 
         std::unique_ptr<OctreeNode> rootTerrainCube;
+        
+        std::vector<std::pair<glm::vec3, glm::vec3>> normalsToDelete;
+        std::set<VecInt3> pointsTouched;
 
         std::vector<float> vertices;
         std::vector<float> normals;
@@ -287,6 +347,25 @@ private:
     std::set<VecInt3> toRegen;
     std::set<VecInt3> toReload;
     std::set<VecInt3> marchingPoints;
+
+    struct glmVec3Comp
+    {
+        static constexpr float eps = 1e-4;
+        bool operator()(const glm::vec3& a, const glm::vec3& b) const
+        {
+            if(a.x + eps < b.x)
+                return true;
+            if(b.x + eps < a.x)
+                return false;
+            if(a.y + eps < b.y)
+                return true;
+            if(b.y + eps < a.y)
+                return false;
+            return a.z + eps < b.z;
+        }
+    };
+    std::map<glm::vec3, glm::vec3, glmVec3Comp> pointNormals;
+
     static VecInt3 getChunkFromPoint(VecInt3 pos);
     std::map<VecInt3, std::unique_ptr<Chunk>> chunks;
 
