@@ -52,7 +52,7 @@ public:
             if (action.isVisible())
             {
                 action.setPositionOffset(temp);
-                temp.y += Text::glyphHeight * 1.5f;
+                temp.y -= Text::glyphHeight * 1.5f;
             }
             action.update(delta);
         }

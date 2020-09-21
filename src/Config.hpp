@@ -21,6 +21,11 @@ public:
 
     virtual ~Config()
     {
+        flush();
+    }
+
+    void flush() const
+    {
         std::ofstream output(file);
         output << json.dump(4);
         output.close();

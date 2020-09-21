@@ -59,3 +59,8 @@
 - [freesound.org/people/Robinhood76/sounds/273332/](https://freesound.org/people/Robinhood76/sounds/273332/)
 - [freesound.org/people/cydon/sounds/268557/](https://freesound.org/people/cydon/sounds/268557/)
 - [freesound.org/people/FilmmakersManual/sounds/522464/](https://freesound.org/people/FilmmakersManual/sounds/522464/)
+
+## Models
+
+- [www.turbosquid.com/3d-models/television-rubin-model-1386464](https://www.turbosquid.com/3d-models/television-rubin-model-1386464)
+- [www.turbosquid.com/3d-models/panzerschreck-pbr-model-1620855](https://www.turbosquid.com/3d-models/panzerschreck-pbr-model-1620855)

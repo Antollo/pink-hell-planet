@@ -52,9 +52,9 @@ public:
         return ptr->camera.getPosition();
     }
 
-    static void init(Window &window)
+    static void init(Window &window, GlobalConfig &config)
     {
-        ptr.reset(new Game(window));
+        ptr.reset(new Game(window, config));
     }
 
     static void addDrawable(std::unique_ptr<DrawableObject> &&drawable)
@@ -186,8 +186,8 @@ public:
 private:
     static inline std::unique_ptr<Game> ptr;
 
-    Game(Window &w)
-        : window(w), player(nullptr), camera(w, player), damageOverlay(player),
+    Game(Window &w, GlobalConfig& config)
+        : window(w), globalConfig(config), player(nullptr), camera(w, player), damageOverlay(player),
           terrain(world), crosshair(camera), backgroundMusic("music.wav"), fps(0.f)
     {
         clock.reset();
@@ -224,8 +224,37 @@ private:
             "F - Toggle fullscreen",
             [this]() {
                 window.toggleFullscreen();
+                globalConfig.setFullscreen(!globalConfig.getFullscreen());
             },
             [this]() { return player == nullptr; }));
+        menu.insert(Action(
+            GLFW_KEY_L,
+            "L - Lower quality",
+            [this]() {
+                globalConfig.setGraphicSetting(GlobalConfig::GraphicSetting::low);
+                globalConfig.flush();
+                #ifdef _WIN32
+                std::system("start /b game");
+                #else
+                std::system("./game &");
+                #endif
+                window.close();
+            },
+            [this]() { return player == nullptr && globalConfig.getGraphicSetting() != GlobalConfig::GraphicSetting::low; }));
+        menu.insert(Action(
+            GLFW_KEY_H,
+            "H - Higher quality",
+            [this]() {
+                globalConfig.setGraphicSetting(GlobalConfig::GraphicSetting::normal);
+                globalConfig.flush();
+                #ifdef _WIN32
+                std::system("start /b game");
+                #else
+                std::system("./game &");
+                #endif
+                window.close();
+            },
+            [this]() { return player == nullptr && globalConfig.getGraphicSetting() != GlobalConfig::GraphicSetting::normal; }));
 
         running = true;
         mainReady = true;
@@ -246,6 +275,11 @@ private:
         });
 
         backgroundMusic.setLoop().play();
+
+        if (globalConfig.getFullscreen())
+            window.toggleFullscreen();
+
+        window.focus();
     }
 
     friend class std::condition_variable;
@@ -274,6 +308,7 @@ private:
     }
 
     Window &window;
+    GlobalConfig& globalConfig;
     Clock clock, clock60Pi;
     Text fpsText;
     World world;

@@ -1,5 +1,6 @@
 {
     "graphics": "normal",
+    "fullscreen": false,
     "res_x": 800,
     "rex_y": 600
 }

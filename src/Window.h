@@ -137,6 +137,11 @@ public:
         glfwSetWindowShouldClose(window, true);
     }
 
+    void focus()
+    {
+        glfwFocusWindow(window);
+    }
+
     void swapBuffers()
     {
         if (firstUpdate)

@@ -28,6 +28,15 @@ public:
         Config::setInt(resY, "res_y");
     }
 
+    int getFullscreen()
+    {
+        return Config::getBool("fullscreen");
+    }
+    void setFullscreen(bool fullscreen)
+    {
+        Config::setBool(fullscreen, "fullscreen");
+    }
+
     enum GraphicSetting
     {
         low,
@@ -43,6 +52,7 @@ public:
         Config::setString(graphicSettingToString[setting], "graphics");
     }
 
+    using Config::flush;
 
 private:
     static inline std::unordered_map<std::string, GraphicSetting> stringToGraphicSetting = {

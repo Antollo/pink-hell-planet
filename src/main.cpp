@@ -27,7 +27,7 @@ int main()
     Bullet::init();
     Bazooka::init();
 
-    Game::init(window);
+    Game::init(window, config);
     window.show();
     while (window.isOpen())
         Game::get()->tick();
