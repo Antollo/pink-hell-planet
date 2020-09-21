@@ -117,13 +117,13 @@ public:
     void draw(Window *window) const override
     {
         ShaderProgram::setColor(color);
-        glm::vec2 offset(0.f, 0.f), temp, scale(getScale(), getScale() * getAspectRatio());
+        glm::vec2 offset(0.f, 0.f), temp, scale(getGlobalScale(), getGlobalScale() * getAspectRatio());
         for (const auto &character : string)
         {
             if (character == '\n')
             {
                 offset.x = 0.f;
-                offset.y -= glyphHeight * getScale() * getAspectRatio();
+                offset.y -= glyphHeight * getGlobalScale() * getAspectRatio();
                 continue;
             }
 
@@ -131,9 +131,10 @@ public:
             wcharToGlyph[character].setPosition(temp);
             wcharToGlyph[character].setColor(color);
             wcharToGlyph[character].draw(window);
-            offset.x += wcharToGlyph[character].getGlyphOffset() * getScale();
+            offset.x += wcharToGlyph[character].getGlyphOffset() * getGlobalScale();
         }
     }
+    size_t size() const { return string.size(); }
 
 private:
     std::string string;

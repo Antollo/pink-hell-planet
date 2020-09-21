@@ -10,9 +10,8 @@ public:
     ProgressBar(int newLength, float newMaxValue = 1.f, const std::string &newDescription = "")
         : value(newMaxValue), maxValue(newMaxValue), description(newDescription), bar(newLength, '#')
     {
+        update(0.f);
     }
-
-    size_t size() const { return bar.size(); }
 
     void setValue(float newValue)
     {
@@ -21,6 +20,8 @@ public:
 
     void update(float delta) override
     {
+        Text::update(delta);
+
         unsigned int i = 0;
         unsigned int count = std::min(size_t(bar.size() * value / maxValue + 0.5f), bar.size());
 

@@ -5,6 +5,7 @@
 #include "DrawableObject.h"
 #include "RigidBody.h"
 #include "World.h"
+#include "Wind.h"
 
 class PhysicsObject : public DrawableObject, public RigidBody
 {
@@ -14,6 +15,7 @@ public:
     void update(float delta) override
     {
         btTransform m;
+        applyCentralImpulse(Wind::getImpulse(delta));
         body->getMotionState()->getWorldTransform(m);
         m.getOpenGLMatrix(glm::value_ptr(M));
     }

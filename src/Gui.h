@@ -14,17 +14,17 @@ public:
     GuiObject()
         : color(1.f, 1.f, 1.f, 1.f), position(0.f, 0.f), positionOffset(0.f, 0.f)
     {
-        setPosition();
+        setPosition({0.f, 0.f});
         setAlpha(color.a);
     }
     virtual ~GuiObject() {}
 
-    void setPosition(const glm::vec2 &newPosition = glm::vec2(0.f, 0.f))
+    void setPosition(const glm::vec2 &newPosition)
     {
         position = newPosition;
         updateMatrixM();
     }
-    void setPositionOffset(const glm::vec2 &newPositionOffset = glm::vec2(0.f, 0.f))
+    void setPositionOffset(const glm::vec2 &newPositionOffset)
     {
         positionOffset = newPositionOffset;
         updateMatrixM();
@@ -39,17 +39,19 @@ public:
         ShaderProgram::setColor(color);
         DrawableObject::draw(window);
     }
-    static void setAspectRatioAndScale(float newAspectRatio, float newScale)
+    static void setAspectRatioGlobalScale(float newAspectRatio, float newScale)
     {
         aspectRatio = newAspectRatio;
-        scale = newScale;
+        globalScale = newScale;
     }
-
     void update(float delta) override
     {
         DrawableObject::update(delta);
         setAlpha(color.a);
+        updateMatrixM();
     }
+    float getScale() const { return scale; }
+    void setScale(float newScale) { scale = newScale; }
 
 protected:
     Window::ProjectionMode getProjectionMode() const override
@@ -64,9 +66,9 @@ protected:
     {
         return aspectRatio;
     }
-    static float getScale()
+    static float getGlobalScale()
     {
-        return scale;
+        return globalScale;
     }
     glm::vec4 color;
     glm::vec2 position;
@@ -76,12 +78,13 @@ private:
     void updateMatrixM()
     {
         M = glm::scale(
-            glm::translate(glm::vec3(position.x + positionOffset.x * getScale(), position.y + positionOffset.y * getScale() * getAspectRatio(), 0.f)),
-            glm::vec3(getScale(), getScale() * getAspectRatio(), getScale()));
+            glm::translate(glm::vec3(position.x + positionOffset.x * getGlobalScale(), position.y + positionOffset.y * getGlobalScale() * getAspectRatio(), 0.f)),
+            scale * glm::vec3(getGlobalScale(), getGlobalScale() * getAspectRatio(), getGlobalScale()));
     }
+    float scale = 1.f;
     static inline ShaderProgram guiShaderProgram;
     static inline float aspectRatio = 1.f;
-    static inline float scale = 0.001f;
+    static inline float globalScale = 0.001f;
 };
 
 #endif /* GUI_H_ */

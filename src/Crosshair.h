@@ -134,6 +134,9 @@ public:
         distance.setPositionOffset({240.f, 0.f});
         distance.setColor({1.f, 1.f, 1.f, 0.5f});
 
+        wind.setPositionOffset({-240.f - wind.size() * Text::glyphWidth, 0.f});
+        wind.setColor({1.f, 1.f, 1.f, 0.5f});
+
         healthBar.setPosition({-0.2f, 1.f});
         healthBar.setPositionOffset({0.f, -20.f - Text::glyphHeight});
         healthBar.setColor({1.f, 1.f, 1.f, 0.5f});
@@ -150,19 +153,23 @@ public:
         auto player = camera.getPlayer();
         if (player != nullptr)
         {
-            float alpha = player->getAlpha();
-            lines1.setPosition();
-            dots1.setPosition();
+            const float alpha = player->getAlpha();
+
+            lines1.update(delta);
+            dots1.update(delta);
+
+            lines2.update(delta);
+            dots2.update(delta);
+            triangles.update(delta);
+
             lines1.setColor({1.f, 1.f, 1.f, 0.5f * alpha});
             dots1.setColor({1.f, 1.f, 1.f, 0.5f * alpha});
 
-            lines2.setPosition();
-            dots2.setPosition();
-            triangles.setPosition();
             lines2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             dots2.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             triangles.setColor({1.f, 1.f, 1.f, 0.02f * (1.f - alpha)});
             distance.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
+            wind.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             reloadBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
             powerBar.setColor({1.f, 1.f, 1.f, 0.5f * (1.f - alpha)});
 
@@ -173,6 +180,8 @@ public:
                     distance.setText("inf");
                 else
                     distance.setText(std::to_string(int(glm::distance(player->getPosition(), v) + 0.5f)));
+                wind.setText(std::to_string(std::abs(Wind::getStrength())).substr(0, 4));
+                wind.setPositionOffset({-240.f - wind.size() * Text::glyphWidth, 0.f});
             }
             i++;
             if (i > 10)
@@ -201,6 +210,7 @@ protected:
             dots2.draw(window);
             triangles.draw(window);
             distance.draw(window);
+            wind.draw(window);
 
             healthBar.draw(window);
             reloadBar.draw(window);
@@ -214,7 +224,7 @@ private:
     ShapeArray lines1, lines2;
     ShapeArray dots1, dots2;
     ShapeArray triangles;
-    Text distance;
+    Text distance, wind;
     ProgressBar healthBar, reloadBar, powerBar;
     glm::vec3 pos;
 };

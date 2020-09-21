@@ -27,6 +27,7 @@
 #include "Bot.h"
 #include "Menu.h"
 #include "Music.h"
+#include "DamageOverlay.h"
 
 class Game
 {
@@ -63,7 +64,7 @@ public:
 
     void tick()
     {
-        GuiObject::setAspectRatioAndScale(window.getAspectRatio(), 1.f / window.getWidth());
+        GuiObject::setAspectRatioGlobalScale(window.getAspectRatio(), 1.f / window.getWidth());
         time = clock60Pi.getTime();
         ShaderProgram::setTime(time);
         particleSystem.update(time);
@@ -107,8 +108,8 @@ public:
             i->update(delta);
 
         camera.update(delta);
+        damageOverlay.update(delta);
         crosshair.update(delta);
-
         menu.update(delta);
 
         auto it = drawableObjects.begin();
@@ -161,6 +162,7 @@ public:
         window.draw(particleSystem);
         if (player != nullptr)
             window.draw(*player);
+        window.draw(damageOverlay);
         window.draw(fpsText);
         window.draw(crosshair);
         window.draw(menu);
@@ -184,7 +186,9 @@ public:
 private:
     static inline std::unique_ptr<Game> ptr;
 
-    Game(Window &w) : window(w), player(nullptr), camera(w, player), terrain(world), crosshair(camera), backgroundMusic("music.wav"), fps(0.f)
+    Game(Window &w)
+        : window(w), player(nullptr), camera(w, player), damageOverlay(player),
+          terrain(world), crosshair(camera), backgroundMusic("music.wav"), fps(0.f)
     {
         clock.reset();
         clock60Pi.reset();
@@ -253,7 +257,7 @@ private:
 
         if (player != nullptr)
             player->consumeKeyEvent(glfwKeyCode);
-        
+
         camera.consumeKeyEvent(glfwKeyCode);
         menu.consumeKeyEvent(glfwKeyCode);
     }
@@ -280,6 +284,7 @@ private:
     Skybox skybox;
     Fireflies fireflies;
     ParticleSystem particleSystem;
+    DamageOverlay damageOverlay;
     Menu menu;
     Music backgroundMusic;
     float time, delta, maxDelta = 42.f, fps;
