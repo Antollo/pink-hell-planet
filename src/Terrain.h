@@ -230,31 +230,18 @@ private:
                 glm::vec3 x = (marchingCubesVertices[mask][i] + glmPos) * Terrain::scale;
                 vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
                 terrain->pointNormals[x] += marchingCubesNormals[mask][i];
+                auto p = glm::value_ptr(marchingCubesNormals[mask][i]);
+                blockyNormals.insert(blockyNormals.end(), p, p+3);
                 normalsToDelete.emplace_back(x, marchingCubesNormals[mask][i]);
             }
 
             for (auto i : marchingCubesTexCoords[mask])
                 texCoords.push_back(i);
 
-            /*
-            for (auto i : marchingCubesVertices[mask])
-            {
-                glm::vec3 x = (i + glmPos) * Terrain::scale;
-                vertices.insert(vertices.end(), glm::value_ptr(x), glm::value_ptr(x) + 3);
-            }
-
-            for (auto i : marchingCubesNormals[mask])
-            {
-                normals.insert(normals.end(), glm::value_ptr(i), glm::value_ptr(i) + 3);
-            }
-            */
-
-
             const std::vector<glm::vec3> &verts = marchingCubesVertices[mask];
             assert(verts.size() % 3 == 0);
             for (size_t i = 0; i < verts.size(); i += 3)
             {
-                // std::cout << toBtVec3(verts[i] + glmPos) * Terrain::scale << std::endl;
                 newTriangleMesh->addTriangle(toBtVec3(verts[i] + glmPos) * Terrain::scale, toBtVec3(verts[i + 1] + glmPos) * Terrain::scale, toBtVec3(verts[i + 2] + glmPos) * Terrain::scale);
             }
         }
@@ -303,6 +290,7 @@ private:
 
         std::vector<float> vertices;
         std::vector<float> normals;
+        std::vector<float> blockyNormals;
         std::vector<float> texCoords;
         std::vector<float> tangents;
         std::vector<float> bitangents;

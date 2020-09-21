@@ -1,6 +1,7 @@
 #ifndef LOADER_H_
 #define LOADER_H_
 
+#include <numeric>
 #include <tiny_obj_loader.h>
 #include "error.h"
 

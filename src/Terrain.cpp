@@ -238,6 +238,7 @@ void Terrain::Chunk::prepareVertexBuffer()
 {
     vertices.clear();
     normals.clear();
+    blockyNormals.clear();
     texCoords.clear();
 
     newTriangleMesh.reset(new btTriangleMesh());
