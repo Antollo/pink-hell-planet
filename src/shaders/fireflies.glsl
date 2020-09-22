@@ -15,25 +15,25 @@ const Firefly fireflies[firefliesCount] = Firefly[firefliesCount](
         vec3(3, 7, 2),
         vec3(0.7, 0, 0.2),
         vec3(10, 1, 10),
-        vec3(10, 27, 10)
+        vec3(15, 27, 15)
     ),
     Firefly(
         vec3(3, 5, 2),
         vec3(1.5, 0, 0.2),
         vec3(10, 1, 10),
-        vec3(30, 27, 10)
+        vec3(45, 27, 15)
     ),
     Firefly(
         vec3(3, 7, 5),
         vec3(0.7, 0, 1),
         vec3(10, 1, 10),
-        vec3(10, 27, 30)
+        vec3(15, 27, 45)
     ),
     Firefly(
         vec3(3, 7, 4),
         vec3(0.1, 0, 0.7),
         vec3(10, 1, 10),
-        vec3(30, 27, 30)
+        vec3(45, 27, 45)
     )
 );
 
